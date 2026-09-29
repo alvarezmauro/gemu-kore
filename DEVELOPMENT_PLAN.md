@@ -3,6 +3,10 @@
 
 This document defines the order in which the application should be developed and the preferred OpenAI model for every task.
 
+Task IDs in this document are the execution authority. The roadmap stages in `PROJECT_SPEC.md` are descriptive. Complete only the named task and its applicable checks; do not start another task or unfinished prerequisite without explicit authorization.
+
+Accepted decisions C01–C17 are recorded in [ARCHITECTURE_REVIEW.md](docs/architecture/ARCHITECTURE_REVIEW.md). Task 0.2 writes [DOMAIN_MODEL.md](docs/architecture/DOMAIN_MODEL.md), defining core versus deferred schema scope. Architecture tasks produce documents; they do not authorize application code or migrations.
+
 The goal is not to use the strongest model for everything.
 
 Instead:
@@ -236,6 +240,8 @@ OUTPUT:
 
 Architecture review.
 
+Output file: `docs/architecture/ARCHITECTURE_REVIEW.md`. C01–C17 have been resolved with the user; preserve those choices in subsequent design tasks.
+
 ---
 
 ## TASK 0.2 — Design the Domain Model
@@ -322,6 +328,10 @@ Also identify which fields should be relational columns versus JSON.
 The result should be suitable for implementation in PostgreSQL + Prisma.
 ```
 
+Output file: `docs/architecture/DOMAIN_MODEL.md`.
+
+Carry forward accepted decisions C01–C17. Define essential asset/publication boundaries, market links, variant compatibility, flat release components, owned presence, explicit target foreign keys and artwork bindings. Define the core Task 4.1 subset versus later feature migrations. Detailed renderer/storage/provider mechanics remain with their feature tasks. Do not generate Prisma or SQL implementation.
+
 ---
 
 ## TASK 0.3 — Repository Architecture
@@ -361,6 +371,8 @@ Prisma
 OUTPUT:
 
 Repository architecture.
+
+Reserve `/app/...` for private management and `/collection/...` for consistently public views. Define the private root/dashboard and public item identity conventions without reopening C01.
 
 ---
 
@@ -680,6 +692,8 @@ VIEWER
 
 Permissions must be server-side.
 
+Editors manage copies and generate enrichment suggestions; only admins create/edit canonical catalog records or accept canonical changes. Publication and settings changes require ADMIN. Enforce permissions at the underlying service, including inline catalog creation.
+
 ---
 
 ## TASK 3.5 — Authentication Tests
@@ -745,6 +759,8 @@ Take the approved Astra conceptual schema and implement it in Prisma.
 Do NOT redesign the domain.
 
 Include the core catalog + collection models.
+
+Create the agreed core catalog and collection structures for consoles, games and accessories using the Task 0.2 core-scope list. Do not pre-create all optional enrichment, packaging or rendering tables. Later domain tasks use these structures rather than redesigning them.
 
 ---
 
@@ -818,6 +834,8 @@ AWS S3
 ```
 
 The application must not depend directly on one provider.
+
+Honor the privacy contracts from Task 0.2: private originals, explicit media-use approval, approved public display versions and authorized direct file access. MVP model ingestion accepts self-contained GLB only.
 
 ---
 
@@ -1038,7 +1056,7 @@ Implement URL-based filtering.
 Example:
 
 ```text
-/games?platform=snes&region=us&hasBox=true
+/app/games?platform=snes&region=us&hasBox=true
 ```
 
 ---
@@ -1085,6 +1103,8 @@ ConsoleModel
 Region
 ExternalReference
 ```
+
+Core entities already established in Task 4.1 are reused here. Implement feature services, validation, catalog management and only the approved feature-specific schema additions; do not recreate or independently redesign core tables.
 
 ---
 
@@ -1381,6 +1401,8 @@ Remember:
 
 Game ≠ GameRelease.
 
+Core entities already established in Task 4.1 are reused here. Implement feature services, validation, catalog management and only the approved feature-specific schema additions; do not recreate or independently redesign core tables.
+
 ---
 
 ## TASK 11.2 — Game Creation Flow
@@ -1400,18 +1422,16 @@ Platform
 ↓
 Game
 ↓
-Release
+Optional market/edition filters
 ↓
-Region
-↓
-Edition
+Release selection
 ↓
 My Copy
 ↓
-Enrichment
-↓
 Review
 ```
+
+Deliver a complete manual creation flow now. The selected release fixes canonical market and edition. Admins may create a missing release; editors select existing records. Add optional enrichment during Phases 12–13, available during creation and afterward; saving a valid copy must not depend on providers.
 
 ---
 
@@ -1478,6 +1498,8 @@ Support:
 - main + extras
 - completionist
 - source metadata
+
+Store one selected estimate set with source, optional URL and recorded/updated timestamp. Permit clearly identified manual estimates and unknown durations; imported replacements require review. Follow Task 0.2 for game-versus-release scope.
 
 ---
 
@@ -1579,6 +1601,8 @@ Cover:
 - incomplete information
 - retry behavior
 - EnrichmentRun
+
+Use explicit target foreign keys with exactly one populated target. Separate editor-generated proposals from admin acceptance. Add enrichment to the existing manual game flow without making it a prerequisite for saving.
 
 ---
 
@@ -1695,6 +1719,8 @@ spine.png
 ↓
 Chrono Trigger SNES Box
 ```
+
+Use the flat expected release-component and owned-presence contracts from Task 0.2. Define explicit component/slot/asset bindings for both packaging and physical media. Support multiple independently illustrated packages/discs without a nested containment hierarchy. Finalize implementation mechanics, not a new product model.
 
 ---
 
@@ -1865,11 +1891,15 @@ Implement:
 ```text
 Accessory
 AccessoryVariant
-AccessoryPlatform
+AccessoryVariantPlatform
 OwnedAccessory
 ```
 
 Support multiple compatible platforms.
+
+Core entities already established in Task 4.1 are reused here. Implement feature services, validation, catalog management and only the approved feature-specific schema additions; do not recreate or independently redesign core tables.
+
+Shared description, specifications and video belong to Accessory; variants may provide differences. Compatibility is explicit per variant. Copying another variant's compatibility list during creation requires review; do not dynamically inherit it.
 
 ---
 
@@ -1996,6 +2026,8 @@ Determine exactly how:
 `PublicSettings`
 
 controls public queries.
+
+Refine the previously established publication contracts; do not postpone privacy decisions until this phase. `PublicSettings` exclusively owns the global toggle. New items/media are private; public delivery requires item/media approval and asset eligibility, including direct requests and derivatives. Public URLs retain the same data contract for logged-in visitors.
 
 ---
 

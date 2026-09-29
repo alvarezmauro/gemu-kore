@@ -1,6 +1,10 @@
 # Video Game Collection Manager
 ## Master Product & Technical Specification
 
+Execution follows explicit task IDs in `DEVELOPMENT_PLAN.md`. Sections 138–150 are a high-level product roadmap, not executable phase instructions.
+
+The 17 accepted architecture decisions are recorded in [ARCHITECTURE_REVIEW.md](docs/architecture/ARCHITECTURE_REVIEW.md#3-accepted-resolutions-for-c01c17) and incorporated below. [DOMAIN_MODEL.md](docs/architecture/DOMAIN_MODEL.md) develops the conceptual relationships for Task 0.2; detailed schema refinements remain design proposals until adopted for implementation.
+
 ## 1. Project Overview
 
 Build a modern web application for cataloguing, managing, exploring, and optionally publicly showcasing a physical video game collection.
@@ -428,7 +432,7 @@ ADMIN:
 EDITOR:
 
 - collection CRUD
-- enrichment
+- enrichment candidate retrieval and suggestion review
 - media uploads
 
 VIEWER:
@@ -436,6 +440,8 @@ VIEWER:
 - private collection read-only
 
 Authorization must exist server-side for every mutation.
+
+Only ADMIN may create or edit canonical catalog records or apply enrichment to them. EDITOR may generate saved suggestions for admin review, select existing catalog records, and manage owned copies. Creating a missing release is a separately authorized admin step, even inside the add-copy flow. Publication choices and public settings are ADMIN-only.
 
 ---
 
@@ -547,11 +553,7 @@ Preferred format:
 
 `GLB`
 
-Allow:
-
-`GLTF`
-
-when necessary.
+For the MVP, accept only self-contained GLB files. GLTF packages and automatic conversion are deferred. Reject external model dependencies rather than fetching them implicitly.
 
 ---
 
@@ -731,7 +733,7 @@ Fields:
 - name
 - slug
 - modelNumber
-- regionId
+- commercial market relationships (zero or more Region links)
 - releaseYear
 - discontinuedYear
 - manufacturerId
@@ -832,7 +834,7 @@ or similarly restrained Magic UI presentation.
 Fields:
 
 - serial number
-- region
+- observed region/model markings or identification uncertainty (optional)
 - has box
 - location
 - defects
@@ -859,6 +861,8 @@ Never modify canonical catalog data.
 Display a review screen before creation.
 
 Use subtle Blur Fade transitions between sections.
+
+The selected model supplies canonical commercial markets. Observed copy markings do not override them. Conflicting evidence requires model identification review.
 
 ---
 
@@ -893,7 +897,7 @@ Only if readability remains excellent.
 Show:
 
 - serial number
-- region
+- canonical markets and separately labeled observed markings
 - location
 - has box
 - defects
@@ -969,7 +973,7 @@ Fields:
 - id
 - gameId
 - platformId
-- regionId
+- commercial market relationships (zero or more Region links)
 - editionName
 - editionType
 - releaseDate
@@ -983,11 +987,12 @@ Fields:
 - trailerProvider
 - trailerId
 - trailerUrl
-- packagingTemplateId
-- physicalMediaTemplateId
+- expected release components with optional packaging/media templates and artwork bindings
 - metadata
 - createdAt
 - updatedAt
+
+Market and edition identify the selected release; they are not independent copy overrides. Playtime is one selected estimate set with source, optional source URL and recorded/updated timestamp; see §40. Its precise attachment to game or release is developed in Task 0.2.
 
 ---
 
@@ -1046,55 +1051,24 @@ Examples:
 - poster
 - bonus disc
 
+Use a flat list of expected release components: packaging, media, manual, or extra. Each component has a positive quantity and may optionally reference the appropriate packaging or physical-media template. Different disc artwork requires separate components. Explicit component/slot/asset bindings supply textures. Owned component presence is tracked separately from expected contents. No nested inventory hierarchy or mandatory 3D representation is required.
+
 ---
 
 ## 32. Adding a Game
 
-Use a multi-step flow.
+Use a guided flow:
 
-### Step 1
+1. Select platform.
+2. Search/select game.
+3. Optionally filter releases by commercial market and edition; unknown details do not block searching.
+4. Select the matching release. ADMIN may create a missing release in an explicitly authorized step; EDITOR selects existing releases.
+5. Enter personal-copy details: serial/observed markings, location, has box, defects, notes and photos.
+6. Review and create.
 
-Select platform.
+The chosen release fixes canonical market and edition information. Changing either means selecting another release or making an authorized catalog correction, never silently overriding the release on the copy.
 
-### Step 2
-
-Search game.
-
-### Step 3
-
-Select existing release or create release.
-
-### Step 4
-
-Choose:
-
-- region
-- edition
-
-### Step 5
-
-Personal copy information:
-
-- serial/product number
-- location
-- has box
-- defects
-- notes
-- photos
-
-### Step 6
-
-Optional:
-
-`Enrich with AI`
-
-### Step 7
-
-Review.
-
-### Step 8
-
-Create.
+Task 11.2 delivers this complete manual flow. Phases 12–13 add optional enrichment during creation and afterward, with per-field review and admin-only canonical acceptance. Saving a valid copy never depends on provider availability. Do not show unfinished enrichment controls before those services exist.
 
 ---
 
@@ -1219,8 +1193,7 @@ Create:
 Fields:
 
 - id
-- entityType
-- entityId
+- explicit nullable target foreign keys (exactly one populated; supported targets defined in Task 0.2)
 - provider
 - status
 - query
@@ -1240,6 +1213,8 @@ Statuses:
 - FAILED
 
 This creates an auditable enrichment history.
+
+Use real database relationships rather than an unchecked entityType/entityId pair. Target existence and exactly-one-target selection must be enforced. Editors can produce suggestions; only admins can apply canonical changes.
 
 ---
 
@@ -1309,6 +1284,8 @@ Never make the application depend entirely on one playtime website.
 
 Manual values must be allowed.
 
+Keep one currently selected set of the three estimates, with a shared source, optional source URL and recorded/updated timestamp. Manual values are explicitly marked manual. Missing estimates remain unknown, not zero. Imported replacements require enrichment review. Multiple competing source sets and a source-comparison UI are deferred; the game-versus-release scope is defined in Task 0.2.
+
 ---
 
 ## 41. Physical Packaging
@@ -1372,7 +1349,7 @@ Fields:
 - materialName
 - metadata
 
-A GameRelease supplies assets for these slots.
+A packaging component in a GameRelease supplies artwork through explicit component/slot/asset bindings. Each slot must belong to that component's selected template; allow at most one artwork binding per component/slot.
 
 Then:
 
@@ -1423,6 +1400,8 @@ Texture slots might include:
 - FRONT_LABEL
 - BACK_LABEL
 - DISC_ART
+
+Define `PhysicalMediaTextureSlot` with template, slot name, required flag and material mapping, analogous to packaging slots. A release media component supplies artwork through explicit component/slot/asset bindings. Multiple discs or cartridges use separate components when their geometry or artwork differs.
 
 ---
 
@@ -1523,9 +1502,9 @@ Fields:
 - createdAt
 - updatedAt
 
-Accessories may support multiple platforms.
+Shared descriptions, specifications and video belong to the accessory family. Variants may provide specific differences.
 
-Create a many-to-many relationship.
+Authoritative platform compatibility belongs to each AccessoryVariant through `AccessoryVariantPlatform`. The family can display the union of its variants, clearly labeled; it is not a second writable compatibility list.
 
 ---
 
@@ -1545,12 +1524,14 @@ Fields:
 - id
 - accessoryId
 - name
-- regionId
+- commercial market relationships (zero or more Region links)
 - releaseYear
 - color
 - edition
 - default3DModelAssetId
 - metadata
+
+Variants may override shared description, specifications or video when needed. Compatibility is explicitly recorded per variant; a new variant may copy another variant's list for review, but does not dynamically inherit it. Commercial markets are separate from platform compatibility.
 
 ---
 
@@ -1576,6 +1557,8 @@ Provide:
 `Enrich with AI`
 
 where catalog metadata is incomplete.
+
+Producer, compatibility, markets and variant information are canonical facts. Editors select existing variants and record personal-copy information; canonical creation/correction and enrichment acceptance require ADMIN.
 
 ---
 
@@ -1647,6 +1630,8 @@ Create specialized records:
 
 Each specialized record has a one-to-one relationship with `CollectionItem`.
 
+Each item has an explicit publication choice, private by default. Enabling the public collection does not publish every item automatically.
+
 ---
 
 ## 55. OwnedConsole
@@ -1655,7 +1640,7 @@ Contains:
 
 - collectionItemId
 - consoleModelId
-- regionId
+- observed identification markings (optional; not a canonical region override)
 - customLogoAssetId
 - custom3DModelAssetId
 
@@ -1667,6 +1652,8 @@ Contains:
 
 - collectionItemId
 - gameReleaseId
+
+Actual component presence belongs to the owned copy and is separate from the selected release's expected component list. Detailed presence tracking is introduced with the physical-edition feature.
 
 ---
 
@@ -1757,7 +1744,7 @@ Example:
 
 ## 60. Location Manager
 
-Provide `/locations`.
+Provide `/app/locations`.
 
 Allow:
 
@@ -1803,13 +1790,15 @@ Media types:
 
 Allow drag-and-drop ordering.
 
+Personal media starts private. ADMIN explicitly approves each use for public display, separately from publishing the item. Originals remain private; public delivery serves approved display versions. Serial photos remain private unless reviewed/sanitized for the intended disclosure. Direct asset requests must enforce the same publication rules.
+
 ---
 
 ## 62. Collection Home
 
 Create a unified:
 
-`/collection`
+`/app/collection`
 
 private view.
 
@@ -2037,7 +2026,7 @@ Whenever practical, filters must use URL search parameters.
 Example:
 
 ```text
-/games?platform=snes&region=north-america&hasBox=true
+/app/games?platform=snes&region=north-america&hasBox=true
 ```
 
 Advantages:
@@ -2171,7 +2160,7 @@ Create public routes:
 /collection/accessories/[slug]
 ```
 
-The root `/collection` can detect whether the visitor is authenticated, but public data must still come through public-safe queries.
+Public routes always use the same public-safe data contract, including for logged-in visitors. Authorized users manage the collection under `/app/...`; authentication does not turn `/collection` into a private-management route.
 
 ---
 
@@ -2270,6 +2259,8 @@ Settings:
 
 Defaults should prioritize privacy.
 
+All listed visibility settings default to false. Publication additionally requires explicit item and media-use approval; new items/media start private. These global settings never bypass an individual item's or media use's publication choice. A personal publication decision and external-asset public-use eligibility are separate checks. Hiding a serial field does not hide a serial visible in image pixels.
+
 ---
 
 ## 85. Public Query Security
@@ -2285,6 +2276,8 @@ Example:
 should select only properties permitted publicly.
 
 Privacy must be enforced server-side.
+
+Apply the same rules to direct image/model delivery, display derivatives, search results, counts and metadata. Keep originals private and expose only approved display versions. Public 3D requires approved geometry and textures; a private texture cannot become public merely because its model is approved.
 
 ---
 
@@ -2421,7 +2414,7 @@ Do not aggressively recompress personal collection photography.
 
 Create:
 
-`/catalog`
+`/app/catalog`
 
 ADMIN only.
 
@@ -2527,8 +2520,7 @@ Create:
 Fields:
 
 - id
-- entityType
-- entityId
+- explicit nullable target foreign keys (exactly one populated; supported targets defined in Task 0.2)
 - provider
 - externalId
 - url
@@ -2546,13 +2538,13 @@ Providers might include:
 
 Do not fill primary database models with provider-specific fields.
 
+Use one shared reference structure with real foreign keys and an exactly-one-target constraint. Use dedicated associations when the relationship has specific domain meaning, such as texture bindings. Do not introduce a universal catalog superclass or retain unchecked polymorphic IDs.
+
 ---
 
 ## 97. Region
 
-Create canonical:
-
-`Region`
+`Region` is a controlled vocabulary for commercial markets only.
 
 Examples:
 
@@ -2564,15 +2556,12 @@ Examples:
 - China
 - Brazil
 - Worldwide
-- Region Free
 
-Optional metadata:
+Console models, game releases and accessory variants may have multiple explicit market links. Unknown market coverage is different from confirmed Worldwide distribution. A meaningful market-specific physical difference may identify a different catalog product.
 
-- NTSC-U
-- NTSC-J
-- PAL
+Region-lock behavior is a separate optional property. `Region Free` is not a commercial market. Video standards such as PAL and NTSC belong to hardware specifications; software/packaging languages are also distinct. Add typed technical fields only when a concrete query or filtering need justifies them.
 
-Do not assume TV format and commercial region are exactly the same concept.
+Owned consoles inherit catalog markets and can record observed markings or uncertainty separately; they have no independent authoritative region override.
 
 ---
 
@@ -2849,6 +2838,8 @@ Enrichment:
 
 - EnrichmentRun
 
+This is a starting model inventory, not a requirement to create every table in Task 4.1. Task 0.2 defines market links, variant compatibility, release components, owned presence and typed artwork bindings. Core tables cover all three collection categories; optional feature tables arrive in their assigned phases after detailed design.
+
 ---
 
 ## 109. Public Settings
@@ -2867,6 +2858,8 @@ PublicSettings {
 }
 ```
 
+`PublicSettings` is the sole owner of `publicCollectionEnabled` and public visibility controls. Do not duplicate the toggle in `AppSettings`. Per-item/media publication choices are additional gates, not replacements for these settings.
+
 ---
 
 ## 110. Application Settings
@@ -2877,11 +2870,12 @@ Potential:
 - collectionDescription
 - collectionLogo
 - defaultTheme
-- publicCollectionEnabled
 - preferredCurrency
 - timezone
 
 Currency is not used in MVP but could support future valuations.
+
+Publication and public visibility controls belong exclusively to `PublicSettings`.
 
 ---
 
@@ -3296,33 +3290,33 @@ Critical flows:
 Private:
 
 ```text
-/
-/collection
-/consoles
-/consoles/new
-/consoles/[id]
-/consoles/[id]/edit
+/app
+/app/collection
+/app/consoles
+/app/consoles/new
+/app/consoles/[id]
+/app/consoles/[id]/edit
 
-/games
-/games/new
-/games/[id]
-/games/[id]/edit
+/app/games
+/app/games/new
+/app/games/[id]
+/app/games/[id]/edit
 
-/accessories
-/accessories/new
-/accessories/[id]
-/accessories/[id]/edit
+/app/accessories
+/app/accessories/new
+/app/accessories/[id]
+/app/accessories/[id]/edit
 
-/locations
+/app/locations
 
-/catalog
-/catalog/consoles
-/catalog/games
-/catalog/accessories
+/app/catalog
+/app/catalog/consoles
+/app/catalog/games
+/app/catalog/accessories
 
-/settings
-/settings/access
-/settings/public
+/app/settings
+/app/settings/access
+/app/settings/public
 ```
 
 ---
@@ -3341,7 +3335,7 @@ Private:
 /collection/accessories/[slug]
 ```
 
-Routing details can be adjusted if private/public namespace conflicts become awkward.
+These routes are public only. Private management uses `/app/...`; public detail URLs must uniquely identify an owned item rather than relying only on a shared catalog slug.
 
 ---
 
@@ -3433,7 +3427,7 @@ Do NOT initially build:
 
 ---
 
-## 138. Development Phase 0 — Repository Foundation
+## 138. Product Roadmap Stage 0 — Repository Foundation
 
 Implement:
 
@@ -3455,9 +3449,11 @@ Deliverable:
 
 Application boots successfully.
 
+Sections 138–150 describe product milestones only. Execute `DEVELOPMENT_PLAN.md` task IDs, not these roadmap stage numbers. Task 0.2 fixes essential domain/privacy contracts; detailed storage, enrichment and rendering designs remain in their feature tasks.
+
 ---
 
-## 139. Development Phase 1 — Authentication
+## 139. Product Roadmap Stage 1 — Authentication
 
 Implement:
 
@@ -3474,7 +3470,7 @@ Only authorized users access private application.
 
 ---
 
-## 140. Development Phase 2 — Design System
+## 140. Product Roadmap Stage 2 — Design System
 
 Build shared application layout.
 
@@ -3507,7 +3503,7 @@ Reusable UI system.
 
 ---
 
-## 141. Development Phase 3 — Shared Collection Infrastructure
+## 141. Product Roadmap Stage 3 — Shared Collection Infrastructure
 
 Build:
 
@@ -3528,7 +3524,7 @@ Shared domain foundation.
 
 ---
 
-## 142. Development Phase 4 — Consoles
+## 142. Product Roadmap Stage 4 — Consoles
 
 Implement:
 
@@ -3549,7 +3545,7 @@ Fully usable console collection.
 
 ---
 
-## 143. Development Phase 5 — Games
+## 143. Product Roadmap Stage 5 — Games
 
 Implement:
 
@@ -3570,7 +3566,7 @@ Fully usable game collection.
 
 ---
 
-## 144. Development Phase 6 — AI Enrichment
+## 144. Product Roadmap Stage 6 — AI Enrichment
 
 Implement:
 
@@ -3587,7 +3583,7 @@ Safe metadata enrichment workflow.
 
 ---
 
-## 145. Development Phase 7 — Physical Game 3D
+## 145. Product Roadmap Stage 7 — Physical Game 3D
 
 Build:
 
@@ -3618,7 +3614,7 @@ Selected physical games rendered in interactive 3D.
 
 ---
 
-## 146. Development Phase 8 — Accessories
+## 146. Product Roadmap Stage 8 — Accessories
 
 Implement:
 
@@ -3636,7 +3632,7 @@ Fully usable accessory collection.
 
 ---
 
-## 147. Development Phase 9 — Dashboard
+## 147. Product Roadmap Stage 9 — Dashboard
 
 Build:
 
@@ -3654,7 +3650,7 @@ Polished collection overview.
 
 ---
 
-## 148. Development Phase 10 — Public Museum
+## 148. Product Roadmap Stage 10 — Public Museum
 
 Build:
 
@@ -3674,7 +3670,7 @@ Shareable digital collection.
 
 ---
 
-## 149. Development Phase 11 — UX Polish
+## 149. Product Roadmap Stage 11 — UX Polish
 
 Review:
 
@@ -3692,7 +3688,7 @@ Remove animations that do not improve the application.
 
 ---
 
-## 150. Development Phase 12 — Hardening
+## 150. Product Roadmap Stage 12 — Hardening
 
 Perform:
 
@@ -3716,7 +3712,7 @@ Production-ready application.
 
 Codex MUST follow these rules.
 
-1. Implement one phase at a time.
+1. Complete only the named DEVELOPMENT_PLAN task and its necessary fixes/checks. Start another task or unfinished prerequisite only when explicitly authorized; multiple tasks may be explicitly authorized together.
 2. Inspect existing architecture before changing it.
 3. Do not implement future phases prematurely.
 4. Prefer established project abstractions.
@@ -3750,7 +3746,7 @@ Codex MUST follow these rules.
 32. Use Server Components by default.
 33. Keep third-party providers behind adapters.
 34. Do not hard-code provider APIs throughout domain code.
-35. Before declaring a phase complete, run:
+35. Before declaring an implementation task complete, run applicable:
    - lint
    - typecheck
    - unit tests
@@ -3958,40 +3954,23 @@ A feature is complete only when:
 After creating the repository, give Codex this instruction:
 
 ```text
-Read the complete project specification before writing code.
+Read AGENTS.md, PROJECT_SPEC.md and DEVELOPMENT_PLAN.md completely.
 
-We are going to implement this project phase by phase.
+Execute TASK 0.1 — Review the Complete Product Specification only.
+Write the review to docs/architecture/ARCHITECTURE_REVIEW.md.
+Do not write application code or migrations.
 
-Do not attempt to build the complete application immediately.
+Use DEVELOPMENT_PLAN.md task IDs for execution. The product-roadmap
+stages in PROJECT_SPEC.md are descriptive, not executable phase instructions.
 
-Start with Phase 0 only.
+For later work, name the exact authorized task. Read accepted architecture
+decisions and the relevant design documents before proceeding. Complete
+that task and its applicable checks; do not start another task automatically.
 
-Before implementing anything:
-
-1. Propose the initial repository architecture.
-2. List the packages you intend to install and explain why each is necessary.
-3. Identify any architectural decisions that need to be made before implementation.
-4. Do not introduce functionality belonging to later phases.
-5. Keep the architecture compatible with all later phases in the specification.
-6. Prefer Server Components.
-7. Keep business logic outside React components.
-8. Use shadcn/ui for functional UI primitives.
-9. Use Magic UI as the primary animated/visual enhancement library.
-10. Use Motion directly only for custom animation requirements Magic UI does not cover.
-11. Do not install additional UI or animation libraries without justification.
-12. Assume the application will eventually be self-hosted using Docker on a VPS.
-
-Once the architecture is established, implement Phase 0 and verify:
-
-- development server starts
-- database connection works
-- Prisma migrations work
-- Tailwind works
-- shadcn works
-- Magic UI works
-- tests run
-- lint passes
-- TypeScript passes
-
-Do not begin Phase 1 until Phase 0 is complete.
+Preserve the catalog/copy separation, server-side authorization and privacy,
+provider adapters, mobile/accessibility support, and self-hosted Docker design.
+Use Server Components by default, shadcn for functional controls and purposeful
+Magic UI/Motion enhancement. Do not add unrelated dependencies or future features.
 ```
+
+---
