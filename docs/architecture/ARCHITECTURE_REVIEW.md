@@ -441,4 +441,4 @@ Task 0.2 should produce a conceptual model and explicit decisions sufficient to 
 12. Missing provider data, missing 3D textures, unknown dates and unavailable graphics do not prevent normal collection use.
 13. Seed reruns preserve manual changes, and database/media restoration preserves links and provenance.
 
-These are design and future implementation-verification criteria, not tests implemented or claimed to pass in Task 0.1. The deliverable of Task 0.1 is this review and its accepted C01–C17 decision record. The completed Task 0.2 document maps these cases to its proposed model. Task 0.3 — Repository Architecture is next; no Prisma schema has been generated.
+These are design and future implementation-verification criteria, not tests implemented or claimed to pass in Task 0.1. The deliverable of Task 0.1 is this review and its accepted C01–C17 decision record. The completed Task 0.2 document maps these cases to its proposed model. Task 0.3 is documented in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md). Task 1.1 — Initialize Application is next; no application or Prisma schema has been generated.

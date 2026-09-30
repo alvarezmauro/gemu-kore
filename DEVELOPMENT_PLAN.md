@@ -370,9 +370,11 @@ Prisma
 
 OUTPUT:
 
-Repository architecture.
+Repository architecture: [docs/architecture/REPOSITORY_ARCHITECTURE.md](docs/architecture/REPOSITORY_ARCHITECTURE.md).
 
 Reserve `/app/...` for private management and `/collection/...` for consistently public views. Define the private root/dashboard and public item identity conventions without reopening C01.
+
+Task 0.3 documents the planned structure and dependency rules only. Its route convention uses `/app` for the private dashboard and the owned CollectionItem UUID as `[id]` for public item details. Introduce folders, dependencies and configuration only in their assigned implementation tasks.
 
 ---
 

@@ -8,7 +8,7 @@ Status: **Design deliverable complete; no Prisma schema, SQL migrations or appli
 
 This document develops [PROJECT_SPEC.md](../../PROJECT_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md) and the [architecture review](ARCHITECTURE_REVIEW.md). The user accepted C01–C17 individually. Those decisions are fixed inputs, not alternatives to reconsider. The specification and plan have been reconciled with those decisions during this documentation task.
 
-The detailed choices below are the architect's proposed domain design for implementation review. They are not presented as additional decisions individually approved by the user. Task 0.3 remains separate. Task 4.1 must use the adopted core subset, not create every future-feature table listed here.
+The detailed choices below are the architect's proposed domain design for implementation review. They are not presented as additional decisions individually approved by the user. Task 0.3's repository design is documented separately in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md). Task 4.1 must use the adopted core subset, not create every future-feature table listed here.
 
 The model preserves:
 
@@ -74,7 +74,7 @@ The three subtype relations are collectively exclusive and required: every item 
 - Fields explicitly called optional/nullable may be unknown. Other identifying relationships are required. Unknown values are not stored as fake companies, regions, zero durations or fabricated dates.
 - Catalog entities have optional stable `seedKey`, unique within their entity table, and optional `archivedAt`. Archiving hides a record from default creation selectors, not from existing owned-copy references. Names are not globally unique. Slugs are unique within their entity table and are not immutable identity.
 - Catalog ownership means shared canonical knowledge managed by admins. Collection ownership means the shared collection, not the creator/uploader. Actor IDs record attribution only. There is no `ownerUserId`, `Collection` or `CollectionMember` in this release.
-- Public routes can use the item UUID for unambiguous copy identity, with an optional decorative slug defined in Task 0.3. Catalog slugs cannot uniquely identify two copies of the same release.
+- Public detail routes use the item UUID as `[id]` for unambiguous copy identity, as defined in Task 0.3. Decorative title slugs are deferred. Catalog slugs cannot uniquely identify two copies of the same release.
 
 ### 2.2 Columns versus JSON
 
@@ -256,7 +256,7 @@ Public collection output requires the global toggle. Item output additionally re
 
 For generated package/media viewers, publish only approved component presentations whose base geometry and every delivered texture pass eligibility checks. A derived preview must pass its own content review and input-rights checks. Do not infer public permission from “this URL exists” or “this model is from the catalog.”
 
-Public asset endpoints resolve access through the permitted item/use/component context. Knowing an object key or Asset ID is insufficient. Publication revocation changes policy immediately for new requests; cache invalidation and any residual signed-URL lifetime must be explicit in Phase 5/18. An already downloaded file cannot be recalled. Keep public-sensitive response caching conservative until that design is validated.
+Public asset endpoints resolve access through the permitted item/use/component context. Knowing an object key or Asset ID is insufficient. Task 0.3 defines authorized streaming, current-policy checks and no-store responses as the baseline in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md). Requests evaluated after a committed revocation must fail the applicable gate; an in-flight response or already downloaded file cannot be recalled. Any later signed-read or shared-cache policy requires an explicit access lifetime and revocation design.
 
 Public search uses only permitted fields and published rows, including filters/counts/suggestions. The public query must not match private notes or serials and then return a sanitized card. Account records, audit payloads, provider snapshots, raw metadata, source filenames and storage keys are excluded from public DTOs.
 
@@ -410,16 +410,17 @@ Task 4.2 should turn the relevant core cases into database integration checks. L
 
 ## 12. Remaining implementation design and explicit exclusions
 
-No core domain decision requires another round of C01–C17 questions. The following are deliberately later implementation decisions:
+No core domain decision requires another round of C01–C17 questions. Task 0.3 completed the repository design: concrete folders/modules, DTO conventions, private/public route parameters and dependency boundaries are documented in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md).
 
-- Task 0.3: concrete folders/modules, DTO naming, private/public route parameter conventions and dependency boundaries.
+The following are deliberately later implementation decisions:
+
 - Task 3.1: pinned Better Auth schema/configuration, verified-email/account-linking behavior and bootstrap/revocation procedure.
 - Task 4.1/4.2: exact migration syntax, Prisma mappings and tested enforcement of constraints not expressible directly in the ORM.
-- Phase 5: numerical upload limits, derivative codecs, storage provider configuration, delivery URL lifetimes and retry/cleanup operations.
+- Phase 5: numerical upload limits, derivative codecs, storage provider configuration and retry/cleanup operations. Task 0.3 chooses authorized streaming without signed read URLs as the baseline; a different delivery policy requires an explicit access-lifetime decision.
 - Tasks 9.1/14.1: geometry axes, exact UV schemas, renderer budgets and template validation mechanics.
 - Phases 12–13: provider-specific mappings, runtime output schemas, timeouts, quotas and AI model choice.
-- Phase 18: cache invalidation and public delivery verification before enabling publication.
+- Phase 18: implement and verify Task 0.3's current-policy checks and no-store public delivery before enabling publication; any later shared-cache design needs an explicit revocation policy.
 
 No marketplace, trading, valuations, purchases, repair work orders, broad compatibility graph, nested bundle inventory, language/geography ontology, multi-tenant membership, universal catalog superclass or external search infrastructure. Later multi-collection support adds a default Collection and collection ownership to items, locations, private asset scope and settings, then membership permissions; it does not add ownership to canonical Game/Model/Variant records.
 
-The design is ready for the next documentation task, **Task 0.3 — Repository Architecture**. Application initialization and Prisma implementation remain separately authorized later tasks.
+Tasks 0.2 and 0.3 are documented. The next task is **Task 1.1 — Initialize Application**. Application initialization and Prisma implementation remain separately authorized later tasks.

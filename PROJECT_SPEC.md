@@ -5,6 +5,8 @@ Execution follows explicit task IDs in `DEVELOPMENT_PLAN.md`. Sections 138–150
 
 The 17 accepted architecture decisions are recorded in [ARCHITECTURE_REVIEW.md](docs/architecture/ARCHITECTURE_REVIEW.md#3-accepted-resolutions-for-c01c17) and incorporated below. [DOMAIN_MODEL.md](docs/architecture/DOMAIN_MODEL.md) develops the conceptual relationships for Task 0.2; detailed schema refinements remain design proposals until adopted for implementation.
 
+[REPOSITORY_ARCHITECTURE.md](docs/architecture/REPOSITORY_ARCHITECTURE.md) defines Task 0.3's planned folders, dependency boundaries, route identity and data/media delivery rules. It does not authorize application implementation ahead of the development plan.
+
 ## 1. Project Overview
 
 Build a modern web application for cataloguing, managing, exploring, and optionally publicly showcasing a physical video game collection.
@@ -2153,14 +2155,16 @@ Create public routes:
 ```text
 /collection
 /collection/consoles
-/collection/consoles/[slug]
+/collection/consoles/[id]
 /collection/games
-/collection/games/[slug]
+/collection/games/[id]
 /collection/accessories
-/collection/accessories/[slug]
+/collection/accessories/[id]
 ```
 
 Public routes always use the same public-safe data contract, including for logged-in visitors. Authorized users manage the collection under `/app/...`; authentication does not turn `/collection` into a private-management route.
+
+`[id]` is the owned CollectionItem UUID, so two copies of one catalog release have distinct URLs. `/app` is the private dashboard; the completed application's `/` entry redirects consistently to `/collection`.
 
 ---
 
@@ -2170,11 +2174,11 @@ Create:
 
 `publicCollectionEnabled`
 
-When false:
-
-public routes display:
+When false, `/collection` displays:
 
 `This collection is currently private.`
+
+Category/detail routes return generic not-found responses without revealing whether an item exists. Public data and media endpoints also deny access. Task 0.3 defines the baseline of current-policy checks and no shared response caching for these revocable outputs.
 
 Do not expose any collection data.
 
@@ -2670,7 +2674,7 @@ React components should never contain substantial business logic.
 
 ## 103. Feature Organization
 
-Suggested:
+The following summarizes the organization. [REPOSITORY_ARCHITECTURE.md](docs/architecture/REPOSITORY_ARCHITECTURE.md) defines the complete planned layout, import rules and phased introduction of modules; future folders are not scaffolded in advance.
 
 ```text
 src/
@@ -3326,16 +3330,16 @@ Private:
 ```text
 /collection
 /collection/consoles
-/collection/consoles/[slug]
+/collection/consoles/[id]
 
 /collection/games
-/collection/games/[slug]
+/collection/games/[id]
 
 /collection/accessories
-/collection/accessories/[slug]
+/collection/accessories/[id]
 ```
 
-These routes are public only. Private management uses `/app/...`; public detail URLs must uniquely identify an owned item rather than relying only on a shared catalog slug.
+These routes are public only. Private management uses `/app/...`; public detail URLs use the owned CollectionItem UUID as `[id]`. Catalog slugs and titles are not owned-copy lookup keys; decorative title slugs are deferred.
 
 ---
 
