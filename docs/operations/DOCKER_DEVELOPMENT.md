@@ -31,6 +31,8 @@ The optional `app` profile starts all three services. Open [localhost:3002](http
 
 The development image pins Node.js and pnpm. Source is bind-mounted for live edits. Container dependencies, `.next` output and generated Prisma files have separate volumes, so Linux dependencies/build artifacts do not replace host files. The app installs against the frozen lockfile at startup to pick up dependency changes, generates Prisma and starts the development server. Rebuild after changing the Dockerfile or toolchain; dependency-only changes are also picked up by a restart.
 
+The startup install runs with `CI=true` so pnpm can refresh its disposable dependency volume without an interactive confirmation. It explicitly reuses the image's `/root/.local/share/pnpm/store` cache; otherwise the source bind mount can cause pnpm to choose a different store and download everything again. `CI=true` applies only to installation; Next.js still runs in development mode.
+
 The image build copies only dependency manifests. `.dockerignore` excludes local secrets, Git history, host dependencies and generated outputs. The development container has access to the bind-mounted working tree at runtime; it is not a production image. Next.js uses the server environment supplied by Compose, which overrides the host-oriented values in the mounted `.env.local`.
 
 | Service           | From the host           | From the app container  |

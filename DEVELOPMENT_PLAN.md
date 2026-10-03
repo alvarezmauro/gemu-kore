@@ -501,6 +501,8 @@ Create one example test of each type.
 
 ## TASK 2.1 — Install shadcn + Magic UI
 
+Status: **Completed 2026-10-03.** Configured shadcn/ui, the Magic UI registry and Blur Fade source, Lucide, Motion and light/dark/system theme handling. The starter page includes an accessible theme menu. All 23 tests, lint, typechecking, formatting and the production build pass; local and Docker previews were verified. Setup and scope are documented in [docs/operations/UI_FOUNDATION.md](docs/operations/UI_FOUNDATION.md).
+
 MODEL:
 
 `GPT-6 Sol`

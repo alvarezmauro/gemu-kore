@@ -22,7 +22,7 @@ services:
       - app_node_modules:/app/node_modules
       - app_next:/app/.next
       - app_prisma:/app/src/server/db/generated
-    command: sh -c 'pnpm install --frozen-lockfile && exec pnpm dev --hostname 0.0.0.0'
+    command: sh -c 'CI=true pnpm install --frozen-lockfile --store-dir /root/.local/share/pnpm/store && exec pnpm dev --hostname 0.0.0.0'
     depends_on:
       postgres:
         condition: service_healthy
