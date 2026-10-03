@@ -446,6 +446,8 @@ Use minimal infrastructure models if necessary.
 
 ## TASK 1.3 — Docker Development Environment
 
+Status: **Completed 2026-10-03.** Compose provides PostgreSQL, MinIO and an optional Next.js app profile, preserving the existing database volume. Both local and containerized development were verified. Setup, persistence and the MinIO source-build limitation are documented in [docs/operations/DOCKER_DEVELOPMENT.md](docs/operations/DOCKER_DEVELOPMENT.md).
+
 MODEL:
 
 `GPT-6 Sol`

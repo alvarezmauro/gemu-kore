@@ -4,25 +4,13 @@ Task 1.2 uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client a
 
 ## Local connection
 
-The Task 1.2 setup uses a local container named `gemukore-postgres`, listening only on `127.0.0.1:5433`, with database/user `gemukore` and durable volume `gemukore-postgres-data`. Its generated password is stored in the ignored `.env.local`. Preserve that file; `.env.example` contains illustrative credentials, not the generated password. Start an existing container with:
+Task 1.3 now manages PostgreSQL through Compose, reusing the Task 1.2 volume `gemukore-postgres-data` and its existing credentials. The service listens only on `127.0.0.1:5433`, with database/user `gemukore`. Start the local dependencies with:
 
 ```sh
-docker start gemukore-postgres
+pnpm docker:up
 ```
 
-For a **fresh environment** without that container, either provide an existing dedicated PostgreSQL database or start a single database using the following local-only example. The full app/PostgreSQL/MinIO Compose setup remains Task 1.3.
-
-```sh
-docker run --detach --name gemukore-postgres \
-  --publish 127.0.0.1:5433:5432 \
-  --env POSTGRES_DB=gemukore \
-  --env POSTGRES_USER=gemukore \
-  --env POSTGRES_PASSWORD=gemukore_local \
-  --mount type=volume,source=gemukore-postgres-data,target=/var/lib/postgresql/data \
-  postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
-```
-
-Copy `.env.example` to `.env.local` only on that fresh setup, and set `DATABASE_URL` to match your database. Container initialization variables apply only to an empty data volume; changing them does not change an existing database's password. The local development role can create shadow databases for migrations. It is not a production role configuration.
+Follow [Docker development](DOCKER_DEVELOPMENT.md) for first-time setup, the optional containerized app and the standalone-container handoff. Preserve `.env.local`; `.env.example` contains illustrative credentials, not the generated password. Initialization variables apply only to an empty volume, so changing them does not rotate an existing password. The local role can create shadow databases for migrations; it is not a production role configuration.
 
 Prisma commands and operational scripts load environment files through `@next/env`, using the same precedence as Next.js. Shell-provided values win; `.env.local` is not loaded in test mode. Production commands use `NODE_ENV=production`. Keep connection strings out of public environment variables, logs, screenshots and Git.
 

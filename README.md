@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.2** provide the Next.js application foundation and PostgreSQL/Prisma infrastructure. The root page is a temporary starter; product features and domain tables are not implemented. Next: **1.3 — Docker Development Environment**.
+Tasks **1.1–1.3** provide the Next.js foundation, PostgreSQL/Prisma infrastructure and Docker development environment. The root page is a temporary starter; product features and domain tables are not implemented. Next: **1.4 — Testing Infrastructure**.
 
 ## Local development
 
@@ -10,12 +10,17 @@ Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. 
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm docker:up
 pnpm dev
 ```
 
 Open the local URL printed by Next.js, normally [localhost:3000](http://localhost:3000). If that port is occupied, Next.js chooses another available port. The starter page and public liveness endpoint run without a database. Client generation runs automatically before development, typechecking and builds.
 
-Database operations require `DATABASE_URL`. The Task 1.2 setup created a private `.env.local` with generated local credentials and a persistent PostgreSQL container on `127.0.0.1:5433`. Preserve that file. For a fresh setup, follow [database development](docs/operations/DATABASE.md), including how to start PostgreSQL and configure `.env.local`.
+Database operations require `DATABASE_URL`. The current setup has a private `.env.local` with generated credentials; preserve it. For a fresh checkout, copy `.env.example` to `.env.local` before starting Docker. Compose reuses the existing PostgreSQL volume on `127.0.0.1:5433` and runs MinIO on ports 9000/9001. Follow [Docker development](docs/operations/DOCKER_DEVELOPMENT.md) for setup, credentials and the transition from the standalone Task 1.2 database.
+
+To run Next.js inside Docker as well, use `pnpm docker:app` and open [localhost:3002](http://localhost:3002). Source edits are shared, while container dependencies and generated outputs are isolated from the host. Use `pnpm docker:status`, `pnpm docker:logs` and `pnpm docker:down` to manage the services. Database and object data survive teardown in external Docker volumes.
+
+The first MinIO build compiles a pinned upstream source release because its community image is no longer available. Its repository is archived; this local development setup does not settle the production storage choice. Details and source references are in the Docker guide.
 
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 

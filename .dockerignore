@@ -1,0 +1,13 @@
+.git
+.env*
+node_modules
+.next
+src/server/db/generated
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+.pnpm-store
+coverage
+playwright-report
+test-results
+logo

@@ -20,7 +20,13 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
-    "db:check": "pnpm db:generate && node --conditions=react-server --import tsx scripts/check-database.ts"
+    "db:check": "pnpm db:generate && node --conditions=react-server --import tsx scripts/check-database.ts",
+    "docker:prepare": "docker volume create gemukore-postgres-data && docker volume create gemukore-minio-data",
+    "docker:up": "pnpm docker:prepare && docker compose --env-file .env.local up --build --detach --wait",
+    "docker:app": "pnpm docker:prepare && docker compose --env-file .env.local --profile app up --build --detach --wait",
+    "docker:down": "docker compose --env-file .env.local --profile app down",
+    "docker:status": "docker compose --env-file .env.local --profile app ps",
+    "docker:logs": "docker compose --env-file .env.local --profile app logs --follow --tail 100"
   },
   "dependencies": {
     "@next/env": "16.3.8",
