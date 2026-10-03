@@ -1,0 +1,6 @@
+engineStrict: true
+saveExact: true
+
+# Single package; allow the native resolver used by Next.js lint tooling.
+allowBuilds:
+  unrs-resolver: true

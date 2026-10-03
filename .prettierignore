@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+pnpm-lock.yaml
+next-env.d.ts
+.env*
+logo/
+# Preserve the reviewed architecture documents' existing formatting.
+AGENTS.md
+PROJECT_SPEC.md
+DEVELOPMENT_PLAN.md
+docs/architecture/

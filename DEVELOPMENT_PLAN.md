@@ -382,6 +382,8 @@ Task 0.3 documents the planned structure and dependency rules only. Its route co
 
 ## TASK 1.1 — Initialize Application
 
+Status: **Completed 2026-10-02.** See [README.md](README.md) for setup and verification commands. Foundation only; no product features.
+
 MODEL:
 
 `GPT-6 Sol`
