@@ -477,6 +477,8 @@ docker-compose.yml
 
 ## TASK 1.4 — Testing Infrastructure
 
+Status: **Completed 2026-10-03.** Vitest, React Testing Library and Playwright are configured with validation, component, isolated PostgreSQL transaction and desktop/mobile browser examples. All 16 checks pass; lint, typechecking, formatting and the production build pass. Setup and isolation are documented in [docs/operations/TESTING.md](docs/operations/TESTING.md).
+
 MODEL:
 
 `GPT-6 Sol`

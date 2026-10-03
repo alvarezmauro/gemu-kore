@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.3** provide the Next.js foundation, PostgreSQL/Prisma infrastructure and Docker development environment. The root page is a temporary starter; product features and domain tables are not implemented. Next: **1.4 — Testing Infrastructure**.
+Tasks **1.1–1.4** provide the Next.js foundation, PostgreSQL/Prisma infrastructure, Docker development environment and testing infrastructure. The root page is a temporary starter; product features and domain tables are not implemented. Next: **2.1 — Install shadcn + Magic UI**.
 
 ## Local development
 
@@ -39,13 +39,16 @@ Use `pnpm db:migrate --create-only --name describe_the_change` to prepare a futu
 pnpm lint
 pnpm typecheck
 pnpm format:check
+pnpm test
+pnpm test:integration
+pnpm test:e2e
 pnpm build
 pnpm start
 ```
 
 `pnpm typecheck` generates Next.js route types before checking TypeScript, so it works on a fresh checkout without a running development server. `pnpm start` serves the completed production build. Run `pnpm format` to format source and configuration; the existing reviewed architecture documents and logo sources are excluded to preserve their formatting.
 
-Unit, integration and Playwright test infrastructure belongs to Task 1.4. Foundation verification includes the checks above, browser smoke checks, environment validation and real PostgreSQL checks for migration reapplication, connection failures and transaction commit/rollback.
+Vitest and React Testing Library cover unit/component behavior. Integration tests automatically create and remove an isolated PostgreSQL container; they require Docker and do not use your development data. Before the first browser run, use `pnpm test:e2e:install`. Playwright builds and starts the app on port 3100, then checks desktop/mobile Chromium. See [Testing](docs/operations/TESTING.md) for setup, examples, isolation and failure reports.
 
 Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma 7.10.0 rather than the registry's Prisma 8 release candidate. TypeScript 6 and ESLint 9 satisfy the installed Next.js lint plugins' peer ranges; ESLint 9 emits an upstream deprecation notice during initial installation. Revisit that pin when those plugins support ESLint 10. `pnpm-workspace.yaml` holds package-manager settings and explicit installation-script approvals for this single package; it does not introduce extra workspace packages. Next.js automatic agent-file generation is disabled to preserve the maintained `AGENTS.md`.
 
