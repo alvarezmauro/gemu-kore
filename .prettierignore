@@ -16,3 +16,5 @@ AGENTS.md
 PROJECT_SPEC.md
 DEVELOPMENT_PLAN.md
 docs/architecture/
+# Preserve the user-supplied visual reference verbatim.
+docs/design/references/fambly.html

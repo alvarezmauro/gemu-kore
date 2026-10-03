@@ -54,6 +54,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 
 ## Project documents
 
+- [Design direction and visual reference](DESIGN.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

@@ -12,6 +12,8 @@ Before performing substantial work, read:
 These documents are the primary source of truth for product requirements,
 architecture, development sequencing, and implementation constraints.
 
+For UI and visual work, also read `DESIGN.md`. It adapts the user-provided visual reference to GemuKore; reference HTML under `docs/design/references/` is supporting material, not application code or product requirements.
+
 If implementation details conflict with these documents, stop and identify
 the conflict before changing the architecture.
 
