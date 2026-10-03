@@ -1,6 +1,10 @@
 engineStrict: true
 saveExact: true
 
+# Allow large dependencies to finish on slow development networks.
+fetchTimeout: 300000
+networkConcurrency: 8
+
 # Single package; approved installation steps for Prisma, tsx and lint tooling.
 allowBuilds:
   "@prisma/engines": true

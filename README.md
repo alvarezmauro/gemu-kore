@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Task **2.1** adds shadcn/ui, Magic UI, Lucide, Motion and light/dark/system theme handling. The root page is a temporary starter; product features and domain tables are not implemented. Next: **2.2 — Build Application Design System**.
+Tasks **1.1–1.4** provide the application and testing foundation. Task **2.1** adds shadcn/ui, Magic UI, Lucide, Motion and light/dark/system theme handling. Task **2.2** adds the warm-paper design system, responsive application shell, cards, forms and feedback states. The root page is a temporary design preview; product features and domain tables are not implemented. Next: **2.3 — Animation Guidelines**.
 
 ## Local development
 
@@ -55,6 +55,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 ## Project documents
 
 - [Design direction and visual reference](DESIGN.md)
+- [Application design system](docs/operations/DESIGN_SYSTEM.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

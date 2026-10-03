@@ -99,3 +99,5 @@ Verified on 2026-10-03:
 - A full Compose teardown and restart preserves the external data volumes. Default startup runs only PostgreSQL and MinIO; the optional app profile restores all three services.
 - The Docker app renders in a browser without errors. Both local and containerized Next.js detect a temporary source edit and its restoration.
 - Host lint, typechecking and production build pass; container typechecking also passes. Production deployment and persistent test infrastructure remain later tasks.
+
+Task 2.2 dependency refresh encountered registry timeouts for large packages. `pnpm-workspace.yaml` now allows five minutes per request and limits installation concurrency to eight for local and container installs; frozen lockfile and supply-chain checks remain enabled.

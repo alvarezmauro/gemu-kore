@@ -525,6 +525,8 @@ Do NOT install other component libraries.
 
 ## TASK 2.2 — Build Application Design System
 
+Status: **Completed 2026-10-03.** Applied the warm-paper palette and self-hosted typography from `DESIGN.md`, with shared responsive shell/navigation, page headers, cards, form primitives, loading and empty states. The root route is an unsaved design preview. All 31 tests, lint, typechecking, formatting and the production build pass. Usage and scope: [docs/operations/DESIGN_SYSTEM.md](docs/operations/DESIGN_SYSTEM.md). No domain or schema changes.
+
 MODEL:
 
 `GPT-6 Sol`

@@ -1,10 +1,10 @@
 # GemuKore — Design Direction
 
-Version: 0.1 · Established: 2026-10-03 · Implementation begins in Task 2.2.
+Version: 0.1 · Established: 2026-10-03 · Shared foundations implemented in Task 2.2.
 
 GemuKore should feel like a carefully arranged collection on warm paper: calm, tactile, welcoming and easy to browse. Games, consoles, packaging and personal photographs provide the personality. The interface supplies a quiet frame around them.
 
-This document adapts the user's **Fambly** reference to GemuKore. It governs visual decisions alongside [PROJECT_SPEC.md](PROJECT_SPEC.md), the accepted [repository architecture](docs/architecture/REPOSITORY_ARCHITECTURE.md) and [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md). It does not change domain rules, permissions, public/private boundaries or development sequencing. The current application's Task 2.1 styling is an installation baseline, not the finished design described here.
+This document adapts the user's **Fambly** reference to GemuKore. It governs visual decisions alongside [PROJECT_SPEC.md](PROJECT_SPEC.md), the accepted [repository architecture](docs/architecture/REPOSITORY_ARCHITECTURE.md) and [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md). It does not change domain rules, permissions, public/private boundaries or development sequencing. Task 2.2 implements the shared visual foundations described here; component usage and preview scope are documented in [the design-system guide](docs/operations/DESIGN_SYSTEM.md).
 
 The original [example HTML](docs/design/references/fambly.html) is preserved as visual reference. Read its [reference notes](docs/design/references/README.md) before using it. This document takes precedence over that example for GemuKore-specific styling and accessibility decisions.
 

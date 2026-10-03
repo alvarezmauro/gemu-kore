@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the starter page renders without browser errors", async ({ page }) => {
+test("the design preview renders without browser errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
@@ -17,7 +17,7 @@ test("the starter page renders without browser errors", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(
-    page.getByText("A home for your gaming collection."),
+    page.getByText("A home for your gaming collection.", { exact: false }),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });

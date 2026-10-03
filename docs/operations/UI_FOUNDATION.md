@@ -1,25 +1,25 @@
 # UI foundation
 
-Task 2.1 configures shadcn/ui, Magic UI, Lucide, Motion and theme handling. The starter page remains a placeholder. Typography, navigation, layout and component conventions belong to Task 2.2; shared animation patterns belong to Task 2.3.
+Task 2.1 configured shadcn/ui, Magic UI, Lucide, Motion and theme handling. Task 2.2 now implements typography, navigation, layout and component conventions in the [application design system](DESIGN_SYSTEM.md). The root page is a temporary design preview. Shared animation patterns remain Task 2.3.
 
 ## Installed foundations
 
-- `components.json` configures shadcn's Radix-based `radix-nova` preset, neutral colors, CSS variables, Tailwind 4 and Lucide icons. Initialization used CLI 4.21.1 with noninteractive defaults. Only Button and Dropdown Menu are installed so far.
+- `components.json` configures shadcn's Radix-based `radix-nova` preset, neutral colors, CSS variables, Tailwind 4 and Lucide icons. Initialization used CLI 4.21.1 with noninteractive defaults. Task 2.1 installed Button and Dropdown Menu; Task 2.2 also installs Card, Input, Label, Textarea, Skeleton, Sheet and Badge.
 - `src/components/ui/` contains the owned shadcn source. The underlying Radix package is part of shadcn's implementation, not a second design system.
 - `src/lib/utils.ts` exposes the CLI's `cn` class-merging helper. Components use the repository alias for that helper.
-- `src/components/magic/blur-fade.tsx` is installed from Magic UI's official registry. `@magicui` is registered in `components.json`. The component is available for future presentation work; the starter page does not animate its content.
+- `src/components/magic/blur-fade.tsx` is installed from Magic UI's official registry. `@magicui` is registered in `components.json`. The component is available for future presentation work; the design preview does not animate its content.
 - `motion/react` is the animation entry point. Do not add a second animation library. Lucide provides the theme menu's icons.
-- `src/app/globals.css` holds the baseline light/dark tokens. The existing system-font stack remains until the design-system task. The CLI's circular font variable and automatic Google font import were removed.
+- `src/app/globals.css` holds light/dark tokens. Task 2.2 replaces the neutral installation baseline with the palette in `DESIGN.md` and uses locally served Inter and Plus Jakarta Sans through `next/font`. The CLI's circular font variable remains removed.
 
 Versions are pinned in the package manifest and lockfile. The current shadcn generator imports `shadcn/tailwind.css`, so the `shadcn` dependency supplies both the CLI and build-time styles; it is not a runtime component library.
 
 ## Theme behavior
 
-`ThemeProvider` is a small Client Component that wraps server-rendered children. The root layout and starter page remain Server Components. `next-themes` applies the `light` or `dark` class to `<html>` and handles system preference, initial theme application and persistence under `gemukore-theme` in local storage.
+`ThemeProvider` is a small Client Component that wraps server-rendered children. The root layout and preview page remain Server Components. `next-themes` applies the `light` or `dark` class to `<html>` and handles system preference, initial theme application and persistence under `gemukore-theme` in local storage.
 
 The default is **System**. The visible Theme menu offers **Light**, **Dark** and **System**, with radio selection, keyboard navigation, focus restoration and touch-sized controls. Its trigger renders stable content before hydration; selected theme state is displayed only in the opened menu. The intentional hydration-warning suppression is limited to `<html>`, whose theme attributes are updated by next-themes.
 
-Use semantic classes such as `bg-background`, `text-foreground`, `text-muted-foreground` and `border-border` instead of fixed light-only colors. The starter page now follows these tokens. Final product colors and typography remain Task 2.2.
+Use semantic classes such as `bg-background`, `text-foreground`, `text-muted-foreground` and `border-border` instead of fixed light-only colors. The design preview and shared controls follow the Task 2.2 palette and typography.
 
 ## Reduced motion and future effects
 
@@ -36,7 +36,7 @@ pnpm exec shadcn add input --yes
 pnpm exec shadcn add @magicui/magic-card --path src/components/magic --yes
 ```
 
-These are future examples, not components already installed. Review generated changes, dependency additions and CSS before accepting them. Keep Magic UI sources under `components/magic/`, keep utility imports aligned with `components.json`, and preserve local accessibility adjustments when updating registry source.
+These commands illustrate the installation workflow; Input is already installed by Task 2.2. Review generated changes, dependency additions and CSS before accepting them. Keep Magic UI sources under `components/magic/`, keep utility imports aligned with `components.json`, and preserve local accessibility adjustments when updating registry source.
 
 After dependency changes, run `pnpm docker:app` to rebuild and refresh the Docker development app's separate dependency volume. Local development uses the host installation.
 
