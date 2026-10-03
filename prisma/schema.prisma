@@ -1,0 +1,10 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/server/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Domain models are introduced in Task 4.1, not during database setup.

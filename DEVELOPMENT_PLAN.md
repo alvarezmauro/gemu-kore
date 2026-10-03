@@ -419,6 +419,8 @@ all work.
 
 ## TASK 1.2 — PostgreSQL + Prisma
 
+Status: **Completed 2026-10-02.** PostgreSQL 16.15, Prisma 7.10.0, migration baseline, server-only database utilities and separate application/database health checks are implemented. Setup and workflow: [docs/operations/DATABASE.md](docs/operations/DATABASE.md). No domain models were introduced.
+
 MODEL:
 
 `GPT-6 Sol`

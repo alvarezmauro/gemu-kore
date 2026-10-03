@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Task **1.1 — Initialize Application** provides the Next.js App Router foundation with TypeScript, Tailwind CSS, ESLint, Prettier and server environment validation. The root page is a temporary starter; product features are not implemented. Next: **1.2 — PostgreSQL + Prisma**.
+Tasks **1.1–1.2** provide the Next.js application foundation and PostgreSQL/Prisma infrastructure. The root page is a temporary starter; product features and domain tables are not implemented. Next: **1.3 — Docker Development Environment**.
 
 ## Local development
 
@@ -13,9 +13,20 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open the local URL printed by Next.js, normally [localhost:3000](http://localhost:3000). If that port is occupied, Next.js chooses another available port. No database, credentials, Docker services or `.env.local` file are needed for Task 1.1.
+Open the local URL printed by Next.js, normally [localhost:3000](http://localhost:3000). If that port is occupied, Next.js chooses another available port. The starter page and public liveness endpoint run without a database. Client generation runs automatically before development, typechecking and builds.
 
-When configuration is needed, copy `.env.example` to `.env.local`. Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
+Database operations require `DATABASE_URL`. The Task 1.2 setup created a private `.env.local` with generated local credentials and a persistent PostgreSQL container on `127.0.0.1:5433`. Preserve that file. For a fresh setup, follow [database development](docs/operations/DATABASE.md), including how to start PostgreSQL and configure `.env.local`.
+
+Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
+
+```sh
+pnpm db:validate
+pnpm db:deploy
+pnpm db:status
+pnpm db:check
+```
+
+Use `pnpm db:migrate --create-only --name describe_the_change` to prepare a future development migration for review. Full migration instructions, pool limits and environment loading are in the database guide. `/api/health` reports application liveness only; database connectivity is checked through the private `db:check` command.
 
 ## Checks and production build
 
@@ -29,9 +40,9 @@ pnpm start
 
 `pnpm typecheck` generates Next.js route types before checking TypeScript, so it works on a fresh checkout without a running development server. `pnpm start` serves the completed production build. Run `pnpm format` to format source and configuration; the existing reviewed architecture documents and logo sources are excluded to preserve their formatting.
 
-Unit, integration and Playwright test infrastructure belongs to Task 1.4. Task 1.1 is verified through the checks above, browser smoke checks and direct environment-validation checks.
+Unit, integration and Playwright test infrastructure belongs to Task 1.4. Foundation verification includes the checks above, browser smoke checks, environment validation and real PostgreSQL checks for migration reapplication, connection failures and transaction commit/rollback.
 
-Dependencies are pinned in `package.json` and `pnpm-lock.yaml`. TypeScript 6 and ESLint 9 satisfy the installed Next.js lint plugins' peer ranges; ESLint 9 emits an upstream deprecation notice during initial installation. Revisit that pin when those plugins support ESLint 10. `pnpm-workspace.yaml` holds package-manager settings for this single package, including approval for the lint resolver's native installation step; it does not introduce extra workspace packages. Next.js automatic agent-file generation is disabled to preserve the maintained `AGENTS.md`.
+Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma 7.10.0 rather than the registry's Prisma 8 release candidate. TypeScript 6 and ESLint 9 satisfy the installed Next.js lint plugins' peer ranges; ESLint 9 emits an upstream deprecation notice during initial installation. Revisit that pin when those plugins support ESLint 10. `pnpm-workspace.yaml` holds package-manager settings and explicit installation-script approvals for this single package; it does not introduce extra workspace packages. Next.js automatic agent-file generation is disabled to preserve the maintained `AGENTS.md`.
 
 ## Project documents
 

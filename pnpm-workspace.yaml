@@ -1,6 +1,9 @@
 engineStrict: true
 saveExact: true
 
-# Single package; allow the native resolver used by Next.js lint tooling.
+# Single package; approved installation steps for Prisma, tsx and lint tooling.
 allowBuilds:
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
   unrs-resolver: true

@@ -7,5 +7,34 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   prettier,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "src/server/db/generated/**",
+  ]),
+  {
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@prisma/*",
+                "@/server/db/**",
+                "@/server/repositories/**",
+                "**/server/db/**",
+                "**/server/repositories/**",
+              ],
+              message:
+                "UI and route entry points must use feature/service boundaries, not database access.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

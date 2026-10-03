@@ -8,15 +8,24 @@
     "pnpm": "11.5.0"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "pnpm db:generate && next dev",
+    "build": "pnpm db:generate && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "pnpm db:generate && next typegen && tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:check": "pnpm db:generate && node --conditions=react-server --import tsx scripts/check-database.ts"
   },
   "dependencies": {
+    "@next/env": "16.3.8",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "next": "16.3.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -33,7 +42,9 @@
     "eslint-config-prettier": "10.1.8",
     "postcss": "8.5.28",
     "prettier": "3.9.9",
+    "prisma": "7.10.0",
     "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
     "typescript": "6.0.3"
   }
 }

@@ -5,6 +5,8 @@ build/
 coverage/
 pnpm-lock.yaml
 next-env.d.ts
+src/server/db/generated/
+prisma/migrations/
 .env*
 logo/
 # Preserve the reviewed architecture documents' existing formatting.
