@@ -792,6 +792,8 @@ Include the core catalog + collection models.
 
 Create the agreed core catalog and collection structures for consoles, games and accessories using the Task 0.2 core-scope list. Do not pre-create all optional enrichment, packaging or rendering tables. Later domain tasks use these structures rather than redesigning them.
 
+Status: **Completed 2026-10-04.** Implemented the approved 25 core models alongside the existing five auth/policy models: catalog identities, explicit market/compatibility/company links, identifiers/references, all three owned subtypes, locations/defects, settings and immutable metadata history. Added an atomic additive migration with restrictive shared references, private/default-disabled publication, scoped partial uniqueness, calendar/target/JSON checks and deferred matching-subtype enforcement. UUID default annotations now match PostgreSQL introspection without altering existing auth tables. Forty new isolated database cases verify migration replay/redeployment/drift and core invariants; all 82 unit/component, 177 integration and 64 desktop/mobile browser tests pass (323 total). Lint, typechecking, formatting, schema validation, production builds and whitespace checks pass. Migration is applied locally, status/drift/connectivity are healthy, Docker's refreshed client includes all 30 models, and login/private redirects/design preview pass browser verification. No catalog/inventory seeds, CRUD endpoints, UI features, new dependency, optional asset/component/enrichment tables or rendering fields. Schema contracts and deferred service obligations: [docs/operations/CORE_DATABASE.md](docs/operations/CORE_DATABASE.md). Task 4.2 remains the next independent review before major features.
+
 ---
 
 ## TASK 4.2 — Review Prisma Schema

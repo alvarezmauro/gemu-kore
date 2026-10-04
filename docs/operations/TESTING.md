@@ -113,6 +113,16 @@ Verified on 2026-10-04: 82 unit/component tests, 137 isolated PostgreSQL integra
 
 Both full and production dependency audits report two high upstream tooling advisories after the mysql2 update removes one high and one moderate advisory. Audit output is not suppressed or counted as a passing security gate. Reachability and follow-up are recorded in the review. The optional patched MySQL version was verified in both host and Docker dependency trees; `optimisticRepeatInstall: false` ensures repeated frozen installs check override/lockfile updates even when `package.json` is unchanged. Live provider consent and production ingress/rate-limit behavior remain outside these local checks.
 
+## Task 4.1 core schema verification
+
+`tests/integration/core-schema.test.ts` adds 40 database cases using the existing disposable PostgreSQL runner. They exercise real Prisma nested/transactional aggregate creation and direct SQL constraint failures. Coverage includes all three matching owned subtypes, orphan commit failure, wrong/fixed types, subtype movement/deletion/replacement, catalog-preserving copy deletion, duplicate printings/copies, shared-reference deletion rules, explicit markets/variant compatibility, scoped credits, valid/invalid partial calendar dates, typed reference targets and uniqueness, locations/defects, private settings defaults, immutable metadata facts, deleted-user attribution and versioned technical JSON.
+
+The runner replays the complete migration chain on a fresh database, then the core suite redeploys it to confirm no pending migration and compares the live schema to Prisma with a nonzero exit on drift. Custom SQL constraint behavior is tested separately because a Prisma-visible diff cannot prove CHECK/trigger correctness. Fixture cleanup intentionally truncates only disposable core data, including immutable test history; settings remain intact. Never use that fixture reset on a personal database.
+
+Verified on 2026-10-04: 82 unit/component tests, 177 isolated integration tests and 64 desktop/mobile Chromium tests pass, **323 total**. Lint, TypeScript, formatting, schema validation, production builds and diff whitespace pass. The core migration is applied to development PostgreSQL; migration status and a read-only drift check are clean, and connectivity is healthy. The restarted Docker app generated all 30 models and renders login/design preview without browser errors or an error overlay; anonymous private entry still redirects to login. All disposable test containers were removed. No real collection records or provider credentials were used for tests. The two dependency advisories recorded in Task 3.6 are unaffected by this schema-only task.
+
+Implementation contracts and remaining service responsibilities are in [CORE_DATABASE.md](CORE_DATABASE.md). Task 4.2 is still required as the next independent schema review; these checks do not claim completed domain CRUD, publication, location hierarchy services or media/enrichment functionality.
+
 ## Task 1.4 verification
 
 Verified on 2026-10-03:

@@ -1,6 +1,6 @@
 # Database development
 
-Task 1.2 uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client and PostgreSQL adapter versions. The schema intentionally has no domain models. The first migration establishes the `public` schema and Prisma migration history; catalog, collection and authentication tables belong to later tasks.
+The foundation uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Task 4.1 adds the approved core catalog and owned-collection structures. See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
 
 ## Local connection
 
@@ -42,7 +42,7 @@ pnpm db:status
 
 Use `migrate dev` only on a dedicated development database; it uses a shadow database and can propose a reset when it finds drift. Do not accept a reset on valuable data. Applied migration files are immutable: add a new migration for subsequent changes. Commit the schema, migration SQL, migration lock and package lock together.
 
-For an existing set of reviewed migrations, use `pnpm db:deploy`. This applies pending migrations without generating schema changes or resetting data. Production migration credentials and permissions will be separated from application runtime access during deployment work. No startup hook runs migrations or creates a database automatically. No `db push`, automatic reset, placeholder seed data or product models are introduced here.
+For an existing set of reviewed migrations, use `pnpm db:deploy`. This applies pending migrations without generating schema changes or resetting data. Production migration credentials and permissions will be separated from application runtime access during deployment work. No startup hook runs migrations or creates a database automatically. Do not use `db push` or an automatic reset; they bypass the reviewed migration workflow and custom SQL constraints. Task 4.1 creates safe settings defaults, without placeholder catalog, collection or administrator seed data.
 
 Generated Prisma files live under `src/server/db/generated/` and are ignored. The `dev`, `build`, `typecheck` and `db:check` commands generate them explicitly, so a clean checkout does not depend on an untracked client from another machine.
 

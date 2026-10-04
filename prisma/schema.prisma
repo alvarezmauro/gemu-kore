@@ -7,26 +7,31 @@ datasource db {
   provider = "postgresql"
 }
 
+// UUID defaults use PostgreSQL's introspected spelling; migrations resolve the pg_catalog function.
 // Core auth models generated with auth 1.7.7; AccessGrant is application-owned.
-// Catalog and collection models remain Task 4.1.
+// Core catalog/collection: DOMAIN_MODEL.md §10. Deferred features have no placeholder FKs.
 
 model User {
-  id            String    @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  email           String
+  emailVerified   Boolean          @default(false)
+  image           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  sessions        Session[]
+  accounts        Account[]
+  createdItems    CollectionItem[] @relation("ItemCreator")
+  updatedItems    CollectionItem[] @relation("ItemUpdater")
+  publishedItems  CollectionItem[] @relation("ItemPublisher")
+  metadataChanges MetadataChange[]
 
   @@unique([email])
   @@map("user")
 }
 
 model Session {
-  id        String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   expiresAt DateTime
   token     String
   createdAt DateTime @default(now())
@@ -43,7 +48,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   accountId             String
   providerId            String
   userId                String    @db.Uuid
@@ -64,7 +69,7 @@ model Account {
 }
 
 model Verification {
-  id         String   @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   identifier String
   value      String
   expiresAt  DateTime
@@ -83,7 +88,7 @@ enum AccessRole {
 }
 
 model AccessGrant {
-  id        String     @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String     @unique
   role      AccessRole
   enabled   Boolean    @default(false)
@@ -92,4 +97,631 @@ model AccessGrant {
 
   // No User FK: a grant may be provisioned before its holder signs in.
   @@map("access_grant")
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum IdentificationStatus {
+  INCOMPLETE
+  CONFIRMED
+}
+
+enum RegionLock {
+  UNRESTRICTED
+  RESTRICTED
+  NOT_APPLICABLE
+}
+
+enum GameEditionType {
+  STANDARD
+  LIMITED
+  SPECIAL
+  COLLECTORS
+  DELUXE
+  GREATEST_HITS
+  PLAYERS_CHOICE
+  PLATINUM
+  BUDGET
+  RE_RELEASE
+  BUNDLE
+  CUSTOM
+}
+
+enum CompanyCreditRole {
+  DEVELOPER
+  PORT_DEVELOPER
+  PUBLISHER
+  DISTRIBUTOR
+}
+
+enum ProductIdentifierScheme {
+  PRODUCT_CODE
+  UPC
+  EAN
+  OTHER
+}
+
+enum CollectionItemType {
+  CONSOLE
+  GAME
+  ACCESSORY
+}
+
+enum PublicationStatus {
+  PRIVATE
+  PUBLISHED
+}
+
+enum LocationType {
+  PROPERTY
+  ROOM
+  FURNITURE
+  SHELF
+  CONTAINER
+  CUSTOM
+}
+
+enum DefectSeverity {
+  COSMETIC
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum DefectStatus {
+  ACTIVE
+  REPAIRED
+  ACCEPTED
+}
+
+enum MetadataOrigin {
+  MANUAL
+  SEED
+  PROVIDER
+  AI_ASSISTED
+}
+
+model AppSettings {
+  id                    Int             @id @default(1)
+  collectionName        String          @default("GemuKore")
+  collectionDescription String?
+  defaultTheme          ThemePreference @default(SYSTEM)
+  timezone              String          @default("UTC")
+  preferredCurrency     String?         @db.VarChar(3)
+  revision              Int             @default(1)
+  createdAt             DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime        @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@map("app_settings")
+}
+
+model PublicSettings {
+  id                        Int      @id @default(1)
+  publicCollectionEnabled   Boolean  @default(false)
+  allowSearchEngineIndexing Boolean  @default(false)
+  showSerialNumbers         Boolean  @default(false)
+  showLocations             Boolean  @default(false)
+  showNotes                 Boolean  @default(false)
+  showDefects               Boolean  @default(false)
+  showPersonalPhotos        Boolean  @default(false)
+  revision                  Int      @default(1)
+  createdAt                 DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@map("public_settings")
+}
+
+model Company {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  slug               String               @unique
+  seedKey            String?              @unique
+  archivedAt         DateTime?            @db.Timestamptz(3)
+  revision           Int                  @default(1)
+  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamptz(3)
+  description        String?
+  countryCode        String?              @db.VarChar(2)
+  foundedYear        Int?
+  website            String?
+  aliases            String[]             @default([])
+  platforms          ConsolePlatform[]
+  consoleModels      ConsoleModel[]
+  accessories        Accessory[]
+  accessoryVariants  AccessoryVariant[]
+  gameCredits        GameCompany[]
+  releaseCredits     GameReleaseCompany[]
+  externalReferences ExternalReference[]
+  metadataChanges    MetadataChange[]
+
+  @@map("company")
+}
+
+model Region {
+  id                String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  slug              String                   @unique
+  seedKey           String?                  @unique
+  archivedAt        DateTime?                @db.Timestamptz(3)
+  revision          Int                      @default(1)
+  createdAt         DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                 @default(now()) @updatedAt @db.Timestamptz(3)
+  code              String                   @unique
+  description       String?
+  consoleModels     ConsoleModelRegion[]
+  gameReleases      GameReleaseRegion[]
+  accessoryVariants AccessoryVariantRegion[]
+  metadataChanges   MetadataChange[]
+
+  @@map("region")
+}
+
+model ConsolePlatform {
+  id                  String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String
+  slug                String                     @unique
+  seedKey             String?                    @unique
+  archivedAt          DateTime?                  @db.Timestamptz(3)
+  revision            Int                        @default(1)
+  createdAt           DateTime                   @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                   @default(now()) @updatedAt @db.Timestamptz(3)
+  manufacturerId      String?                    @db.Uuid
+  manufacturer        Company?                   @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  generation          Int?
+  originalReleaseYear Int?
+  discontinuedYear    Int?
+  description         String?
+  history             String?
+  aliases             String[]                   @default([])
+  models              ConsoleModel[]
+  gameReleases        GameRelease[]
+  accessoryVariants   AccessoryVariantPlatform[]
+  externalReferences  ExternalReference[]
+  metadataChanges     MetadataChange[]
+
+  @@index([manufacturerId])
+  @@map("console_platform")
+}
+
+model ConsoleModel {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  slug                 String               @unique
+  seedKey              String?              @unique
+  archivedAt           DateTime?            @db.Timestamptz(3)
+  revision             Int                  @default(1)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime             @default(now()) @updatedAt @db.Timestamptz(3)
+  platformId           String               @db.Uuid
+  platform             ConsolePlatform      @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  manufacturerId       String?              @db.Uuid
+  manufacturer         Company?             @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  modelNumber          String?
+  releaseYear          Int?
+  discontinuedYear     Int?
+  description          String?
+  specifications       Json?
+  widthMm              Decimal?             @db.Decimal(10, 3)
+  heightMm             Decimal?             @db.Decimal(10, 3)
+  depthMm              Decimal?             @db.Decimal(10, 3)
+  weightGrams          Decimal?             @db.Decimal(12, 3)
+  regionLock           RegionLock?
+  regionLockNote       String?
+  identificationStatus IdentificationStatus @default(INCOMPLETE)
+  regions              ConsoleModelRegion[]
+  ownedConsoles        OwnedConsole[]
+  identifiers          ProductIdentifier[]
+  externalReferences   ExternalReference[]
+  metadataChanges      MetadataChange[]
+
+  @@index([platformId])
+  @@index([manufacturerId])
+  @@index([modelNumber])
+  @@map("console_model")
+}
+
+model ConsoleModelRegion {
+  consoleModelId String       @db.Uuid
+  regionId       String       @db.Uuid
+  consoleModel   ConsoleModel @relation(fields: [consoleModelId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  region         Region       @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([consoleModelId, regionId])
+  @@index([regionId, consoleModelId])
+  @@map("console_model_region")
+}
+
+model Game {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  slug               String              @unique
+  seedKey            String?             @unique
+  archivedAt         DateTime?           @db.Timestamptz(3)
+  revision           Int                 @default(1)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+  description        String?
+  aliases            String[]            @default([])
+  releases           GameRelease[]
+  companies          GameCompany[]
+  externalReferences ExternalReference[]
+  metadataChanges    MetadataChange[]
+
+  @@map("game")
+}
+
+model GameRelease {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                 String               @unique
+  seedKey              String?              @unique
+  archivedAt           DateTime?            @db.Timestamptz(3)
+  revision             Int                  @default(1)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime             @default(now()) @updatedAt @db.Timestamptz(3)
+  gameId               String               @db.Uuid
+  platformId           String               @db.Uuid
+  game                 Game                 @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platform             ConsolePlatform      @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  editionName          String?
+  editionType          GameEditionType      @default(STANDARD)
+  printingLabel        String?
+  firstReleaseYear     Int?
+  languages            String[]             @default([])
+  descriptionOverride  String?
+  metadata             Json?
+  regionLock           RegionLock?
+  regionLockNote       String?
+  identificationStatus IdentificationStatus @default(INCOMPLETE)
+  regions              GameReleaseRegion[]
+  companies            GameReleaseCompany[]
+  ownedGames           OwnedGame[]
+  identifiers          ProductIdentifier[]
+  externalReferences   ExternalReference[]
+  metadataChanges      MetadataChange[]
+
+  @@index([gameId, platformId])
+  @@index([platformId])
+  @@map("game_release")
+}
+
+model GameReleaseRegion {
+  gameReleaseId String               @db.Uuid
+  regionId      String               @db.Uuid
+  releaseYear   Int?
+  releaseMonth  Int?
+  releaseDay    Int?
+  gameRelease   GameRelease          @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  region        Region               @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  companies     GameReleaseCompany[]
+
+  @@id([gameReleaseId, regionId])
+  @@index([regionId, gameReleaseId])
+  @@map("game_release_region")
+}
+
+model GameCompany {
+  gameId      String            @db.Uuid
+  companyId   String            @db.Uuid
+  role        CompanyCreditRole @default(DEVELOPER)
+  creditLabel String?
+  sortOrder   Int               @default(0)
+  game        Game              @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([gameId, companyId, role])
+  @@index([companyId, gameId])
+  @@map("game_company")
+}
+
+model GameReleaseCompany {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameReleaseId String             @db.Uuid
+  companyId     String             @db.Uuid
+  regionId      String?            @db.Uuid
+  role          CompanyCreditRole
+  creditLabel   String?
+  sortOrder     Int                @default(0)
+  gameRelease   GameRelease        @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  company       Company            @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  releaseRegion GameReleaseRegion? @relation(fields: [gameReleaseId, regionId], references: [gameReleaseId, regionId], onDelete: Restrict, onUpdate: Restrict)
+
+  // Scoped/unscoped uniqueness is enforced by partial indexes in migration SQL.
+  @@index([gameReleaseId, regionId])
+  @@index([companyId, role, gameReleaseId])
+  @@map("game_release_company")
+}
+
+model Accessory {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  slug               String              @unique
+  seedKey            String?             @unique
+  archivedAt         DateTime?           @db.Timestamptz(3)
+  revision           Int                 @default(1)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+  producerId         String?             @db.Uuid
+  producer           Company?            @relation(fields: [producerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  description        String?
+  releaseYear        Int?
+  specifications     Json?
+  variants           AccessoryVariant[]
+  externalReferences ExternalReference[]
+  metadataChanges    MetadataChange[]
+
+  @@index([producerId])
+  @@map("accessory")
+}
+
+model AccessoryVariant {
+  id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String
+  slug                   String                     @unique
+  seedKey                String?                    @unique
+  archivedAt             DateTime?                  @db.Timestamptz(3)
+  revision               Int                        @default(1)
+  createdAt              DateTime                   @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime                   @default(now()) @updatedAt @db.Timestamptz(3)
+  accessoryId            String                     @db.Uuid
+  accessory              Accessory                  @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  producerId             String?                    @db.Uuid
+  producer               Company?                   @relation(fields: [producerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  modelNumber            String?
+  color                  String?
+  edition                String?
+  releaseYear            Int?
+  descriptionOverride    String?
+  specificationsOverride Json?
+  regionLock             RegionLock?
+  regionLockNote         String?
+  identificationStatus   IdentificationStatus       @default(INCOMPLETE)
+  regions                AccessoryVariantRegion[]
+  platforms              AccessoryVariantPlatform[]
+  ownedAccessories       OwnedAccessory[]
+  identifiers            ProductIdentifier[]
+  externalReferences     ExternalReference[]
+  metadataChanges        MetadataChange[]
+
+  @@index([accessoryId])
+  @@index([producerId])
+  @@index([modelNumber])
+  @@map("accessory_variant")
+}
+
+model AccessoryVariantRegion {
+  accessoryVariantId String           @db.Uuid
+  regionId           String           @db.Uuid
+  accessoryVariant   AccessoryVariant @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  region             Region           @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([accessoryVariantId, regionId])
+  @@index([regionId, accessoryVariantId])
+  @@map("accessory_variant_region")
+}
+
+model AccessoryVariantPlatform {
+  accessoryVariantId String           @db.Uuid
+  platformId         String           @db.Uuid
+  compatibilityNote  String?
+  accessoryVariant   AccessoryVariant @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  platform           ConsolePlatform  @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([accessoryVariantId, platformId])
+  @@index([platformId, accessoryVariantId])
+  @@map("accessory_variant_platform")
+}
+
+model ProductIdentifier {
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheme             ProductIdentifierScheme
+  value              String
+  normalizedValue    String
+  issuer             String?
+  marketNote         String?
+  consoleModelId     String?                 @db.Uuid
+  consoleModel       ConsoleModel?           @relation(fields: [consoleModelId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameReleaseId      String?                 @db.Uuid
+  gameRelease        GameRelease?            @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  accessoryVariantId String?                 @db.Uuid
+  accessoryVariant   AccessoryVariant?       @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  createdAt          DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime                @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@unique([consoleModelId, scheme, normalizedValue])
+  @@unique([gameReleaseId, scheme, normalizedValue])
+  @@unique([accessoryVariantId, scheme, normalizedValue])
+  @@index([scheme, normalizedValue])
+  @@map("product_identifier")
+}
+
+model ExternalReference {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider           String
+  providerObjectType String?
+  externalId         String?
+  url                String?
+  normalizedUrl      String?
+  metadata           Json?
+  companyId          String?           @db.Uuid
+  company            Company?          @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platformId         String?           @db.Uuid
+  platform           ConsolePlatform?  @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  consoleModelId     String?           @db.Uuid
+  consoleModel       ConsoleModel?     @relation(fields: [consoleModelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameId             String?           @db.Uuid
+  game               Game?             @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameReleaseId      String?           @db.Uuid
+  gameRelease        GameRelease?      @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryId        String?           @db.Uuid
+  accessory          Accessory?        @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryVariantId String?           @db.Uuid
+  accessoryVariant   AccessoryVariant? @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdAt          DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime          @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@unique([companyId, provider, providerObjectType, externalId])
+  @@unique([platformId, provider, providerObjectType, externalId])
+  @@unique([consoleModelId, provider, providerObjectType, externalId])
+  @@unique([gameId, provider, providerObjectType, externalId])
+  @@unique([gameReleaseId, provider, providerObjectType, externalId])
+  @@unique([accessoryId, provider, providerObjectType, externalId])
+  @@unique([accessoryVariantId, provider, providerObjectType, externalId])
+  // URL-only uniqueness is enforced by per-target partial indexes in SQL.
+  @@index([provider, providerObjectType, externalId])
+  @@map("external_reference")
+}
+
+model Location {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  normalizedName String
+  parentId       String?          @db.Uuid
+  parent         Location?        @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  children       Location[]       @relation("LocationHierarchy")
+  type           LocationType     @default(CUSTOM)
+  description    String?
+  sortOrder      Int              @default(0)
+  items          CollectionItem[]
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @default(now()) @updatedAt @db.Timestamptz(3)
+
+  // Root-name uniqueness is a partial SQL index; NULL is not a sibling ID.
+  @@unique([parentId, normalizedName])
+  @@index([parentId, sortOrder, id])
+  @@map("location")
+}
+
+model CollectionItem {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type              CollectionItemType
+  serialNumber      String?
+  observedMarkings  String?
+  locationId        String?            @db.Uuid
+  location          Location?          @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  hasBox            Boolean?
+  notes             String?
+  publicationStatus PublicationStatus  @default(PRIVATE)
+  publishedAt       DateTime?          @db.Timestamptz(3)
+  publishedById     String?            @db.Uuid
+  publishedBy       User?              @relation("ItemPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  createdById       String?            @db.Uuid
+  createdBy         User?              @relation("ItemCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById       String?            @db.Uuid
+  updatedBy         User?              @relation("ItemUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  revision          Int                @default(1)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @default(now()) @updatedAt @db.Timestamptz(3)
+  ownedConsole      OwnedConsole?
+  ownedGame         OwnedGame?
+  ownedAccessory    OwnedAccessory?
+  defects           Defect[]
+
+  // Fixed child types + composite FKs + deferred SQL constraint triggers.
+  @@unique([id, type])
+  @@index([createdAt, id])
+  @@index([type, createdAt, id])
+  @@index([locationId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([publishedById])
+  @@map("collection_item")
+}
+
+model OwnedConsole {
+  collectionItemId String             @id @db.Uuid
+  type             CollectionItemType @default(CONSOLE)
+  collectionItem   CollectionItem     @relation(fields: [collectionItemId, type], references: [id, type], onDelete: Cascade, onUpdate: Restrict)
+  consoleModelId   String             @db.Uuid
+  consoleModel     ConsoleModel       @relation(fields: [consoleModelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([collectionItemId, type])
+  @@index([consoleModelId])
+  @@map("owned_console")
+}
+
+model OwnedGame {
+  collectionItemId String             @id @db.Uuid
+  type             CollectionItemType @default(GAME)
+  collectionItem   CollectionItem     @relation(fields: [collectionItemId, type], references: [id, type], onDelete: Cascade, onUpdate: Restrict)
+  gameReleaseId    String             @db.Uuid
+  gameRelease      GameRelease        @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([collectionItemId, type])
+  @@unique([collectionItemId, gameReleaseId])
+  @@index([gameReleaseId])
+  @@map("owned_game")
+}
+
+model OwnedAccessory {
+  collectionItemId   String             @id @db.Uuid
+  type               CollectionItemType @default(ACCESSORY)
+  collectionItem     CollectionItem     @relation(fields: [collectionItemId, type], references: [id, type], onDelete: Cascade, onUpdate: Restrict)
+  accessoryVariantId String             @db.Uuid
+  accessoryVariant   AccessoryVariant   @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([collectionItemId, type])
+  @@index([accessoryVariantId])
+  @@map("owned_accessory")
+}
+
+model Defect {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collectionItemId String         @db.Uuid
+  collectionItem   CollectionItem @relation(fields: [collectionItemId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  title            String
+  description      String?
+  severity         DefectSeverity
+  status           DefectStatus   @default(ACTIVE)
+  resolvedAt       DateTime?      @db.Timestamptz(3)
+  repairNote       String?
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime       @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@index([collectionItemId, status])
+  @@map("defect")
+}
+
+model MetadataChange {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fieldPath             String
+  before                Json
+  after                 Json
+  rootRevision          Int
+  origin                MetadataOrigin
+  sourceSnapshot        Json?
+  snapshotSchemaVersion Int               @default(1)
+  actorId               String?           @db.Uuid
+  actor                 User?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt             DateTime          @default(now()) @db.Timestamptz(3)
+  companyId             String?           @db.Uuid
+  company               Company?          @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  regionId              String?           @db.Uuid
+  region                Region?           @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platformId            String?           @db.Uuid
+  platform              ConsolePlatform?  @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  consoleModelId        String?           @db.Uuid
+  consoleModel          ConsoleModel?     @relation(fields: [consoleModelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameId                String?           @db.Uuid
+  game                  Game?             @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameReleaseId         String?           @db.Uuid
+  gameRelease           GameRelease?      @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryId           String?           @db.Uuid
+  accessory             Accessory?        @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryVariantId    String?           @db.Uuid
+  accessoryVariant      AccessoryVariant? @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([companyId, rootRevision, fieldPath])
+  @@unique([regionId, rootRevision, fieldPath])
+  @@unique([platformId, rootRevision, fieldPath])
+  @@unique([consoleModelId, rootRevision, fieldPath])
+  @@unique([gameId, rootRevision, fieldPath])
+  @@unique([gameReleaseId, rootRevision, fieldPath])
+  @@unique([accessoryId, rootRevision, fieldPath])
+  @@unique([accessoryVariantId, rootRevision, fieldPath])
+  @@index([actorId])
+  @@map("metadata_change")
 }
