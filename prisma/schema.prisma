@@ -12,19 +12,24 @@ datasource db {
 // Core catalog/collection: DOMAIN_MODEL.md §10. Deferred features have no placeholder FKs.
 
 model User {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  email           String
-  emailVerified   Boolean          @default(false)
-  image           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  sessions        Session[]
-  accounts        Account[]
-  createdItems    CollectionItem[] @relation("ItemCreator")
-  updatedItems    CollectionItem[] @relation("ItemUpdater")
-  publishedItems  CollectionItem[] @relation("ItemPublisher")
-  metadataChanges MetadataChange[]
+  uploadedAssets        Asset[]               @relation("AssetUploader")
+  reviewedAssets        Asset[]               @relation("AssetReviewer")
+  approvedCatalogAssets CatalogAsset[]        @relation("CatalogAssetApprover")
+  approvedItemMedia     CollectionItemMedia[] @relation("ItemMediaApprover")
+  approvedAppAssets     AppAsset[]            @relation("AppAssetApprover")
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  email                 String
+  emailVerified         Boolean               @default(false)
+  image                 String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  sessions              Session[]
+  accounts              Account[]
+  createdItems          CollectionItem[]      @relation("ItemCreator")
+  updatedItems          CollectionItem[]      @relation("ItemUpdater")
+  publishedItems        CollectionItem[]      @relation("ItemPublisher")
+  metadataChanges       MetadataChange[]
 
   @@unique([email])
   @@map("user")
@@ -186,6 +191,7 @@ enum MetadataOrigin {
 }
 
 model AppSettings {
+  assets                AppAsset[]
   id                    Int             @id @default(1)
   collectionName        String          @default("GemuKore")
   collectionDescription String?
@@ -216,6 +222,7 @@ model PublicSettings {
 }
 
 model Company {
+  assets             CatalogAsset[]
   id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name               String
   slug               String               @unique
@@ -261,6 +268,7 @@ model Region {
 }
 
 model ConsolePlatform {
+  assets              CatalogAsset[]
   id                  String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                String
   slug                String                     @unique
@@ -288,6 +296,7 @@ model ConsolePlatform {
 }
 
 model ConsoleModel {
+  assets               CatalogAsset[]
   id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String
   slug                 String               @unique
@@ -336,6 +345,7 @@ model ConsoleModelRegion {
 }
 
 model Game {
+  assets             CatalogAsset[]
   id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name               String
   slug               String              @unique
@@ -355,6 +365,7 @@ model Game {
 }
 
 model GameRelease {
+  assets               CatalogAsset[]
   id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug                 String               @unique
   seedKey              String?              @unique
@@ -436,6 +447,7 @@ model GameReleaseCompany {
 }
 
 model Accessory {
+  assets             CatalogAsset[]
   id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name               String
   slug               String              @unique
@@ -458,6 +470,7 @@ model Accessory {
 }
 
 model AccessoryVariant {
+  assets                 CatalogAsset[]
   id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                   String
   slug                   String                     @unique
@@ -596,25 +609,26 @@ model Location {
 }
 
 model CollectionItem {
-  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  media             CollectionItemMedia[]
+  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type              CollectionItemType
   serialNumber      String?
   observedMarkings  String?
-  locationId        String?            @db.Uuid
-  location          Location?          @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  locationId        String?               @db.Uuid
+  location          Location?             @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   hasBox            Boolean?
   notes             String?
-  publicationStatus PublicationStatus  @default(PRIVATE)
-  publishedAt       DateTime?          @db.Timestamptz(3)
-  publishedById     String?            @db.Uuid
-  publishedBy       User?              @relation("ItemPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
-  createdById       String?            @db.Uuid
-  createdBy         User?              @relation("ItemCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  updatedById       String?            @db.Uuid
-  updatedBy         User?              @relation("ItemUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
-  revision          Int                @default(1)
-  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime           @default(now()) @updatedAt @db.Timestamptz(3)
+  publicationStatus PublicationStatus     @default(PRIVATE)
+  publishedAt       DateTime?             @db.Timestamptz(3)
+  publishedById     String?               @db.Uuid
+  publishedBy       User?                 @relation("ItemPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  createdById       String?               @db.Uuid
+  createdBy         User?                 @relation("ItemCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById       String?               @db.Uuid
+  updatedBy         User?                 @relation("ItemUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  revision          Int                   @default(1)
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @default(now()) @updatedAt @db.Timestamptz(3)
   ownedConsole      OwnedConsole?
   ownedGame         OwnedGame?
   ownedAccessory    OwnedAccessory?
@@ -731,4 +745,239 @@ model MetadataChange {
   @@index([accessoryVariantId, createdAt, id])
   @@index([actorId])
   @@map("metadata_change")
+}
+
+// Phase 5: logical files, fixed lineage and explicitly approved uses.
+enum AssetKind {
+  IMAGE
+  MODEL_3D
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
+enum AssetScope {
+  CATALOG
+  COLLECTION
+}
+
+enum AssetDeliveryClass {
+  ORIGINAL
+  DISPLAY
+}
+
+enum AssetState {
+  PENDING
+  READY
+  FAILED
+  DELETING
+}
+
+enum AssetSourceType {
+  USER_UPLOAD
+  CURATED
+  EXTERNAL_PROVIDER
+  AI_ASSISTED
+  IMPORTED
+}
+
+enum AssetRightsStatus {
+  UNKNOWN
+  APPROVED
+  RESTRICTED
+}
+
+enum AssetDependencyPurpose {
+  RESIZE
+  SANITIZE
+  RENDER_INPUT
+}
+
+enum CatalogAssetRole {
+  LOGO
+  COVER
+  SCREENSHOT
+  GALLERY
+  MODEL_3D
+  VIDEO
+  PREVIEW
+}
+
+enum CollectionMediaType {
+  PHOTO
+  FRONT
+  BACK
+  LEFT
+  RIGHT
+  TOP
+  BOTTOM
+  SERIAL
+  BOX
+  DAMAGE
+  OTHER
+  CUSTOM_LOGO
+  CUSTOM_MODEL
+}
+
+enum AppAssetRole {
+  COLLECTION_LOGO
+}
+
+model Asset {
+  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind              AssetKind
+  scope             AssetScope
+  deliveryClass     AssetDeliveryClass    @default(ORIGINAL)
+  state             AssetState            @default(PENDING)
+  storageNamespace  String
+  objectKey         String
+  mimeType          String?
+  sizeBytes         BigInt?
+  width             Int?
+  height            Int?
+  durationSeconds   Float?
+  originalFilename  String?
+  sha256            String?               @db.VarChar(64)
+  sourceType        AssetSourceType       @default(USER_UPLOAD)
+  provider          String?
+  sourceUrl         String?
+  author            String?
+  licenseName       String?
+  licenseUrl        String?
+  attribution       String?
+  usageRestrictions String?
+  retrievedAt       DateTime?             @db.Timestamptz(3)
+  rightsStatus      AssetRightsStatus     @default(UNKNOWN)
+  publicSafe        Boolean               @default(false)
+  reviewedById      String?               @db.Uuid
+  reviewedBy        User?                 @relation("AssetReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  reviewedAt        DateTime?             @db.Timestamptz(3)
+  uploadedById      String?               @db.Uuid
+  uploadedBy        User?                 @relation("AssetUploader", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  metadata          Json?
+  transformMetadata Json?
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @default(now()) @updatedAt @db.Timestamptz(3)
+  inputs            AssetDependency[]     @relation("DerivedAsset")
+  outputs           AssetDependency[]     @relation("SourceAsset")
+  catalogUses       CatalogAsset[]        @relation("CatalogPrivateAsset")
+  catalogPublicUses CatalogAsset[]        @relation("CatalogPublicAsset")
+  itemUses          CollectionItemMedia[] @relation("ItemPrivateAsset")
+  itemPublicUses    CollectionItemMedia[] @relation("ItemPublicAsset")
+  appUses           AppAsset[]            @relation("AppPrivateAsset")
+  appPublicUses     AppAsset[]            @relation("AppPublicAsset")
+
+  @@unique([storageNamespace, objectKey])
+  @@index([sha256])
+  @@index([state, createdAt])
+  @@index([uploadedById])
+  @@index([reviewedById])
+  @@map("asset")
+}
+
+model AssetDependency {
+  derivedAssetId String                 @db.Uuid
+  sourceAssetId  String                 @db.Uuid
+  purpose        AssetDependencyPurpose
+  derivedAsset   Asset                  @relation("DerivedAsset", fields: [derivedAssetId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  sourceAsset    Asset                  @relation("SourceAsset", fields: [sourceAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([derivedAssetId, sourceAssetId])
+  @@index([sourceAssetId, derivedAssetId])
+  @@map("asset_dependency")
+}
+
+model CatalogAsset {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String?           @db.Uuid
+  company              Company?          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  consolePlatformId    String?           @db.Uuid
+  consolePlatform      ConsolePlatform?  @relation(fields: [consolePlatformId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  consoleModelId       String?           @db.Uuid
+  consoleModel         ConsoleModel?     @relation(fields: [consoleModelId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameId               String?           @db.Uuid
+  game                 Game?             @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameReleaseId        String?           @db.Uuid
+  gameRelease          GameRelease?      @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  accessoryId          String?           @db.Uuid
+  accessory            Accessory?        @relation(fields: [accessoryId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  accessoryVariantId   String?           @db.Uuid
+  accessoryVariant     AccessoryVariant? @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  role                 CatalogAssetRole
+  isPrimary            Boolean           @default(false)
+  caption              String?
+  altText              String?
+  sortOrder            Int               @default(0)
+  assetId              String            @db.Uuid
+  asset                Asset             @relation("CatalogPrivateAsset", fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicDisplayAssetId String?           @db.Uuid
+  publicDisplayAsset   Asset?            @relation("CatalogPublicAsset", fields: [publicDisplayAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicApproved       Boolean           @default(false)
+  approvedById         String?           @db.Uuid
+  approvedBy           User?             @relation("CatalogAssetApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  approvedAt           DateTime?         @db.Timestamptz(3)
+  createdAt            DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime          @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@index([assetId])
+  @@index([publicDisplayAssetId])
+  @@index([approvedById])
+  @@index([companyId, role, sortOrder])
+  @@index([consolePlatformId, role, sortOrder])
+  @@index([consoleModelId, role, sortOrder])
+  @@index([gameId, role, sortOrder])
+  @@index([gameReleaseId, role, sortOrder])
+  @@index([accessoryId, role, sortOrder])
+  @@index([accessoryVariantId, role, sortOrder])
+  @@map("catalog_asset")
+}
+
+model CollectionItemMedia {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collectionItemId     String              @db.Uuid
+  collectionItem       CollectionItem      @relation(fields: [collectionItemId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  type                 CollectionMediaType @default(PHOTO)
+  isPrimary            Boolean             @default(false)
+  caption              String?
+  altText              String?
+  sortOrder            Int                 @default(0)
+  assetId              String              @db.Uuid
+  asset                Asset               @relation("ItemPrivateAsset", fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicDisplayAssetId String?             @db.Uuid
+  publicDisplayAsset   Asset?              @relation("ItemPublicAsset", fields: [publicDisplayAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicApproved       Boolean             @default(false)
+  approvedById         String?             @db.Uuid
+  approvedBy           User?               @relation("ItemMediaApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  approvedAt           DateTime?           @db.Timestamptz(3)
+  createdAt            DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@index([collectionItemId, sortOrder, id])
+  @@index([assetId])
+  @@index([publicDisplayAssetId])
+  @@index([approvedById])
+  @@map("collection_item_media")
+}
+
+model AppAsset {
+  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appSettingsId        Int          @default(1)
+  appSettings          AppSettings  @relation(fields: [appSettingsId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  role                 AppAssetRole @default(COLLECTION_LOGO)
+  assetId              String       @db.Uuid
+  asset                Asset        @relation("AppPrivateAsset", fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicDisplayAssetId String?      @db.Uuid
+  publicDisplayAsset   Asset?       @relation("AppPublicAsset", fields: [publicDisplayAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicApproved       Boolean      @default(false)
+  approvedById         String?      @db.Uuid
+  approvedBy           User?        @relation("AppAssetApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  approvedAt           DateTime?    @db.Timestamptz(3)
+  createdAt            DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime     @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@unique([appSettingsId, role])
+  @@index([assetId])
+  @@index([publicDisplayAssetId])
+  @@index([approvedById])
+  @@map("app_asset")
 }

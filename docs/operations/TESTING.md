@@ -12,6 +12,7 @@ pnpm test:e2e:install
 pnpm test
 pnpm test:integration
 pnpm test:storage
+pnpm test:assets
 pnpm test:e2e
 pnpm test:e2e:access
 ```
@@ -162,3 +163,7 @@ Verified on 2026-10-03:
 ## References
 
 The setup follows the official [Next.js Vitest guide](https://nextjs.org/docs/app/guides/testing/vitest), [Vitest global setup](https://vitest.dev/config/globalsetup), [React Testing Library setup](https://testing-library.com/docs/react-testing-library/setup/) and [Playwright web server guidance](https://playwright.dev/docs/test-webserver).
+
+## Asset pipeline integration
+
+Task 5.3 adds `pnpm test:assets`, using `vitest.assets.config.mts` with both isolated PostgreSQL and MinIO setup. It exercises real file processing, authenticated request handlers, private storage, lifecycle/use constraints, pending recovery and cleanup. It never inherits personal storage credentials. Browser smoke checks now also test anonymous upload/completion/GET/HEAD denial on desktop and mobile. See [ASSET_UPLOADS.md](ASSET_UPLOADS.md) for the contract and coverage. Utility cases remain scheduled for Task 5.4.

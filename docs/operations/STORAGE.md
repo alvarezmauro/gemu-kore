@@ -63,3 +63,7 @@ Final Task 5.2 verification: 145 unit/component tests, 32 storage tests, 198 iso
 The production dependency audit still reports the two previously reviewed tooling advisories in `deepmerge-ts` and `braces`; the new SDK introduces no additional reported advisory. See [AUTH_SECURITY_REVIEW.md](../architecture/AUTH_SECURITY_REVIEW.md). The known nonfailing pg adapter deprecation is unchanged. No dependency warning is suppressed or unrelated dependency upgraded.
 
 Next: **Task 5.3 — Asset Upload Pipeline**. Cloud providers have not been exercised live; before deployment, run equivalent private byte/range/error/retention checks using an isolated bucket and the selected production account.
+
+## Task 5.3 handoff
+
+The adapter is now used by the authenticated upload/completion and private-media endpoints. Asset records, content validation, derivatives and explicit cleanup are described in [ASSET_UPLOADS.md](ASSET_UPLOADS.md). The earlier Task 5.2 scope statements above are historical. Public buckets, signed URL APIs, publication, cloud compatibility tests and automatic cleanup remain outside this implementation.

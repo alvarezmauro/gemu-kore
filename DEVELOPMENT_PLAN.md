@@ -918,6 +918,8 @@ Implement:
 - image metadata
 - Asset records
 
+Status: **Completed 2026-10-04.** Added the approved Asset/dependency/catalog/item/application-use models through additive migrations, preserving independent content-safety and rights reviews. Implemented authenticated same-origin uploads, actual MIME/size/resource validation, immutable generated keys, exact original retention, oriented metadata-free WebP derivatives, bounded self-contained GLB validation, atomic READY/use finalization, hash-verified idempotent completion, private no-store GET/HEAD/ranges and explicit reference-aware cleanup/retries. Pinned Sharp and the official Khronos validator with documented processing/hosting limits. All 154 unit/component, 25 isolated full asset-pipeline, 32 storage, 198 PostgreSQL and 66 desktop/mobile browser tests pass (475 total), with lint, typechecking, formatting, production builds and whitespace checks. Local migrations, connectivity and schema drift checks pass; the refreshed Docker app, preview and private-login redirect pass browser verification. The empty development bucket was provisioned privately; unsigned access is denied and the Linux decoder is ready. No personal test records/files, public delivery, upload form, viewer, background queue, automatic cleanup or future-phase feature. Known pg deprecation and the two previously reviewed tooling advisories remain; new dependencies add no reported advisory. Contract, limits and recovery: [docs/operations/ASSET_UPLOADS.md](docs/operations/ASSET_UPLOADS.md). Next: Task 5.4.
+
 ---
 
 ## TASK 5.4 — Asset Utility Tests
