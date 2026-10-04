@@ -36,6 +36,19 @@ test("private entry redirects to sign-in and ignores an external return path", a
   ).toBeVisible();
 });
 
+test("private locations redirect to sign-in without exposing hierarchy data", async ({
+  page,
+}) => {
+  await page.goto("/app/locations");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(
+    page.getByRole("list", { name: "Location hierarchy" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Add location" })).toHaveCount(
+    0,
+  );
+});
+
 test("callback errors render a generic retry message", async ({ page }) => {
   await page.goto(
     "/login?error=provider_rejected&error_description=private-provider-details",

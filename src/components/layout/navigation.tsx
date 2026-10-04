@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { LayoutGrid, Layers, TextCursorInput, Inbox } from "lucide-react";
+import {
+  LayoutGrid,
+  Layers,
+  TextCursorInput,
+  Inbox,
+  MapPin,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const icons = {
@@ -7,6 +13,7 @@ const icons = {
   cards: Layers,
   forms: TextCursorInput,
   feedback: Inbox,
+  locations: MapPin,
 };
 
 export type NavigationItem = {

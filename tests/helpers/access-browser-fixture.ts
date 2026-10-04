@@ -14,7 +14,47 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset") {
+    if (command === "reset-locations") {
+      await database.$executeRaw`TRUNCATE TABLE location CASCADE`;
+    } else if (command === "seed-locations") {
+      const home = await database.location.create({
+        data: { name: "Home", normalizedName: "home", type: "PROPERTY" },
+      });
+      await database.location.create({
+        data: {
+          name: "Other",
+          normalizedName: "other",
+          type: "PROPERTY",
+          sortOrder: 1,
+        },
+      });
+      const office = await database.location.create({
+        data: {
+          name: "Office",
+          normalizedName: "office",
+          parentId: home.id,
+          type: "ROOM",
+        },
+      });
+      const cabinet = await database.location.create({
+        data: {
+          name: "Retro Cabinet",
+          normalizedName: "retro cabinet",
+          parentId: office.id,
+          type: "FURNITURE",
+        },
+      });
+      await database.location.create({
+        data: {
+          name: "Shelf 2",
+          normalizedName: "shelf 2",
+          parentId: cabinet.id,
+          type: "SHELF",
+        },
+      });
+    } else if (command === "location-count") {
+      result = await database.location.count();
+    } else if (command === "reset") {
       await database.accessGrant.deleteMany();
       await database.user.deleteMany();
     } else if (command === "sign-in") {

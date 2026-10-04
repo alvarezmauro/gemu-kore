@@ -3,6 +3,8 @@ import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { getPrivateWelcomePageData } from "@/features/auth/queries.server";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -33,9 +35,12 @@ export default async function PrivateEntryPage() {
             : "Viewer"}
       </Badge>
       <p className="text-sm text-muted-foreground">
-        Your collection workspace is being prepared. Item management will be
-        available as the application takes shape.
+        Organize the places where you keep your collection. Item management will
+        be available as the application takes shape.
       </p>
+      <Button asChild variant="outline">
+        <Link href="/app/locations">Manage locations</Link>
+      </Button>
       <SignOutButton />
     </AuthCard>
   );

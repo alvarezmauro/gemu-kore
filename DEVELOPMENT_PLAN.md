@@ -975,6 +975,8 @@ Home
 / Shelf 2
 ```
 
+Status: **Completed 2026-10-04.** Added the private `/app/locations` manager and a link from the private entry page. Viewers can browse; editors and administrators can add, edit, nest, move, reorder and delete unused locations through authenticated, validated Server Actions. The service serializes hierarchy writes, rejects cycles/concurrent cross-moves and duplicate names, preserves descendant/item IDs, derives current breadcrumbs, blocks occupied/parent deletion and rejects stale edits. Responsive themed controls, accessible dialogs/confirmation, pending/error feedback and retained form values use the existing design system. All 416 unit/component, 226 PostgreSQL integration and 82 desktop/mobile browser tests pass (724 checks), with lint, types, formatting, production browser builds and whitespace validation. No schema/migration, dependency, development-data or future-phase change. Details: [docs/operations/LOCATIONS.md](docs/operations/LOCATIONS.md). Next: Task 6.2.
+
 ---
 
 ## TASK 6.2 — Defects
