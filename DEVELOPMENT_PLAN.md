@@ -873,6 +873,8 @@ The application must not depend directly on one provider.
 
 Honor the privacy contracts from Task 0.2: private originals, explicit media-use approval, approved public display versions and authorized direct file access. MVP model ingestion accepts self-contained GLB only.
 
+Status: **Completed 2026-10-04.** Reviewed MinIO, Cloudflare R2, DigitalOcean Spaces, Backblaze B2 and AWS S3 against the accepted asset, provenance and privacy model. Documented one server-only S3-compatible adapter, four byte operations, logical immutable locators, private buckets, authorized streaming, bounded upload/retry lifecycles, derivative lineage, safe reference-aware cleanup and provider migration/restore. Defined provider configuration differences and implementation acceptance checks; cloud compatibility still requires testing with the pinned adapter and chosen account. Documentation links, formatting and diff whitespace checks pass. No application code, schema, dependency, configuration, bucket or publication change; implementation suites were not rerun for this design task. Architecture and handoff: [docs/architecture/STORAGE_ARCHITECTURE.md](docs/architecture/STORAGE_ARCHITECTURE.md). Next: Task 5.2.
+
 ---
 
 ## TASK 5.2 — Implement Storage Service
