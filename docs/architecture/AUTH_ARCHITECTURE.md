@@ -8,7 +8,7 @@ Use Better Auth for Google/GitHub identity and PostgreSQL-backed sessions. Use t
 
 This follows [PROJECT_SPEC.md §§10–12](../../PROJECT_SPEC.md), accepted decision A09 in [ARCHITECTURE_REVIEW.md](ARCHITECTURE_REVIEW.md), and the boundaries in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md). There is one collection and three roles; no membership framework, password login, auth administration plugin, Redis or separate auth service is needed.
 
-The existing repository has no auth dependency, auth tables or protected product routes. This review specifies their future behavior; it does not claim that any security control is implemented or tested.
+At the time of Task 3.1, the repository had no auth dependency, auth tables or protected product routes. Task 3.2 now implements identity/session integration; its setup and tested scope are recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md). AccessGrant and RBAC remain Tasks 3.3–3.4. The recommendations below describe the complete target architecture, not a claim that every control is already implemented.
 
 ```mermaid
 flowchart TD
@@ -68,7 +68,7 @@ Better Auth 1.7.7 retains `(providerId, accountId)` identity. The short-lived is
 
 ### Google
 
-Keep Better Auth's redirect OAuth flow and built-in token validation. Use the stable Google subject as accountId and require the selected email's `email_verified` evidence. Request only the normal identity scopes. Disable the alternative ID-token sign-in endpoint for the MVP; do not add One Tap/native sign-in without applying the same identity guard. [Google integration](https://better-auth.com/docs/authentication/google).
+Keep Better Auth's redirect OAuth flow and token exchange. Task 3.2 confirms that its Google redirect profile reader decodes the HTTPS token response, so the integration explicitly calls the library's exported `verifyGoogleIdToken` before that reader. This provides the recommended signature/issuer/audience/expiry validation without a custom verifier. Use the stable Google subject as accountId and require the selected email's `email_verified` evidence. Request only the normal identity scopes. Disable the alternative ID-token sign-in endpoint for the MVP; do not add One Tap/native sign-in without applying the same identity guard. [Google integration](https://better-auth.com/docs/authentication/google).
 
 ### GitHub
 
@@ -82,7 +82,7 @@ Accept that deterministic selection only when its own verified flag is true. A d
 
 Place a small project identity guard at the validated provider user-info/callback boundary. Delegate OAuth exchange and provider verification to Better Auth; then require verified normalized email and compare it with the User attached to an existing `(providerId, accountId)`. Use a narrow server-side lookup for that comparison. On mismatch or loss of verification, reject the new login and revoke existing sessions for that binding when detected. Never transfer its grant, automatically update User.email, or force emailVerified to true.
 
-Task 3.2 must prove that the pinned integration seam covers both first and returning logins before treating this guard as complete. Prefer wrapping the built-in provider user-info operation; if using a library hook instead, its exercised coverage must be equivalent. Do not replace the library's token validation with custom JWT decoding.
+Task 3.2 wraps the built-in provider user-info operation and exercises first and returning callbacks against PostgreSQL. This also covers missing selected email before the callback's later validation hooks. Do not replace the library's token validation with custom JWT decoding. Real provider configuration/consent still needs live verification.
 
 Normalize identically on persistence and lookup. Do not remove dots, strip `+suffix`, merge provider aliases, allow domain wildcards or apply fuzzy matching. The provider's selected verified address determines identity. An operator may provision that exact address; a typed address on a login form cannot provide verification.
 
@@ -209,4 +209,4 @@ Task 3.2 must review the library endpoint surface and disable unused link/unlink
 
 Before real OAuth verification, supply the browser origin, Google/GitHub client IDs/secrets and server-only `BETTER_AUTH_SECRET`. Provider callbacks are `/api/auth/callback/google` and `/api/auth/callback/github` under the configured origin. These are operational inputs, not unresolved architecture choices. Add their validation and `.env.example` placeholders in Task 3.2; never commit values or use `NEXT_PUBLIC_*` for secrets. The first administrator's exact verified address is supplied when running Task 3.3's bootstrap.
 
-This task checked repository/spec alignment, published compatibility, pinned provider/callback behavior and documentation consistency. It installed no dependency, generated no schema, changed no application route/configuration and ran no OAuth login. Runtime security and provider integration remain the implementation tasks' responsibility.
+Task 3.1 checked repository/spec alignment, published compatibility, pinned provider/callback behavior and documentation consistency without implementation. Task 3.2's code, migrations and exercised integration boundaries are recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md); live provider login remains unverified until credentials are configured. Grant and role security remain the following implementation tasks' responsibility.

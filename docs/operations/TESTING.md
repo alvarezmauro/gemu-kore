@@ -63,6 +63,8 @@ Desktop and mobile Chromium share the same downloaded browser. This is an initia
 
 The current browser suite supplies a syntactically valid but unavailable test database URL. These read-only starter/health checks require no database and cannot connect to the personal development database. No secrets or private data are placed in fixtures.
 
+Task 3.2 adds real auth callback/session integration tests against the disposable database, with Google/GitHub HTTP responses mocked only in tests. Auth browser checks explicitly blank provider credentials and verify the unavailable setup, anonymous redirects and generic error/denial screens. They do not use the personal OAuth configuration. See [AUTHENTICATION.md](AUTHENTICATION.md) for the live-provider verification boundary and setup.
+
 HTML reports, screenshots and failure traces go into ignored `playwright-report/` and `test-results/` directories. CI rejects accidentally focused tests, uses one worker and retries failures twice; local runs do not retry. No CI deployment pipeline is introduced by this task.
 
 ## Task 1.4 verification

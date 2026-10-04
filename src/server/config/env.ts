@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { databaseUrlSchema } from "./database-env";
+import { authEnvironmentSchema, configuredAuthEnvironment } from "./auth-env";
 
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
@@ -12,13 +13,22 @@ const environmentSchema = z.object({
 export function getServerEnv() {
   // Read runtime values instead of a build-time-inlined NODE_ENV expression.
   const result = environmentSchema.safeParse(process.env);
+  const authResult = authEnvironmentSchema.safeParse(process.env);
 
-  if (!result.success) {
-    const fields = result.error.issues.map((issue) => issue.path.join("."));
+  if (!result.success || !authResult.success) {
+    const fields = [
+      ...(!result.success ? result.error.issues : []),
+      ...(!authResult.success ? authResult.error.issues : []),
+    ].map((issue) => issue.path.join("."));
     throw new Error(`Invalid server environment: ${fields.join(", ")}.`);
   }
 
   return result.data;
+}
+
+export function getAuthEnv() {
+  getServerEnv();
+  return configuredAuthEnvironment(authEnvironmentSchema.parse(process.env));
 }
 
 export function getDatabaseEnv() {

@@ -657,6 +657,8 @@ Make sure OAuth authentication alone cannot grant access.
 
 ## TASK 3.2 — Implement Better Auth
 
+Status: **Completed 2026-10-04.** Better Auth 1.7.7 provides Google/GitHub verified-email login, guarded first/returning identities, fixed PostgreSQL sessions, logout and safe login/denial routes. The four auth models and migration are applied; private application access remains denied until Task 3.3. Lint, typechecking, formatting, production build, 34 unit/component tests, 30 database integration tests and 38 desktop/mobile browser tests pass. Live provider consent/login requires OAuth credentials, which are not configured locally. Setup and verification boundaries are documented in [docs/operations/AUTHENTICATION.md](docs/operations/AUTHENTICATION.md).
+
 MODEL:
 
 `GPT-6 Sol`
