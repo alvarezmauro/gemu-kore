@@ -692,6 +692,8 @@ Reject users not contained in:
 
 `AccessGrant`
 
+Status: **Completed 2026-10-04.** Added the application-owned grant schema/migration, current verified-email grant checks, server-only access context, transactional revalidation and explicit administrator bootstrap/recovery commands. Missing, disabled or deleted grants deny private access; role changes affect existing sessions on the next check. Lint, typechecking, formatting, schema validation, production build, 43 unit/component tests, 57 isolated database integration tests and 50 desktop/mobile browser tests pass. The migration is applied and Docker preview verified. No real administrator was provisioned without its exact verified email. Role permission policy and ordinary grant administration remain Task 3.4. Setup and recovery: [docs/operations/ACCESS_GRANTS.md](docs/operations/ACCESS_GRANTS.md).
+
 ---
 
 ## TASK 3.4 — Implement RBAC

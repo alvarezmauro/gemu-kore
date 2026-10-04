@@ -12,6 +12,7 @@ pnpm test:e2e:install
 pnpm test
 pnpm test:integration
 pnpm test:e2e
+pnpm test:e2e:access
 ```
 
 Unit/component tests need only Node.js. Integration tests also need a running Docker engine and its CLI. Browser tests need Playwright's Chromium download. On a Linux CI runner, use `pnpm exec playwright install --with-deps chromium` to install browser system dependencies as well.
@@ -22,6 +23,7 @@ Unit/component tests need only Node.js. Integration tests also need a running Do
 | `pnpm test:watch`                  | Watch unit and component tests during development.                                                                |
 | `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container. |
 | `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                  |
+| `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
 
 Run lint, typechecking and formatting alongside the applicable suites:
@@ -66,6 +68,16 @@ The current browser suite supplies a syntactically valid but unavailable test da
 Task 3.2 adds real auth callback/session integration tests against the disposable database, with Google/GitHub HTTP responses mocked only in tests. Auth browser checks explicitly blank provider credentials and verify the unavailable setup, anonymous redirects and generic error/denial screens. They do not use the personal OAuth configuration. See [AUTHENTICATION.md](AUTHENTICATION.md) for the live-provider verification boundary and setup.
 
 HTML reports, screenshots and failure traces go into ignored `playwright-report/` and `test-results/` directories. CI rejects accidentally focused tests, uses one worker and retries failures twice; local runs do not retry. No CI deployment pipeline is introduced by this task.
+
+## AccessGrant browser journeys
+
+Task 3.3 adds `pnpm test:e2e:access`. It requires Docker, Chromium and OpenSSL (available on the current macOS development host). The runner shares the isolated PostgreSQL provisioning helper, creates a temporary one-day self-signed certificate outside the repository, and forwards loopback-only `https://127.0.0.1:3111` to a fresh production Next.js server on port 3110. Playwright accepts only this test certificate. Normal application Secure cookie behavior is preserved; no application TLS or auth bypass is introduced for testing.
+
+The runner supplies a generated test-only auth secret and explicit dummy provider configuration, overriding personal configuration. Fixtures run as short-lived server-side commands, create verified Users and real database sessions, sign their fixture session cookie, and modify grants only in that run's test database. The browser and production auth library still validate the cookie/session and current grant. These fixtures test local authorization, not live provider verification; separate integration tests exercise the real OAuth callbacks with intercepted provider responses.
+
+Desktop/mobile checks cover all three enabled roles, absent grants with forged role/email headers, role change/disable/re-enable/delete on the same session, private response cache policy and signout through the real auth route. Tests run with one worker and reset only disposable fixtures. The config and fixture commands reject execution without the isolated database/origin markers. Never use these fixture helpers against development data.
+
+Run this suite and `pnpm test:e2e` sequentially: both use the checkout's production build output and the same report directory. Normal completion, failed assertions and setup errors clean up the test proxy, temporary certificate and database container. As with integration tests, forcibly killing the runner may leave an abandoned test container; inspect the test label and remove only that exact container. Ports 3110 and 3111 must be free. See [ACCESS_GRANTS.md](ACCESS_GRANTS.md) for authorization and operator procedures.
 
 ## Task 1.4 verification
 

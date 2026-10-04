@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Task **3.1** defines authentication and grant authorization; Task **3.2** implements Google/GitHub identity, database sessions and login/signout. The root page remains a temporary design preview; catalog/collection features are not implemented. Private access stays denied until AccessGrant enforcement is added. Next: **3.3 — Implement AccessGrant**.
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.3** define and implement verified Google/GitHub identity, database sessions and current AccessGrant authorization, with explicit first-administrator setup and recovery. The root page remains a temporary design preview; catalog/collection features are not implemented. Next: **3.4 — Implement RBAC**.
 
 ## Local development
 
@@ -42,6 +42,7 @@ pnpm format:check
 pnpm test
 pnpm test:integration
 pnpm test:e2e
+pnpm test:e2e:access
 pnpm build
 pnpm start
 ```
@@ -60,6 +61,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [UI architecture review](docs/architecture/UI_ARCHITECTURE_REVIEW.md)
 - [Authentication architecture review](docs/architecture/AUTH_ARCHITECTURE.md)
 - [Authentication setup and current verification scope](docs/operations/AUTHENTICATION.md)
+- [Access grants, first administrator and recovery](docs/operations/ACCESS_GRANTS.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

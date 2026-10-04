@@ -2,7 +2,7 @@
 
 Task 3.2 implements Better Auth 1.7.7 with Google/GitHub OAuth, PostgreSQL sessions and the four library models. `/login` provides the configured providers; `/access-denied` provides signout and a route back to login. The design preview at `/` remains available.
 
-Application permission is still pending Task 3.3. `/app` sends anonymous browsers to login and authenticated browsers to access denied. No OAuth login grants collection access, and no AccessGrant, role management or bootstrap command is implemented by this task.
+Task 3.3 now enforces the current enabled verified-email AccessGrant. `/app` sends anonymous browsers to login, authenticated browsers without an enabled grant to access denied, and granted browsers to the private welcome screen. OAuth alone cannot grant access. First-administrator setup and recovery are documented in [ACCESS_GRANTS.md](ACCESS_GRANTS.md); role permission rules remain Task 3.4.
 
 ## Configure providers
 
@@ -75,4 +75,4 @@ The browser suite explicitly blanks OAuth configuration and uses an unavailable 
 
 Verified on 2026-10-04: lint, TypeScript, formatting, the production build, 34 unit/component tests, 30 database integration tests and 38 desktop/mobile browser tests pass. The migration is applied to development PostgreSQL. The refreshed Docker app's login and design preview render without browser errors or a framework overlay; anonymous `/app` redirects to login.
 
-Once credentials are configured, verify each provider's real consent/redirect flow, session creation, denied `/app` destination and signout. Access remains denied until Task 3.3 implements the enabled verified-email grant check. The first administrator and server role permissions remain Tasks 3.3–3.4.
+Once credentials are configured, verify each provider's real consent/redirect flow, session creation, granted/denied `/app` destination and signout. Supply the exact verified address to the explicit [first-administrator command](ACCESS_GRANTS.md). Task 3.3's grant enforcement is implemented; server role permissions remain Task 3.4. The verification counts above record Task 3.2, before grant enforcement.

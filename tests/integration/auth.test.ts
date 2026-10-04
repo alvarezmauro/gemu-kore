@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { createAuth } from "@/server/auth/config";
 import { getAuthenticatedIdentity } from "@/server/auth/session";
+import { requirePrivateAccess } from "@/server/auth/access";
 import { GET, POST } from "@/app/api/auth/[...all]/route";
 import { disconnectDatabase, getDatabase } from "@/server/db/client";
 
@@ -126,6 +127,7 @@ beforeEach(async () => {
   vi.stubEnv("GITHUB_CLIENT_ID", credentials.clientId);
   vi.stubEnv("GITHUB_CLIENT_SECRET", credentials.clientSecret);
   await getDatabase().user.deleteMany();
+  await getDatabase().accessGrant.deleteMany();
   await getDatabase().verification.deleteMany();
   subject = String(Math.floor(Math.random() * 1000000000) + 1);
   email = `collector-${randomUUID()}@example.com`;
@@ -172,12 +174,38 @@ beforeEach(async () => {
 afterEach(() => vi.unstubAllGlobals());
 afterAll(async () => {
   await getDatabase().user.deleteMany();
+  await getDatabase().accessGrant.deleteMany();
   await getDatabase().verification.deleteMany();
   await disconnectDatabase();
   vi.unstubAllEnvs();
 });
 
 describe("real Better Auth callback with isolated PostgreSQL and mocked providers", () => {
+  it.each(["google", "github"] as const)(
+    "requires a current enabled grant after real %s callback authentication",
+    async (provider) => {
+      const response = await login(provider);
+      const headers = new Headers({ Cookie: cookies(response) });
+      await expect(requirePrivateAccess(headers)).rejects.toMatchObject({
+        code: "DENIED",
+      });
+      await getDatabase().accessGrant.create({
+        data: { email: email!, role: "ADMIN", enabled: true },
+      });
+      await expect(requirePrivateAccess(headers)).resolves.toMatchObject({
+        email,
+        role: "ADMIN",
+      });
+      await getDatabase().accessGrant.update({
+        where: { email: email! },
+        data: { enabled: false },
+      });
+      await expect(requirePrivateAccess(headers)).rejects.toMatchObject({
+        code: "DENIED",
+      });
+      expect(await getDatabase().session.count()).toBe(1);
+    },
+  );
   it.each(["google", "github"] as const)(
     "creates a verified %s identity, encrypted credentials and a fixed session",
     async (provider) => {

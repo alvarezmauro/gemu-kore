@@ -15,7 +15,7 @@ declare module "vitest" {
   }
 }
 
-export default async function setup(project: TestProject) {
+export async function startTestPostgres() {
   const name = `gemukore-test-${randomUUID()}`;
   const password = randomUUID();
   let created = false;
@@ -86,10 +86,15 @@ export default async function setup(project: TestProject) {
       env: { ...process.env, NODE_ENV: "test", DATABASE_URL: databaseUrl },
       timeout: 60_000,
     });
-    project.provide("databaseUrl", databaseUrl);
-    return cleanup;
+    return { databaseUrl, cleanup };
   } catch (error) {
     await cleanup();
     throw error;
   }
+}
+
+export default async function setup(project: TestProject) {
+  const { databaseUrl, cleanup } = await startTestPostgres();
+  project.provide("databaseUrl", databaseUrl);
+  return cleanup;
 }

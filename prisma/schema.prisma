@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// Core auth models generated with auth 1.7.7; application grants arrive in Task 3.3.
+// Core auth models generated with auth 1.7.7; AccessGrant is application-owned.
 // Catalog and collection models remain Task 4.1.
 
 model User {
@@ -74,4 +74,22 @@ model Verification {
   @@index([identifier])
   @@index([expiresAt])
   @@map("verification")
+}
+
+enum AccessRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model AccessGrant {
+  id        String     @id @default(dbgenerated("pg_catalog.gen_random_uuid()")) @db.Uuid
+  email     String     @unique
+  role      AccessRole
+  enabled   Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // No User FK: a grant may be provisioned before its holder signs in.
+  @@map("access_grant")
 }
