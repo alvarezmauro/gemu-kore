@@ -59,11 +59,14 @@ The core schema was generated using pinned `auth` 1.7.7 and reviewed before inte
 - Sessions last a fixed seven days, without sliding refresh or cookie caching. Production cookies are Secure, HttpOnly, SameSite=Lax and host-only. OAuth state remains checked by the library.
 - Browser login/signout POSTs require the exact configured Origin, including first login without cookies. The library's CSRF/origin checks are explicitly enabled in every environment, including tests.
 - Private session resolution is server-only and returns only identity IDs/email; it provides no collection permission. The library HTTP `get-session`, `list-sessions` and `list-accounts` endpoints are disabled so their credential-bearing responses are not exposed to the browser. The client uses login/signout, not `useSession`; a future identity display should use an explicitly selected DTO.
-- Auth HTTP responses use no-store. Server session/role results are not shared-cached. Auth error logs and visible messages omit provider payloads/credentials.
+- Auth HTTP responses use no-store and `Referrer-Policy: no-referrer`. Server session/role results are not shared-cached. Auth error logs and visible messages omit provider payloads/credentials. Task 3.6 also replaces error-bearing redirects with the configured origin's `/login?error=sign_in_failed`, keeping provider descriptions and arbitrary error codes out of login URLs.
+- Task 3.6 disables unused browser session mutation endpoints (`update-session`, `revoke-session`, `revoke-sessions`, `revoke-other-sessions`). Normal signout and server session resolution remain available. A future session-management feature must review its transport and DTO before enabling any library endpoint.
 
 Production rate limiting uses the library's process-local memory store. Proxy IP headers are not trusted yet; absent a trusted IP, the reviewed library falls back to a shared per-path bucket. Production operations must configure the actual protected reverse proxy before relying on per-client limits. Limits do not survive process restart or coordinate multiple processes. No Redis or rate-limit database table was added.
 
 The module boundaries and later AccessGrant/RBAC handoff are in [AUTH_ARCHITECTURE.md](../architecture/AUTH_ARCHITECTURE.md).
+
+The implemented auth foundation's [Task 3.6 security review](../architecture/AUTH_SECURITY_REVIEW.md) records reproduced findings, fixes, current controls, unresolved dependency advisories and production follow-up requirements. The optional mysql2 dependency is pinned to 3.23.1 in `pnpm-workspace.yaml`; full and production audits still report two high upstream tooling advisories (deepmerge-ts and braces). They are documented, not suppressed, and no request-input path to their vulnerable APIs was identified in the current application. Revisit them before deployment or when their inputs/imports change.
 
 ## Verification
 

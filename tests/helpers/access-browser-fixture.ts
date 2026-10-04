@@ -18,9 +18,19 @@ async function main() {
       await database.accessGrant.deleteMany();
       await database.user.deleteMany();
     } else if (command === "sign-in") {
-      const email = "browser-identity@example.com";
+      const options = JSON.parse(argument ?? "{}") as {
+        email?: string;
+        role?: "ADMIN" | "EDITOR" | "VIEWER";
+        enabled?: boolean;
+        verified?: boolean;
+      };
+      const email = options.email ?? "browser-identity@example.com";
       const user = await database.user.create({
-        data: { name: "Browser fixture", email, emailVerified: true },
+        data: {
+          name: "Browser fixture",
+          email,
+          emailVerified: options.verified ?? true,
+        },
       });
       const token = randomUUID();
       await database.session.create({
@@ -30,12 +40,12 @@ async function main() {
           expiresAt: new Date(Date.now() + 300_000),
         },
       });
-      if (argument)
+      if (options.role)
         await database.accessGrant.create({
           data: {
             email,
-            role: argument as "ADMIN" | "EDITOR" | "VIEWER",
-            enabled: true,
+            role: options.role,
+            enabled: options.enabled ?? true,
           },
         });
       result = { email, token };
@@ -50,6 +60,15 @@ async function main() {
       });
     } else if (command === "sessions") {
       result = await database.session.count();
+    } else if (command === "expire") {
+      await database.session.updateMany({
+        where: { user: { email: argument } },
+        data: { expiresAt: new Date(Date.now() - 1000) },
+      });
+    } else if (command === "revoke") {
+      await database.session.deleteMany({
+        where: { user: { email: argument } },
+      });
     } else throw new Error("Unknown access browser fixture command.");
     console.info(JSON.stringify(result));
   } finally {

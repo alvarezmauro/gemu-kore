@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.4** implement verified Google/GitHub identity, database sessions, current AccessGrant authorization and server-side role permissions, with administrator setup/recovery and guarded grant services. The root page remains a temporary design preview; catalog/collection features are not implemented. Next: **3.5 — Authentication Tests**.
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.4** implement verified Google/GitHub identity, database sessions, current AccessGrant authorization and server-side role permissions, with administrator setup/recovery and guarded grant services. Task **3.5** expands authentication and access regression coverage; Task **3.6** reviews security and hardens error redirects and unused auth endpoints. The root page remains a temporary design preview; catalog/collection features are not implemented. Next: **4.1 — Implement Core Prisma Schema**.
 
 ## Local development
 
@@ -60,6 +60,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Animation strategy](docs/operations/ANIMATION_STRATEGY.md)
 - [UI architecture review](docs/architecture/UI_ARCHITECTURE_REVIEW.md)
 - [Authentication architecture review](docs/architecture/AUTH_ARCHITECTURE.md)
+- [Authentication security review and remaining advisories](docs/architecture/AUTH_SECURITY_REVIEW.md)
 - [Authentication setup and current verification scope](docs/operations/AUTHENTICATION.md)
 - [Access grants, first administrator and recovery](docs/operations/ACCESS_GRANTS.md)
 - [Server role permissions and grant safeguards](docs/operations/RBAC.md)

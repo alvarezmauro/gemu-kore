@@ -85,6 +85,12 @@ export function createAuth(database: PrismaClient, env: AuthEnvironment) {
       "/get-session",
       "/list-sessions",
       "/list-accounts",
+      // No browser session-management UI exists. Keep session mutation and
+      // potential additional-field responses behind reviewed server services.
+      "/update-session",
+      "/revoke-session",
+      "/revoke-sessions",
+      "/revoke-other-sessions",
     ],
     onAPIError: {
       errorURL: `${env.baseURL}/login`,

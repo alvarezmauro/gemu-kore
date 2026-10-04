@@ -11,6 +11,8 @@ import {
 import { createAuth } from "@/server/auth/config";
 import { getAuthenticatedIdentity } from "@/server/auth/session";
 import { requirePrivateAccess } from "@/server/auth/access";
+import { requirePermission } from "@/server/auth/permissions";
+import { getPrivateWelcome } from "@/server/services/access";
 import { GET, POST } from "@/app/api/auth/[...all]/route";
 import { disconnectDatabase, getDatabase } from "@/server/db/client";
 
@@ -181,6 +183,173 @@ afterAll(async () => {
 });
 
 describe("real Better Auth callback with isolated PostgreSQL and mocked providers", () => {
+  for (const provider of ["google", "github"] as const) {
+    it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
+      `${provider} matches a pre-provisioned normalized %s grant and enforces its permissions`,
+      async (role) => {
+        const normalized = "collector.name+games@example.com";
+        email = "  Collector.Name+games@EXAMPLE.COM  ";
+        const grant = await getDatabase().accessGrant.create({
+          data: { email: normalized, role, enabled: true },
+        });
+        expect(await getDatabase().user.count()).toBe(0);
+        const response = await login(provider);
+        expect(response.headers.get("location")).toBe("/app");
+        const headers = new Headers({ Cookie: cookies(response) });
+        const context = await requirePrivateAccess(headers);
+        expect(context).toMatchObject({
+          grantId: grant.id,
+          email: normalized,
+          role,
+        });
+        expect(await getPrivateWelcome(headers)).toEqual({ role });
+        const user = await getDatabase().user.findUniqueOrThrow({
+          where: { email: normalized },
+        });
+        expect(user.emailVerified).toBe(true);
+        expect(await getDatabase().accessGrant.count()).toBe(1);
+        if (role === "VIEWER")
+          await expect(
+            requirePermission(context, "collection.manage"),
+          ).rejects.toMatchObject({ code: "FORBIDDEN" });
+        else
+          await expect(
+            requirePermission(context, "collection.manage"),
+          ).resolves.toMatchObject({ role });
+        if (role === "ADMIN")
+          await expect(
+            requirePermission(context, "catalog.manage"),
+          ).resolves.toMatchObject({ role });
+        else
+          await expect(
+            requirePermission(context, "catalog.manage"),
+          ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      },
+    );
+
+    it.each(["absent", "disabled"] as const)(
+      `${provider} authenticates but denies a pre-existing %s email entitlement`,
+      async (state) => {
+        const grantEmail =
+          state === "disabled" ? email! : "another-person@example.com";
+        const grant = await getDatabase().accessGrant.create({
+          data: {
+            email: grantEmail,
+            role: "ADMIN",
+            enabled: state !== "disabled",
+          },
+        });
+        const response = await login(provider);
+        expect(response.headers.get("location")).toBe("/app");
+        const headers = new Headers({ Cookie: cookies(response) });
+        expect(await getAuthenticatedIdentity(headers)).toMatchObject({
+          email,
+        });
+        await expect(getPrivateWelcome(headers)).rejects.toMatchObject({
+          code: "DENIED",
+        });
+        expect(await getDatabase().session.count()).toBe(1);
+        // OAuth cannot create a grant, enable it or change its role.
+        expect(await getDatabase().accessGrant.findMany()).toEqual([grant]);
+      },
+    );
+
+    it.each(["collector+games@example.com", "collect.or@example.com"])(
+      `${provider} does not transfer collector@example.com access to verified alias %s`,
+      async (alias) => {
+        await getDatabase().accessGrant.create({
+          data: {
+            email: "collector@example.com",
+            role: "ADMIN",
+            enabled: true,
+          },
+        });
+        email = alias;
+        const response = await login(provider);
+        expect(response.headers.get("location")).toBe("/app");
+        const headers = new Headers({
+          Cookie: cookies(response),
+          "x-email": "collector@example.com",
+          "x-role": "ADMIN",
+        });
+        expect(await getAuthenticatedIdentity(headers)).toMatchObject({
+          email: alias,
+        });
+        await expect(requirePrivateAccess(headers)).rejects.toMatchObject({
+          code: "DENIED",
+        });
+        expect(await getDatabase().accessGrant.count()).toBe(1);
+      },
+    );
+
+    it.each(["unverified", "control-character"] as const)(
+      `${provider} rejects %s identity even with a matching enabled admin grant`,
+      async (state) => {
+        const grantedEmail = email!;
+        const grant = await getDatabase().accessGrant.create({
+          data: { email: grantedEmail, role: "ADMIN", enabled: true },
+        });
+        if (state === "unverified") verified = false;
+        else email = `${grantedEmail}\n`;
+        const response = await login(provider);
+        expect(response.headers.get("location")).toContain("/login?error=");
+        expect(await getDatabase().user.count()).toBe(0);
+        expect(await getDatabase().account.count()).toBe(0);
+        expect(await getDatabase().session.count()).toBe(0);
+        await expect(
+          requirePrivateAccess(new Headers({ Cookie: cookies(response) })),
+        ).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+        expect(await getDatabase().accessGrant.findMany()).toEqual([grant]);
+      },
+    );
+
+    it(`${provider} applies grant revocation and role changes to every existing OAuth session`, async () => {
+      const grant = await getDatabase().accessGrant.create({
+        data: { email: email!, role: "EDITOR", enabled: true },
+      });
+      // Establish the provider binding before creating a returning session.
+      const responses = [await login(provider), await login(provider)];
+      const headers = responses.map(
+        (response) => new Headers({ Cookie: cookies(response) }),
+      );
+      expect(await getDatabase().user.count()).toBe(1);
+      const contexts = await Promise.all(
+        headers.map((requestHeaders) => requirePrivateAccess(requestHeaders)),
+      );
+      expect(new Set(contexts.map((context) => context.sessionId)).size).toBe(
+        2,
+      );
+      await getDatabase().accessGrant.update({
+        where: { id: grant.id },
+        data: { role: "VIEWER" },
+      });
+      for (const [index, requestHeaders] of headers.entries()) {
+        expect(await getPrivateWelcome(requestHeaders)).toEqual({
+          role: "VIEWER",
+        });
+        await expect(
+          requirePermission(contexts[index], "collection.manage"),
+        ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      }
+      await getDatabase().accessGrant.update({
+        where: { id: grant.id },
+        data: { enabled: false },
+      });
+      for (const requestHeaders of headers)
+        await expect(getPrivateWelcome(requestHeaders)).rejects.toMatchObject({
+          code: "DENIED",
+        });
+      await getDatabase().accessGrant.update({
+        where: { id: grant.id },
+        data: { role: "EDITOR", enabled: true },
+      });
+      for (const requestHeaders of headers)
+        expect(await getPrivateWelcome(requestHeaders)).toEqual({
+          role: "EDITOR",
+        });
+      expect(await getDatabase().session.count()).toBe(2);
+    });
+  }
   it.each(["google", "github"] as const)(
     "requires a current enabled grant after real %s callback authentication",
     async (provider) => {
@@ -507,6 +676,82 @@ describe("real Better Auth callback with isolated PostgreSQL and mocked provider
       data: { expiresAt: new Date(Date.now() - 1000) },
     });
     expect(await auth.api.getSession({ headers })).toBeNull();
+  });
+
+  it.each([
+    "/update-session",
+    "/revoke-session",
+    "/revoke-sessions",
+    "/revoke-other-sessions",
+  ])(
+    "blocks unused session mutation endpoint %s even with a valid cookie",
+    async (path) => {
+      const response = await login("github");
+      const session = await getDatabase().session.findFirstOrThrow();
+      const result = await POST(
+        new Request(`${baseURL}/api/auth${path}`, {
+          method: "POST",
+          headers: {
+            Cookie: cookies(response),
+            Origin: baseURL,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: session.token,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+            userId: randomUUID(),
+            role: "ADMIN",
+          }),
+        }),
+      );
+      expect(result.status).toBe(404);
+      expect(await getDatabase().session.findMany()).toEqual([session]);
+      expect(await getDatabase().accessGrant.count()).toBe(0);
+      expect(
+        await getAuthenticatedIdentity(
+          new Headers({ Cookie: cookies(response) }),
+        ),
+      ).not.toBeNull();
+    },
+  );
+
+  it.each(["google", "github"] as const)(
+    "keeps arbitrary %s provider errors out of the login redirect",
+    async (provider) => {
+      const { state, cookie } = await start(provider);
+      const query = new URLSearchParams({
+        state: state!,
+        error: "private-provider-error",
+        error_description: "private-provider-description",
+      });
+      const response = await GET(
+        new Request(`${baseURL}/api/auth/callback/${provider}?${query}`, {
+          headers: { Cookie: cookie },
+        }),
+      );
+      expect(response.status).toBe(302);
+      expect(response.headers.get("location")).toBe(
+        `${baseURL}/login?error=sign_in_failed`,
+      );
+      expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(await getDatabase().session.count()).toBe(0);
+    },
+  );
+
+  it("keeps SDK error-endpoint payloads out of the login redirect", async () => {
+    const response = await GET(
+      new Request(
+        `${baseURL}/api/auth/error?error=private-provider-error&error_description=private-provider-description`,
+      ),
+    );
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      `${baseURL}/login?error=sign_in_failed`,
+    );
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(await getDatabase().session.count()).toBe(0);
   });
 
   it("signs out and immediately invalidates the old session cookie", async () => {

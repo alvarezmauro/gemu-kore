@@ -742,6 +742,8 @@ Expand tests for:
 
 Do not change production auth architecture.
 
+Status: **Completed 2026-10-04.** Added 44 regression cases covering normalized verified-email grants provisioned before Google/GitHub login, every role, absent/disabled grants, alias separation, malformed/unverified identity, policy changes across established OAuth sessions, independent browser identities, session expiry/revocation, tampered cookies and disabled-user signout. Changes are limited to tests, disposable fixtures and documentation. Production auth architecture, dependencies and migrations are unchanged. Lint, typechecking, formatting, production build, 82 unit/component tests, 130 isolated database integration tests and 64 desktop/mobile browser tests pass (276 total). Disposable test containers were removed; personal development data was not used. Live provider consent requires actual OAuth credentials. Coverage and boundaries: [docs/operations/TESTING.md](docs/operations/TESTING.md#task-35-authentication-regression-coverage).
+
 ---
 
 ## TASK 3.6 — Security Review
@@ -765,6 +767,8 @@ Review:
 - auth bypass possibilities
 
 GPT-6 Sol implements fixes.
+
+Status: **Completed 2026-10-04.** Reviewed the implemented OAuth, session, current-grant, role/service, route and operator boundaries; no authentication or role-escalation bypass was identified. Reproduced and fixed provider error detail in login redirects, added no-referrer auth responses, and disabled four unused session mutation endpoints. Seven new integration regressions fail before the fixes and pass afterward. Updated optional mysql2 to 3.23.1 and ensured repeated installs recheck lockfile/override changes. Lint, typechecking, formatting, diff whitespace checks, production build, 82 unit/component tests, 137 isolated database integration tests and 64 desktop/mobile browser tests pass (283 total). The refreshed Docker app is healthy; login/design preview and anonymous private redirects pass browser verification. Two high upstream tooling advisories (deepmerge-ts and braces) remain explicitly documented with no current request-input path identified; production rate limiting and live OAuth consent still need deployment/provider configuration. No schema migration or future domain implementation. Findings, evidence and follow-up: [docs/architecture/AUTH_SECURITY_REVIEW.md](docs/architecture/AUTH_SECURITY_REVIEW.md).
 
 ---
 

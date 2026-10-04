@@ -1,9 +1,16 @@
 engineStrict: true
 saveExact: true
+# Recheck lockfile/override changes even when package.json is unchanged.
+optimisticRepeatInstall: false
 
 # Allow large dependencies to finish on slow development networks.
 fetchTimeout: 300000
 networkConcurrency: 8
+
+# Transitive optional MySQL adapters: patch both published security advisories.
+# The application continues to use only PostgreSQL through PrismaPg.
+overrides:
+  mysql2: 3.23.1
 
 # Single package; approved installation steps for Prisma, tsx and lint tooling.
 allowBuilds:
