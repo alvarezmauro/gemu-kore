@@ -4,6 +4,7 @@ import { ApplicationShell } from "@/components/layout/application-shell";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
 import type { NavigationItem } from "@/components/layout/navigation";
+import { AnimationPreview } from "@/components/design-preview/animation-preview";
 import { FormPreview } from "@/components/design-preview/form-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,22 @@ export default function HomePage() {
             <h3 className="text-lg leading-7">Loading example</h3>
             <LoadingCards label="Loading example cards" />
           </div>
+        </section>
+        <section
+          id="motion"
+          aria-labelledby="motion-title"
+          className="space-y-6"
+        >
+          <div>
+            <h2 id="motion-title" className="text-2xl leading-8 tracking-tight">
+              Motion with a purpose
+            </h2>
+            <p className="mt-2 text-body">
+              Try the entrance, list and detail examples. Your device’s
+              reduced-motion preference keeps them static.
+            </p>
+          </div>
+          <AnimationPreview />
         </section>
         <footer className="border-t py-6 text-sm text-muted-foreground">
           GemuKore design preview. Theme choices are saved on this device; form

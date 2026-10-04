@@ -152,7 +152,7 @@ Keep the reference's calm rhythm: 100â€“150ms for color/hover feedback and 150â€
 
 Use shadcn for controls, Magic UI for selected presentation effects, and Motion where custom transitions require it. Do not add new component or animation libraries. One effect should serve a clear purpose; installed effects are not obligations.
 
-Static display is the default for headings, card grids and decorative art. Selective short reveal or card-to-detail transitions remain available for Task 2.3 when they improve orientation. Avoid continuous marquees, floating mascots, animated background grids and automatic parallax. The reference's testimonial marquee is not part of GemuKore's design.
+Static display is the default for headings, card grids and decorative art. Selective short entry or card-to-detail transitions are available when they improve orientation; Task 2.3 documents their use in [the animation strategy](docs/operations/ANIMATION_STRATEGY.md). Avoid continuous marquees, floating mascots, animated background grids and automatic parallax. The reference's testimonial marquee is not part of GemuKore's design.
 
 Under `prefers-reduced-motion`, remove decorative travel, blur, scale, keyframes and auto-rotation. Content must be visible and functional immediately, including when JavaScript or animation fails. Distinguish a transient blur transition, if deliberately approved, from a persistent blurred/glass surface; neither is a default. Public presentation may be richer while following the same limits.
 

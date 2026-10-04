@@ -40,9 +40,9 @@ For future data-writing forms, share domain validation at the server boundary, v
 
 ## Themes and motion
 
-Light/Dark/System retain the existing next-themes behavior and `gemukore-theme` storage key. The theme menu is outside the sidebar, making it accessible on both desktop and mobile. The page, shell and display primitives remain Server Components; only the sheet, theme controls, Radix labels and editable form require client behavior.
+Light/Dark/System retain the existing next-themes behavior and `gemukore-theme` storage key. The theme menu is outside the sidebar, making it accessible on both desktop and mobile. The page, shell and display primitives remain Server Components; the sheet, theme controls, Radix labels, editable form and interactive motion examples use small client boundaries.
 
-Reduced-motion preferences disable sheet/menu keyframes, input/button transitions and skeleton pulses. No Magic UI entrance or decorative effect is added to the preview. Shared animation guidelines and static fallbacks remain Task 2.3.
+Reduced-motion preferences disable sheet/menu keyframes, input/button transitions and skeleton pulses. Task 2.3 adds a selective Blur Fade example and reusable entry, hover, list and shared card/detail patterns. Their timing, static fallbacks and usage are documented in the [animation strategy](ANIMATION_STRATEGY.md).
 
 ## Verification
 

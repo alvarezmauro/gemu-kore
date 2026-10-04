@@ -1,101 +1,57 @@
 "use client";
 
-import { useRef } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useReducedMotion,
-  type MotionProps,
-  type UseInViewOptions,
-  type Variants,
-} from "motion/react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useAnimate, useInView, type UseInViewOptions } from "motion/react";
+import { useMotionAllowed } from "@/lib/motion/use-motion-preference";
+import { motionEase, motionTiming } from "@/lib/motion/tokens";
 
-type MarginType = UseInViewOptions["margin"];
-
-interface BlurFadeProps extends MotionProps {
-  children: React.ReactNode;
-  className?: string;
-  variant?: {
-    hidden: { y: number };
-    visible: { y: number };
-  };
-  duration?: number;
-  delay?: number;
-  offset?: number;
-  direction?: "up" | "down" | "left" | "right";
-  inView?: boolean;
-  inViewMargin?: MarginType;
-  blur?: string;
-}
-
-const getFilter = (v: Variants[string]) =>
-  typeof v === "function" ? undefined : v.filter;
-
+// Adapted from Magic UI Blur Fade. Server HTML is fully visible; animation is
+// an optional enhancement, never the condition for revealing content.
 export function BlurFade({
   children,
   className,
-  variant,
-  duration = 0.4,
-  delay = 0,
-  offset = 6,
-  direction = "down",
   inView = false,
-  inViewMargin = "-50px",
-  blur = "6px",
-  ...props
-}: BlurFadeProps) {
-  const reduceMotion = useReducedMotion();
-  const ref = useRef(null);
-  const inViewResult = useInView(ref, { once: true, margin: inViewMargin });
-  const isInView = !inView || inViewResult;
-  const defaultVariants: Variants = {
-    hidden: {
-      [direction === "left" || direction === "right" ? "x" : "y"]:
-        direction === "right" || direction === "down" ? -offset : offset,
-      opacity: 0,
-      filter: `blur(${blur})`,
-    },
-    visible: {
-      [direction === "left" || direction === "right" ? "x" : "y"]: 0,
-      opacity: 1,
-      filter: `blur(0px)`,
-    },
-  };
-  const combinedVariants = variant ?? defaultVariants;
-
-  const hiddenFilter = getFilter(combinedVariants.hidden);
-  const visibleFilter = getFilter(combinedVariants.visible);
-
-  const shouldTransitionFilter =
-    hiddenFilter != null &&
-    visibleFilter != null &&
-    hiddenFilter !== visibleFilter;
-
-  // Keep content immediately readable when animation is disabled.
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
+  inViewMargin = "0px",
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  inView?: boolean;
+  inViewMargin?: UseInViewOptions["margin"];
+  delay?: number;
+}) {
+  const [scope, animate] = useAnimate<HTMLDivElement>();
+  const inactiveRef = useRef<HTMLDivElement>(null);
+  const visible = useInView(
+    inView && typeof IntersectionObserver !== "undefined" ? scope : inactiveRef,
+    { once: true, margin: inViewMargin },
+  );
+  const allowed = useMotionAllowed();
+  const played = useRef(false);
+  const ready = !inView || visible;
+  useEffect(() => {
+    if (!allowed || !ready || played.current || !scope.current) return;
+    played.current = true;
+    const element = scope.current;
+    const playback = animate(
+      element,
+      { opacity: [0.96, 1], y: [4, 0], filter: ["blur(2px)", "blur(0px)"] },
+      {
+        duration: motionTiming.enter / 1000,
+        delay: Math.min(0.08, Math.max(0, Number.isFinite(delay) ? delay : 0)),
+        ease: motionEase,
+      },
+    );
+    return () => {
+      playback.cancel();
+      element.style.opacity = "1";
+      element.style.filter = "none";
+      element.style.transform = "none";
+    };
+  }, [allowed, ready, delay, scope, animate]);
   return (
-    <AnimatePresence>
-      <motion.div
-        ref={ref}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-        exit="hidden"
-        variants={combinedVariants}
-        transition={{
-          delay: 0.04 + delay,
-          duration,
-          ease: "easeOut",
-          ...(shouldTransitionFilter ? { filter: { duration } } : {}),
-        }}
-        className={className}
-        {...props}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <div ref={scope} className={className} data-motion-blur>
+      {children}
+    </div>
   );
 }

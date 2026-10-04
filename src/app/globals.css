@@ -141,3 +141,133 @@
     outline-offset: 4px;
   }
 }
+
+/* Static values are the baseline. Only opt-in patterns animate. */
+@layer components {
+  .motion-card {
+    transition: background-color var(--motion-feedback) var(--motion-ease);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .motion-page-entry,
+    .motion-list-entry {
+      animation: content-entry var(--motion-enter) var(--motion-ease);
+    }
+    .motion-overlay[data-state="open"] {
+      animation: overlay-enter var(--motion-enter) ease-out;
+    }
+    .motion-overlay[data-state="closed"] {
+      animation: overlay-exit var(--motion-exit) ease-out;
+    }
+    .motion-dialog[data-state="open"] {
+      animation: content-entry var(--motion-enter) var(--motion-ease);
+    }
+    .motion-dialog[data-state="closed"] {
+      animation: surface-exit var(--motion-exit) ease-out;
+    }
+    /* Shared media needs a stationary portal surface for correct measurement. */
+    .motion-dialog[data-shared-layout][data-state="open"] {
+      animation: surface-enter var(--motion-enter) ease-out;
+    }
+    .motion-sheet[data-state="open"] {
+      animation: sheet-enter var(--motion-enter) var(--motion-ease);
+    }
+    .motion-sheet[data-state="closed"] {
+      animation: sheet-exit var(--motion-exit) ease-out;
+    }
+    .motion-sheet[data-side="left"] {
+      --sheet-x: -16px;
+      --sheet-y: 0px;
+    }
+    .motion-sheet[data-side="right"] {
+      --sheet-x: 16px;
+      --sheet-y: 0px;
+    }
+    .motion-sheet[data-side="top"] {
+      --sheet-x: 0px;
+      --sheet-y: -16px;
+    }
+    .motion-sheet[data-side="bottom"] {
+      --sheet-x: 0px;
+      --sheet-y: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .motion-card {
+      transition: transform var(--motion-feedback) var(--motion-ease);
+    }
+    .motion-card:hover {
+      transform: translateY(-2px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .motion-card,
+    .motion-page-entry,
+    .motion-list-entry,
+    .motion-overlay,
+    .motion-dialog,
+    .motion-sheet {
+      animation: none !important;
+      transition: none !important;
+    }
+    .motion-card {
+      transform: none !important;
+    }
+  }
+}
+@keyframes content-entry {
+  from {
+    translate: 0 4px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes surface-enter {
+  from {
+    opacity: 0.96;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes surface-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.96;
+  }
+}
+@keyframes overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes overlay-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sheet-enter {
+  from {
+    translate: var(--sheet-x) var(--sheet-y);
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes sheet-exit {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--sheet-x) var(--sheet-y);
+  }
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
 
+import { motionCssVariables } from "@/lib/motion/tokens";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -36,7 +37,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jakarta.variable}`}
       suppressHydrationWarning
     >
-      <body>
+      <body style={motionCssVariables}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

@@ -558,6 +558,8 @@ shadcn should remain the functional foundation.
 
 ## TASK 2.3 — Animation Guidelines
 
+Status: **Completed 2026-10-03.** Added shared motion timing, reusable page/card/hover/list/dialog/Blur Fade patterns and a scoped card-to-detail media transition. Reduced motion and visible server-rendered fallbacks are supported. The preview demonstrates unsaved interactions only. All 38 tests, lint, typechecking, formatting and the production build pass. Strategy and usage: [docs/operations/ANIMATION_STRATEGY.md](docs/operations/ANIMATION_STRATEGY.md). No schema changes or new dependencies.
+
 MODEL:
 
 `GPT-6 Sol`

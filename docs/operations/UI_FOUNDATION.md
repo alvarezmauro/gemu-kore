@@ -1,13 +1,13 @@
 # UI foundation
 
-Task 2.1 configured shadcn/ui, Magic UI, Lucide, Motion and theme handling. Task 2.2 now implements typography, navigation, layout and component conventions in the [application design system](DESIGN_SYSTEM.md). The root page is a temporary design preview. Shared animation patterns remain Task 2.3.
+Task 2.1 configured shadcn/ui, Magic UI, Lucide, Motion and theme handling. Task 2.2 now implements typography, navigation, layout and component conventions in the [application design system](DESIGN_SYSTEM.md). The root page is a temporary design preview. Task 2.3 establishes the [animation strategy](ANIMATION_STRATEGY.md), with reusable patterns and static fallbacks.
 
 ## Installed foundations
 
-- `components.json` configures shadcn's Radix-based `radix-nova` preset, neutral colors, CSS variables, Tailwind 4 and Lucide icons. Initialization used CLI 4.21.1 with noninteractive defaults. Task 2.1 installed Button and Dropdown Menu; Task 2.2 also installs Card, Input, Label, Textarea, Skeleton, Sheet and Badge.
+- `components.json` configures shadcn's Radix-based `radix-nova` preset, neutral colors, CSS variables, Tailwind 4 and Lucide icons. Initialization used CLI 4.21.1 with noninteractive defaults. Task 2.1 installed Button and Dropdown Menu; Task 2.2 also installs Card, Input, Label, Textarea, Skeleton, Sheet and Badge; Task 2.3 adds Dialog.
 - `src/components/ui/` contains the owned shadcn source. The underlying Radix package is part of shadcn's implementation, not a second design system.
 - `src/lib/utils.ts` exposes the CLI's `cn` class-merging helper. Components use the repository alias for that helper.
-- `src/components/magic/blur-fade.tsx` is installed from Magic UI's official registry. `@magicui` is registered in `components.json`. The component is available for future presentation work; the design preview does not animate its content.
+- `src/components/magic/blur-fade.tsx` is installed from Magic UI's official registry. `@magicui` is registered in `components.json`. Task 2.3 adapts this owned source for visible server rendering, bounded effects and live reduced-motion changes; the preview includes a selective example.
 - `motion/react` is the animation entry point. Do not add a second animation library. Lucide provides the theme menu's icons.
 - `src/app/globals.css` holds light/dark tokens. Task 2.2 replaces the neutral installation baseline with the palette in `DESIGN.md` and uses locally served Inter and Plus Jakarta Sans through `next/font`. The CLI's circular font variable remains removed.
 
@@ -25,7 +25,7 @@ Use semantic classes such as `bg-background`, `text-foreground`, `text-muted-for
 
 The provider sets Motion's `reducedMotion="user"`. This covers Motion transforms and layout animation; it does not automatically disable blur filters or CSS keyframes. The installed Blur Fade returns static, immediately visible children when reduced motion is requested. Button movement/transitions and Dropdown Menu keyframes also respect the preference.
 
-Blur Fade otherwise retains the upstream entrance behavior. Before putting essential content behind an entrance effect, Task 2.3 must establish the no-JavaScript/static fallback and shared presentation conventions. Keep navigation and actions usable independently of animation.
+Task 2.3 replaces the upstream hidden entrance with visible server HTML and an optional short effect. Shared timing, CSS patterns and explicit custom-motion preference handling are documented in the animation strategy. Keep navigation and actions usable independently of animation.
 
 ## Adding components
 
