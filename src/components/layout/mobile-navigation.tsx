@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/sheet";
 import { Navigation, type NavigationItem } from "./navigation";
 
+// Matches the shell's Tailwind lg breakpoint (64rem).
+const desktopQuery = "(min-width: 64rem)";
+
 export function MobileNavigation({
   items,
   context,
@@ -21,6 +24,16 @@ export function MobileNavigation({
   context: string;
 }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const desktop = window.matchMedia(desktopQuery);
+    const closeOnDesktop = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    closeOnDesktop();
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, [open]);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -33,7 +46,17 @@ export function MobileNavigation({
           <Menu aria-hidden="true" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[min(320px,calc(100%-24px))]!">
+      <SheetContent
+        side="left"
+        className="w-[min(320px,calc(100%-24px))]!"
+        onCloseAutoFocus={(event) => {
+          if (window.matchMedia(desktopQuery).matches) {
+            // The mobile trigger is hidden; keep focus on a visible landmark.
+            event.preventDefault();
+            document.getElementById("main-content")?.focus();
+          }
+        }}
+      >
         <SheetHeader className="p-6 pr-16">
           <SheetTitle>GemuKore</SheetTitle>
           <SheetDescription>{context}</SheetDescription>

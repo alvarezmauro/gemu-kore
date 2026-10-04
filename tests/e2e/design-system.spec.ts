@@ -112,3 +112,69 @@ test("the skip link moves keyboard focus to the main content", async ({
   await page.keyboard.press("Enter");
   await expect(page.getByRole("main")).toBeFocused();
 });
+
+test("open mobile navigation closes at the desktop breakpoint and releases focus", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 640, height: 700 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const trigger = page.getByRole("button", { name: "Open navigation" });
+  await trigger.click();
+  const sheet = page.getByRole("dialog", { name: "GemuKore" });
+  await expect(sheet).toBeVisible();
+  await page.setViewportSize({ width: 1024, height: 700 });
+  await expect(sheet).toHaveCount(0);
+  await expect(trigger).toBeHidden();
+  await expect(page.getByRole("main")).toBeFocused();
+  await expect(page.locator("body")).not.toHaveCSS("pointer-events", "none");
+  await page.getByRole("button", { name: "Choose theme" }).click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 640, height: 700 });
+  await expect(trigger).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+  await trigger.click();
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+});
+
+test("card identity and copy metadata wrap instead of being clipped at 320px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/");
+  const card = page.locator('#cards [data-slot="card"]').first();
+  // Stress the existing rendered component with deterministic display values;
+  // this does not add a product route, fixture catalog or persistence.
+  await card.evaluate((element) => {
+    for (const selector of ["h3", "h3 + p", "dt", "dd"]) {
+      element.querySelector(selector)!.textContent = "ReleaseIdentifier".repeat(
+        20,
+      );
+    }
+  });
+  for (const theme of ["Light", "Dark"] as const) {
+    await page.getByRole("button", { name: "Choose theme" }).click();
+    await page.getByRole("menuitemradio", { name: theme, exact: true }).click();
+    for (const selector of ["h3", "h3 + p", "dt", "dd"]) {
+      const text = card.locator(selector).first();
+      expect(
+        await text.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+    }
+    expect(
+      await card.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+});

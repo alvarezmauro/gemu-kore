@@ -13,7 +13,7 @@ export function ObjectCard({
   copyDetails?: readonly { label: string; value: string }[];
 }) {
   return (
-    <Card className="gap-0 pt-0">
+    <Card className="min-w-0 gap-0 pt-0 [overflow-wrap:anywhere]">
       <div className="flex aspect-[4/3] items-center justify-center bg-stone p-6">
         {media}
       </div>
