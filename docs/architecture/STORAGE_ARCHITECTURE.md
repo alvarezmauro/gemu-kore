@@ -2,6 +2,8 @@
 
 Task 5.1 · Reviewed 2026-10-04 · Design complete; implementation begins in Task 5.2.
 
+Task 5.2 implementation/configuration and verification are recorded in [STORAGE.md](../operations/STORAGE.md). This document retains the approved design and future-phase boundaries.
+
 ## 1. Recommended architecture
 
 Use one small server-only storage contract and one configurable S3-compatible adapter. MinIO remains the local development service; Cloudflare R2, DigitalOcean Spaces, Backblaze B2 and AWS S3 are deployment options behind that same adapter. PostgreSQL owns asset identity, provenance, lifecycle and permissions; object storage owns file bytes. Neither a bucket setting nor an object URL grants application access.

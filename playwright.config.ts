@@ -34,6 +34,11 @@ export default defineConfig({
       GOOGLE_CLIENT_SECRET: "",
       GITHUB_CLIENT_ID: "",
       GITHUB_CLIENT_SECRET: "",
+      S3_ENDPOINT: "",
+      S3_REGION: "",
+      S3_BUCKET: "",
+      S3_ACCESS_KEY_ID: "",
+      S3_SECRET_ACCESS_KEY: "",
     },
   },
 });

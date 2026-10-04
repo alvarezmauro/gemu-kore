@@ -11,6 +11,7 @@ pnpm install --frozen-lockfile
 pnpm test:e2e:install
 pnpm test
 pnpm test:integration
+pnpm test:storage
 pnpm test:e2e
 pnpm test:e2e:access
 ```
@@ -22,6 +23,7 @@ Unit/component tests need only Node.js. Integration tests also need a running Do
 | `pnpm test`                        | Run unit and component tests once; no Docker or database needed.                                                  |
 | `pnpm test:watch`                  | Watch unit and component tests during development.                                                                |
 | `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container. |
+| `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.          |
 | `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                  |
 | `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
@@ -53,7 +55,7 @@ Synchronous components can be rendered by React Testing Library. Exercise async 
 
 The example checks the actual application database health function and transaction helper. A test-only probe table verifies both committed writes and rollback on failure. It is not a domain model and requires no application migration. The database pool is disconnected afterward. Integration files run serially against that run's database; future tests must clean up their own fixtures.
 
-Only the integration runner maps `server-only` to an empty test helper so server modules can run outside Next.js. The unit/component runner and application builds keep the real server-only protection.
+Only the Node integration runners map `server-only` to an empty test helper so server modules can run outside Next.js. The unit/component runner keeps the real module by default; storage-specific unit files explicitly mock its marker to test pure helpers/configuration. Application builds retain the real server-only protection.
 
 Normal completion, failed assertions and setup failures after container creation remove the test container. A forcibly killed runner or stopped Docker engine can prevent cleanup. Inspect `docker ps -a --filter label=gemukore.test=true` and remove only the abandoned `gemukore-test-…` container by its exact name. Never reset the development database to run tests.
 
@@ -78,6 +80,14 @@ The runner supplies a generated test-only auth secret and explicit dummy provide
 Desktop/mobile checks cover all three enabled roles, absent grants with forged role/email headers, role change/disable/re-enable/delete on the same session, private response cache policy and signout through the real auth route. Task 3.5 adds initially disabled access, unverified identity, expired/revoked sessions, tampered cookies and separate admin/viewer/ungranted browsers. Tests run with one worker and reset only disposable fixtures. The config and fixture commands reject execution without the isolated database/origin markers. Never use these fixture helpers against development data.
 
 Run this suite and `pnpm test:e2e` sequentially: both use the checkout's production build output and the same report directory. Normal completion, failed assertions and setup errors clean up the test proxy, temporary certificate and database container. As with integration tests, forcibly killing the runner may leave an abandoned test container; inspect the test label and remove only that exact container. Ports 3110 and 3111 must be free. See [ACCESS_GRANTS.md](ACCESS_GRANTS.md) for authorization and operator procedures.
+
+## Task 5.2 storage checks
+
+`pnpm test:storage` uses `vitest.storage.config.mts` and `tests/storage/`. Global setup builds the same pinned MinIO source as development and starts a uniquely named `gemukore-storage-test-…` container with generated credentials, a random loopback port and temporary in-memory data. No personal bucket, configuration or data volume is used. Completion/assertion/setup failures remove the container; after a forcibly killed runner, inspect the `gemukore.test=true` label and remove only the exact abandoned container.
+
+The 32 checks exercise real private MinIO byte/metadata/range/delete operations and the actual SDK against synthetic HTTP failures. They cover missing bucket/key ambiguity, unsigned denial, incorrect credentials, actual/declared length and hash mismatch, replay safety, bounded retries, cancellation, deadlines through body consumption, malformed ranges, truncated responses and abandoned-stream cleanup. Fixtures deliberately use synthetic bytes because content sniffing/decoding belongs to Task 5.3. Configuration/helper/boundary unit checks bring the unit/component total to 145.
+
+Browser runners explicitly blank the five storage fields so production smoke/access builds do not inherit HTTP development credentials. Run Prisma-generating checks, typechecking and browser builds sequentially in a checkout: concurrent regeneration can transiently remove generated files while another check reads them. Final Task 5.2 totals are 145 unit/component + 32 storage + 198 database integration + 64 desktop/mobile browser checks = 439 passing tests. See [STORAGE.md](STORAGE.md) for configuration and limits. Live cloud-provider compatibility is not claimed.
 
 ## Role authorization tests
 

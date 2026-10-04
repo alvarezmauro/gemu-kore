@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the approved core catalog and collection database, including migration constraints and settings defaults. The schema review closes an owned-item ID bypass, enforces required string lists, adds history indexes and removes an unused future key. Base repositories now provide explicit catalog/owned identity lookups and enforce persistence/service import boundaries. Task **5.1** defines storage architecture: one S3-compatible adapter, private files, authorized delivery and safe asset lifecycles. The root page remains a temporary design preview; storage integration and catalog/collection CRUD and UI are not implemented. Next: **5.2 — Implement Storage Service**.
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the approved core catalog and collection database, including migration constraints and settings defaults. Base repositories provide explicit catalog/owned identity lookups and enforce persistence/service import boundaries. Tasks **5.1–5.2** define and implement one S3-compatible adapter for private files, with safe keys/metadata, streamed reads, ranges, cancellation and bounded upload retries. The root page remains a temporary design preview; Asset records, upload processing and catalog/collection CRUD and UI are not implemented. Next: **5.3 — Asset Upload Pipeline**.
 
 ## Local development
 
@@ -68,6 +68,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Prisma schema review and corrections](docs/architecture/PRISMA_SCHEMA_REVIEW.md)
 - [Repository conventions and transaction boundaries](docs/operations/REPOSITORIES.md)
 - [Storage architecture and Phase 5 implementation contracts](docs/architecture/STORAGE_ARCHITECTURE.md)
+- [Storage service configuration, behavior and verification](docs/operations/STORAGE.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

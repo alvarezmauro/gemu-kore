@@ -78,7 +78,7 @@ For another checkout still using the standalone container, stop `gemukore-postgr
 
 PostgreSQL readiness uses `pg_isready`; MinIO readiness uses `/minio/health/ready`. The app starts after both pass and has its own `/api/health` liveness check. `pnpm db:check` separately verifies an authenticated Prisma connection. Health dependencies order startup; they do not guarantee a dependency remains available afterward.
 
-No bucket is made public. Storage integration and upload processing remain Tasks 5.2–5.3. [Task 5.1 storage architecture](../architecture/STORAGE_ARCHITECTURE.md) defines private buckets, authorized application streaming and the future scoped runtime credentials. `S3_BUCKET=gemukore-dev` reserves the intended local bucket name; it is not automatically provisioned. The temporary verification bucket is removed after checks. Local root MinIO credentials are for this development sandbox; the production application must use a scoped storage identity.
+No bucket is made public. [Task 5.2 storage service](STORAGE.md) provides the adapter; Asset records and upload processing remain Task 5.3. [Task 5.1 storage architecture](../architecture/STORAGE_ARCHITECTURE.md) defines private buckets, authorized application streaming and scoped production credentials. `S3_BUCKET=gemukore-dev` reserves the intended local bucket name; it is not automatically provisioned. Task 5.2 tests use independently generated credentials and disposable MinIO containers, not the development volume. Local root MinIO credentials are for this development sandbox; the production application must use a scoped storage identity.
 
 ## MinIO source build
 

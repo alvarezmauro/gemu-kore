@@ -896,6 +896,8 @@ Implement:
 - metadata
 - object keys
 
+Status: **Completed 2026-10-04.** Implemented one server-only S3-compatible adapter with generated immutable locators, technical metadata, replayable/hash-checked uploads, streamed reads/ranges, confirmed missing-key metadata and idempotent current-object deletion. Added optional all-or-none storage configuration, explicit path-style addressing, bounded retries/deadlines, cancellation and redacted failures; SDK imports are confined by lint rules. Reproduced and fixed MinIO's ambiguous HEAD 404 for missing buckets versus keys. Pinned @aws-sdk/client-s3 3.1146.0. All 145 unit/component, 32 isolated storage, 198 PostgreSQL integration and 64 desktop/mobile browser tests pass (439 total), with lint, serialized typechecking, formatting, production browser builds and whitespace checks. The refreshed Docker app is healthy and preview/login/private redirects pass browser verification. Existing pg deprecation and two previously reviewed tooling advisories remain documented; no new audit advisory. No schema, Asset records, media endpoint, content-decoding pipeline, signed URL API, public bucket or development-data mutation. Usage, tests and handoff: [docs/operations/STORAGE.md](docs/operations/STORAGE.md). Next: Task 5.3.
+
 ---
 
 ## TASK 5.3 — Asset Upload Pipeline

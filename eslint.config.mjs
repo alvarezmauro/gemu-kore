@@ -3,6 +3,12 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTypeScript from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 
+const sdkBoundary = {
+  group: ["@aws-sdk/*", "@aws-sdk/**"],
+  message:
+    "S3 SDK imports belong only in the server storage adapter. Use its neutral contract.",
+};
+
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
@@ -18,12 +24,18 @@ export default defineConfig([
     "src/server/db/generated/**",
   ]),
   {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/server/storage/s3.ts"],
+    rules: { "no-restricted-imports": ["error", { patterns: [sdkBoundary] }] },
+  },
+  {
     files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
           patterns: [
+            sdkBoundary,
             {
               group: [
                 "@prisma/**",
@@ -49,6 +61,7 @@ export default defineConfig([
         "error",
         {
           patterns: [
+            sdkBoundary,
             {
               group: [
                 "@prisma/**",
@@ -75,6 +88,7 @@ export default defineConfig([
         "error",
         {
           patterns: [
+            sdkBoundary,
             {
               group: [
                 "react",
@@ -135,6 +149,7 @@ export default defineConfig([
         "error",
         {
           patterns: [
+            sdkBoundary,
             {
               group: [
                 "react",
@@ -161,6 +176,70 @@ export default defineConfig([
                 "Services own transactions and domain rules; database queries belong in repositories.",
             },
           ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/storage/**/*.ts"],
+    ignores: ["**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "react",
+                "react/**",
+                "next",
+                "next/**",
+                "@prisma/**",
+                "pg",
+                "@/app/**",
+                "@/components/**",
+                "@/features/**",
+                "@/server/db/**",
+                "@/server/repositories/**",
+                "@/server/auth/**",
+                "@/server/services/**",
+                "**/app/**",
+                "**/components/**",
+                "**/features/**",
+                "**/db/**",
+                "**/repositories/**",
+                "**/auth/**",
+                "**/services/**",
+              ],
+              message:
+                "Storage adapters own byte operations only; authorization and persistence belong in services and repositories.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "Program:not(:has(ImportDeclaration[source.value='server-only']))",
+          message: "Every server storage module must import server-only.",
+        },
+        {
+          selector: "ImportDeclaration[source.value=/^@aws-sdk\\//]",
+          message: "SDK imports belong in s3.ts only.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/storage/s3.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "Program:not(:has(ImportDeclaration[source.value='server-only']))",
+          message: "Every server storage module must import server-only.",
         },
       ],
     },

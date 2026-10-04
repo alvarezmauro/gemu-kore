@@ -92,3 +92,33 @@ it("permits service-owned transactions and neutral feature contracts", async () 
     ),
   ).toEqual([]);
 });
+
+it.each([
+  [servicePath, "@aws-sdk/client-s3"],
+  ["src/app/page.tsx", "@aws-sdk/client-s3"],
+  ["src/features/media/contracts.ts", "@aws-sdk/client-s3"],
+  ["src/server/storage/s3.ts", "@/server/repositories/access"],
+  ["src/server/storage/index.ts", "@aws-sdk/client-s3"],
+])("rejects storage layer bypass in %s from %s", async (path, source) => {
+  expect(
+    await boundaryMessages(
+      `import "server-only"; import { example } from "${source}"; export { example };`,
+      path,
+    ),
+  ).not.toEqual([]);
+});
+
+it("permits the marked adapter's SDK import and requires its server marker", async () => {
+  expect(
+    await boundaryMessages(
+      'import "server-only"; import { S3Client } from "@aws-sdk/client-s3"; export { S3Client };',
+      "src/server/storage/s3.ts",
+    ),
+  ).toEqual([]);
+  expect(
+    await boundaryMessages(
+      "export const marker = true;",
+      "src/server/storage/index.ts",
+    ),
+  ).not.toEqual([]);
+});
