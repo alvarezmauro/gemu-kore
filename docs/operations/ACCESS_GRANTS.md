@@ -12,7 +12,7 @@ There is no User foreign key and no User.role. A grant can exist before its owne
 
 `src/server/services/access.ts` returns only the role needed by the private welcome page. Feature queries handle request headers and transport errors; React contains no grant query or permission logic. Private pages are dynamic and not shared-cached. A committed disable/delete or role change affects the next authorization check, including an existing session. Already authorized operations may finish; already delivered data cannot be recalled.
 
-Task 3.4 will add role-to-permission policy, service enforcement, ordinary grant management with fresh-login and last-admin safeguards. No grant-management HTTP endpoint or Server Action is exposed by Task 3.3. The current private page is a welcome screen, not implemented collection management.
+Task 3.4 now implements the [role-to-permission policy and guarded grant-management services](RBAC.md), with fresh-login and last-admin safeguards. No grant-management HTTP endpoint, Server Action or screen is exposed yet. The current private page is a welcome screen, not implemented collection management.
 
 ## First administrator
 

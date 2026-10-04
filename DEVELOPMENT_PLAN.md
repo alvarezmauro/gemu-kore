@@ -718,6 +718,8 @@ Permissions must be server-side.
 
 Editors manage copies and generate enrichment suggestions; only admins create/edit canonical catalog records or accept canonical changes. Publication and settings changes require ADMIN. Enforce permissions at the underlying service, including inline catalog creation.
 
+Status: **Completed 2026-10-04.** Added the explicit role-permission matrix, a server-only guard that reloads current session/grant authority, and guarded grant list/create/update/delete services. Grant mutations require a session created within five minutes, serialize with bootstrap/recovery, and cannot remove the final enabled ADMIN. Direct-service tests cover role escalation, revoked/stale identity, fresh-login requirements, strict inputs, inline canonical denial/rollback and concurrent administrator changes. Lint, typechecking, formatting, production build, 72 unit/component tests, 110 isolated database integration tests and 50 desktop/mobile browser tests pass. No new dependency, migration or future domain functionality. Grant-management UI/transport is not exposed yet. Policy and usage: [docs/operations/RBAC.md](docs/operations/RBAC.md).
+
 ---
 
 ## TASK 3.5 — Authentication Tests

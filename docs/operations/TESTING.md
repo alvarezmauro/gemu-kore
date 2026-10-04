@@ -79,6 +79,10 @@ Desktop/mobile checks cover all three enabled roles, absent grants with forged r
 
 Run this suite and `pnpm test:e2e` sequentially: both use the checkout's production build output and the same report directory. Normal completion, failed assertions and setup errors clean up the test proxy, temporary certificate and database container. As with integration tests, forcibly killing the runner may leave an abandoned test container; inspect the test label and remove only that exact container. Ports 3110 and 3111 must be free. See [ACCESS_GRANTS.md](ACCESS_GRANTS.md) for authorization and operator procedures.
 
+## Role authorization tests
+
+Task 3.4 adds pure permission/fresh-login unit tests and direct server authorization tests in `tests/integration/permissions.test.ts`. The integration suite uses real signed sessions and current grants, including role demotion, expired/revoked/unverified identities, strict grant-service inputs, last-admin safeguards and competing grant changes. A test-only table in disposable PostgreSQL demonstrates transaction rollback when an editor's copy-management operation attempts an inline canonical write. It is not a domain model or migration and is removed afterward. No future catalog/collection functionality is claimed by this probe.
+
 ## Task 1.4 verification
 
 Verified on 2026-10-03:

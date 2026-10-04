@@ -1,6 +1,6 @@
 # GemuKore — Authentication Architecture Review
 
-Task 3.1 · Reviewed 2026-10-04 · Identity and AccessGrant implemented in Tasks 3.2–3.3; RBAC remains Task 3.4.
+Task 3.1 · Reviewed 2026-10-04 · Identity, AccessGrant and RBAC implemented in Tasks 3.2–3.4.
 
 ## 1. Recommendation and scope
 
@@ -8,7 +8,7 @@ Use Better Auth for Google/GitHub identity and PostgreSQL-backed sessions. Use t
 
 This follows [PROJECT_SPEC.md §§10–12](../../PROJECT_SPEC.md), accepted decision A09 in [ARCHITECTURE_REVIEW.md](ARCHITECTURE_REVIEW.md), and the boundaries in [REPOSITORY_ARCHITECTURE.md](REPOSITORY_ARCHITECTURE.md). There is one collection and three roles; no membership framework, password login, auth administration plugin, Redis or separate auth service is needed.
 
-At the time of Task 3.1, the repository had no auth dependency, auth tables or protected product routes. Task 3.2 implements identity/session integration; its setup and tested scope are recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md). Task 3.3 implements current-grant authorization, bootstrap and operator recovery, documented in [ACCESS_GRANTS.md](../operations/ACCESS_GRANTS.md). Role permission policy, ordinary grant administration, last-admin protection and its fresh-login requirement remain Task 3.4. The recommendations below describe the complete target architecture, not a claim that every control is already implemented.
+At the time of Task 3.1, the repository had no auth dependency, auth tables or protected product routes. Task 3.2 implements identity/session integration; its setup and tested scope are recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md). Task 3.3 implements current-grant authorization, bootstrap and operator recovery, documented in [ACCESS_GRANTS.md](../operations/ACCESS_GRANTS.md). Task 3.4 implements the role policy, guarded grant services, last-admin protection and fresh-login checks, documented in [RBAC.md](../operations/RBAC.md). Grant-management UI/transport and future domain services are not implemented. The recommendations below describe the complete target architecture, not a claim that every future feature is already present.
 
 ```mermaid
 flowchart TD
@@ -209,4 +209,4 @@ Task 3.2 must review the library endpoint surface and disable unused link/unlink
 
 Before real OAuth verification, supply the browser origin, Google/GitHub client IDs/secrets and server-only `BETTER_AUTH_SECRET`. Provider callbacks are `/api/auth/callback/google` and `/api/auth/callback/github` under the configured origin. These are operational inputs, not unresolved architecture choices. Add their validation and `.env.example` placeholders in Task 3.2; never commit values or use `NEXT_PUBLIC_*` for secrets. The first administrator's exact verified address is supplied when running Task 3.3's bootstrap.
 
-Task 3.1 checked repository/spec alignment, published compatibility, pinned provider/callback behavior and documentation consistency without implementation. Task 3.2's identity integration is recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md); Task 3.3's grant schema, server context and operator commands are recorded in [ACCESS_GRANTS.md](../operations/ACCESS_GRANTS.md). Live provider login remains unverified until credentials are configured. Task 3.4 remains responsible for role permissions and ordinary grant administration.
+Task 3.1 checked repository/spec alignment, published compatibility, pinned provider/callback behavior and documentation consistency without implementation. Task 3.2's identity integration is recorded in [AUTHENTICATION.md](../operations/AUTHENTICATION.md); Task 3.3's grant schema, server context and operator commands are recorded in [ACCESS_GRANTS.md](../operations/ACCESS_GRANTS.md). Task 3.4's role permissions and guarded grant administration are recorded in [RBAC.md](../operations/RBAC.md). Live provider login remains unverified until credentials are configured. Future domain services and grant-management transports must apply these service boundaries as they are implemented.

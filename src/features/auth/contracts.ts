@@ -6,3 +6,10 @@ export function isAccessRole(value: unknown): value is AccessRole {
 }
 
 export type PrivateWelcome = { role: AccessRole };
+
+export type AccessGrantSummary = {
+  id: string;
+  email: string;
+  role: AccessRole;
+  enabled: boolean;
+};

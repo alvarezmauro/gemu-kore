@@ -1,21 +1,34 @@
 import "server-only";
 
 import { z } from "zod";
-import type { PrivateWelcome } from "@/features/auth/contracts";
-import { requirePrivateAccess } from "../auth/access";
+import {
+  accessRoles,
+  type PrivateWelcome,
+  type AccessGrantSummary,
+} from "@/features/auth/contracts";
+import {
+  requirePrivateAccess,
+  type PrivateAccessContext,
+} from "../auth/access";
+import { requirePermission } from "../auth/permissions";
 import { normalizeVerifiedEmail } from "../auth/email";
 import { withTransaction, type TransactionClient } from "../db/transaction";
 import {
   countEnabledAdministrators,
   createAdministratorGrant,
+  deleteGrant,
   disableGrant,
   findGrantByEmail,
+  findGrantById,
   findRecoveryUser,
   findUserByEmail,
   lockAccessGrantPolicy,
+  listGrants,
+  insertGrant,
   rebindRecoveryUserEmail,
   restoreAdministratorGrant,
   revokeSessionsForEmails,
+  updateGrant,
 } from "../repositories/access";
 
 export class GrantSetupError extends Error {
@@ -80,8 +93,118 @@ export function withAccessGrantTransaction<T>(
 export async function getPrivateWelcome(
   requestHeaders: Headers,
 ): Promise<PrivateWelcome> {
-  const context = await requirePrivateAccess(requestHeaders);
+  const context = await requirePermission(
+    await requirePrivateAccess(requestHeaders),
+    "private.read",
+  );
   return { role: context.role };
+}
+
+export class GrantManagementError extends Error {
+  constructor(
+    public readonly code:
+      "INVALID_INPUT" | "NOT_FOUND" | "CONFLICT" | "LAST_ADMIN",
+  ) {
+    const messages = {
+      INVALID_INPUT: "Invalid access grant input.",
+      NOT_FOUND: "Access grant not found.",
+      CONFLICT: "This email already has an access grant.",
+      LAST_ADMIN: "Keep at least one enabled administrator.",
+    };
+    super(messages[code]);
+    this.name = "GrantManagementError";
+  }
+}
+
+const createGrantInput = z
+  .object({
+    email: emailInput,
+    role: z.enum(accessRoles),
+    enabled: z.boolean().default(false),
+  })
+  .strict();
+const updateGrantInput = z
+  .object({
+    id: z.uuid(),
+    role: z.enum(accessRoles),
+    enabled: z.boolean(),
+  })
+  .strict();
+const deleteGrantInput = z.object({ id: z.uuid() }).strict();
+
+function grantSummary(grant: AccessGrantSummary): AccessGrantSummary {
+  return {
+    id: grant.id,
+    email: grant.email,
+    role: grant.role,
+    enabled: grant.enabled,
+  };
+}
+
+export async function listAccessGrants(
+  context: PrivateAccessContext,
+): Promise<AccessGrantSummary[]> {
+  await requirePermission(context, "access.read");
+  return (await listGrants()).map(grantSummary);
+}
+
+export async function createAccessGrant(
+  context: PrivateAccessContext,
+  input: unknown,
+): Promise<AccessGrantSummary> {
+  return withAccessGrantTransaction(async (transaction) => {
+    await requirePermission(context, "access.manage", transaction);
+    const parsed = createGrantInput.safeParse(input);
+    if (!parsed.success) throw new GrantManagementError("INVALID_INPUT");
+    if (await findGrantByEmail(parsed.data.email, transaction))
+      throw new GrantManagementError("CONFLICT");
+    return grantSummary(await insertGrant(parsed.data, transaction));
+  });
+}
+
+async function checkAdministratorRemoval(
+  existing: AccessGrantSummary,
+  replacement: { role: string; enabled: boolean } | null,
+  transaction: TransactionClient,
+) {
+  if (
+    existing.enabled &&
+    existing.role === "ADMIN" &&
+    !(replacement?.enabled && replacement.role === "ADMIN") &&
+    (await countEnabledAdministrators(transaction)) <= 1
+  )
+    throw new GrantManagementError("LAST_ADMIN");
+}
+
+export async function updateAccessGrant(
+  context: PrivateAccessContext,
+  input: unknown,
+): Promise<AccessGrantSummary> {
+  return withAccessGrantTransaction(async (transaction) => {
+    await requirePermission(context, "access.manage", transaction);
+    const parsed = updateGrantInput.safeParse(input);
+    if (!parsed.success) throw new GrantManagementError("INVALID_INPUT");
+    const { id, role, enabled } = parsed.data;
+    const existing = await findGrantById(id, transaction);
+    if (!existing) throw new GrantManagementError("NOT_FOUND");
+    await checkAdministratorRemoval(existing, { role, enabled }, transaction);
+    return grantSummary(await updateGrant(id, { role, enabled }, transaction));
+  });
+}
+
+export async function deleteAccessGrant(
+  context: PrivateAccessContext,
+  input: unknown,
+): Promise<{ id: string }> {
+  return withAccessGrantTransaction(async (transaction) => {
+    await requirePermission(context, "access.manage", transaction);
+    const parsed = deleteGrantInput.safeParse(input);
+    if (!parsed.success) throw new GrantManagementError("INVALID_INPUT");
+    const existing = await findGrantById(parsed.data.id, transaction);
+    if (!existing) throw new GrantManagementError("NOT_FOUND");
+    await checkAdministratorRemoval(existing, null, transaction);
+    return await deleteGrant(existing.id, transaction);
+  });
 }
 
 // Local operator use only. No route or Server Action exports these operations.

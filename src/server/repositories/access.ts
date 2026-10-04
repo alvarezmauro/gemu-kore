@@ -2,6 +2,7 @@ import "server-only";
 
 import { getDatabase } from "../db/client";
 import type { TransactionClient } from "../db/transaction";
+import type { AccessRole } from "@/features/auth/contracts";
 
 export function findGrantByEmail(
   email: string,
@@ -21,8 +22,52 @@ export function findCurrentAccessIdentity(
   return database.session.findFirst({
     where: { id: sessionId, userId, expiresAt: { gt: new Date() } },
     select: {
+      createdAt: true,
       user: { select: { id: true, email: true, emailVerified: true } },
     },
+  });
+}
+
+export function listGrants(database: TransactionClient = getDatabase()) {
+  return database.accessGrant.findMany({
+    orderBy: { email: "asc" },
+    select: { id: true, email: true, role: true, enabled: true },
+  });
+}
+
+export function findGrantById(id: string, transaction: TransactionClient) {
+  return transaction.accessGrant.findUnique({
+    where: { id },
+    select: { id: true, email: true, role: true, enabled: true },
+  });
+}
+
+export function insertGrant(
+  data: { email: string; role: AccessRole; enabled: boolean },
+  transaction: TransactionClient,
+) {
+  return transaction.accessGrant.create({
+    data,
+    select: { id: true, email: true, role: true, enabled: true },
+  });
+}
+
+export function updateGrant(
+  id: string,
+  data: { role: AccessRole; enabled: boolean },
+  transaction: TransactionClient,
+) {
+  return transaction.accessGrant.update({
+    where: { id },
+    data,
+    select: { id: true, email: true, role: true, enabled: true },
+  });
+}
+
+export function deleteGrant(id: string, transaction: TransactionClient) {
+  return transaction.accessGrant.delete({
+    where: { id },
+    select: { id: true },
   });
 }
 
