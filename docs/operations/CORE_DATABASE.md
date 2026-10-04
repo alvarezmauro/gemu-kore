@@ -41,7 +41,7 @@ Dimensions use exact decimals in millimeters; weight uses grams. Unknown values 
 
 A collection aggregate must be created inside one transaction: create its root, create the matching owned child, then commit. Prisma nested create is also verified. Creating the root in one committed operation and adding its child later is invalid. Deleting/replacing a subtype alone must retain the root's valid subtype at commit. Explicit `SET CONSTRAINTS ... IMMEDIATE` can force the check sooner, so callers must not force it before finishing aggregate creation.
 
-This task provides storage contracts only. Future authorized services must revalidate current permissions inside write transactions, validate input/domain rules, increment aggregate revisions and persist manual/seed/provider provenance atomically. Catalog writes/history are ADMIN responsibilities. Publication approval/reset, Region Worldwide redundancy, full hierarchy acyclicity and normalized URL/content rules remain service responsibilities; database constraints do not replace them. Repositories and CRUD are Task 4.3 and later, not implemented here.
+This task provides storage contracts only. Future authorized services must revalidate current permissions inside write transactions, validate input/domain rules, increment aggregate revisions and persist manual/seed/provider provenance atomically. Catalog writes/history are ADMIN responsibilities. Publication approval/reset, Region Worldwide redundancy, full hierarchy acyclicity and normalized URL/content rules remain service responsibilities; database constraints do not replace them. Task 4.3 now provides [base identity repositories and persistence conventions](REPOSITORIES.md); domain CRUD and feature services remain assigned to later tasks.
 
 ## Deferred schema
 
@@ -62,6 +62,6 @@ pnpm db:check
 
 The core integration suite exercises the actual Prisma client and direct SQL against disposable PostgreSQL. It verifies fresh migration replay, repeat deployment, Prisma-visible drift, all three aggregate types, invalid roots/subtypes, child movement/replacement, independent printings/copies, delete rules, markets/credits, date precision, typed targets/uniqueness, location names, defects, immutable provenance, deleted-user attribution and versioned JSON. It never uses personal collection data; its isolated fixture reset deliberately uses TRUNCATE to discard immutable test history.
 
-Task 4.2 is complete; Task 4.3 repository conventions are next. Test results and local deployment verification are recorded in [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md) and [TESTING.md](TESTING.md).
+Task 4.2 is complete and Task 4.3 repository conventions are implemented. Task 5.1 storage architecture is next. Test results and local deployment verification are recorded in [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md) and [TESTING.md](TESTING.md).
 
 Verified 2026-10-04 after Task 4.2: 52 core integration cases pass; the complete suite passes 82 unit/component, 189 integration and 64 desktop/mobile browser tests (335 total). Schema validation, lint, TypeScript, formatting, production builds and whitespace checks pass. Local migration status/drift/connectivity are healthy. Docker regenerated all 30 models and its existing login/private redirect/design preview remain functional. Temporary test databases were removed.

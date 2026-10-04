@@ -67,4 +67,102 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ["src/server/repositories/**/*.ts"],
+    ignores: ["**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "react",
+                "react/**",
+                "next",
+                "next/**",
+                "@/app/**",
+                "@/components/**",
+                "@/features/**",
+                "**/app/**",
+                "**/components/**",
+                "**/features/**",
+                "@/server/auth",
+                "@/server/auth/**",
+                "@/server/services/**",
+                "@/server/storage/**",
+                "@/server/providers/**",
+                "@/server/ai/**",
+                "**/auth",
+                "**/auth/**",
+                "**/services/**",
+                "**/storage/**",
+                "**/providers/**",
+                "**/ai/**",
+              ],
+              message:
+                "Repositories own persistence only. Services own authorization, domain workflows and external adapters.",
+            },
+            {
+              group: ["@/server/db/transaction", "**/db/transaction"],
+              importNames: ["withTransaction"],
+              message:
+                "The outer service owns the transaction; repositories receive its TransactionClient.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "Program:not(:has(ImportDeclaration[source.value='server-only']))",
+          message: "Every application repository must import server-only.",
+        },
+        {
+          selector: "CallExpression[callee.property.name='$transaction']",
+          message:
+            "Repositories must not start transactions. Receive the outer service's transaction instead.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/services/**/*.ts"],
+    ignores: ["**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "react",
+                "react/**",
+                "next",
+                "next/**",
+                "@/app/**",
+                "@/components/**",
+                "**/app/**",
+                "**/components/**",
+                "@/features/**/components/**",
+                "**/features/**/components/**",
+                "@/features/**/actions",
+                "**/features/**/actions",
+                "@/features/**/queries.server",
+                "**/features/**/queries.server",
+              ],
+              message:
+                "Services must stay independent of UI and request entry points. Neutral feature contracts are allowed.",
+            },
+            {
+              group: ["@/server/db/client", "**/db/client"],
+              message:
+                "Services own transactions and domain rules; database queries belong in repositories.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);

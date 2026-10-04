@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDatabase } from "../db/client";
 import type { TransactionClient } from "../db/transaction";
-import type { AccessRole } from "@/features/auth/contracts";
+import type { AccessRole } from "../db/generated/client";
 
 export function findGrantByEmail(
   email: string,

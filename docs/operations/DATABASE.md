@@ -50,7 +50,7 @@ Generated Prisma files live under `src/server/db/generated/` and are ignored. Th
 
 `src/server/db/client.ts` lazily creates one server-only Prisma client and reuses it across requests and hot reloads. Its PostgreSQL adapter has a maximum of five connections, a five-second connection/acquisition timeout, ten-second idle timeout and ten-second statement timeout. New process instances each have their own pool; deployment capacity planning must account for their combined limits.
 
-Repositories use the client; service use cases use `withTransaction` to coordinate repositories within a single transaction. The helper has a five-second acquisition limit and ten-second transaction timeout. Keep provider calls and other slow external work outside transactions. `disconnectDatabase` is for short-lived operational commands, not normal request cleanup.
+The [repository conventions](REPOSITORIES.md) define explicit selected records and caller-supplied transaction handles. Repositories use the client; service use cases use `withTransaction` to coordinate repositories within a single transaction. The helper has a five-second acquisition limit and ten-second transaction timeout. Keep provider calls and other slow external work outside transactions. `disconnectDatabase` is for short-lived operational commands, not normal request cleanup.
 
 Two checks serve different purposes:
 

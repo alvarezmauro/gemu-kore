@@ -843,6 +843,8 @@ Create repository conventions.
 
 Do not make one enormous generic repository.
 
+Status: **Completed 2026-10-04.** Added small server-only catalog and collection identity repositories covering all three product/copy splits, with explicit nested selects, retained archive state, nullable missing results and caller-supplied transaction reads. Preserved the existing access repository and switched its role type to the server-local generated client. Documented query/input/DTO/error conventions, service-owned transactions and authorization, future pagination and separate public projections. ESLint now enforces repository markers, downward imports and transaction ownership, and blocks service UI/request/database-client imports. Eighteen new boundary cases and nine real PostgreSQL repository cases cover missing/wrong-kind IDs, narrow records, all subtypes, archives, transaction visibility and rollback. All 100 unit/component, 198 isolated integration and 64 desktop/mobile browser tests pass (362 total), plus lint, typechecking, formatting, production builds and whitespace checks. The existing local login/private redirect/home pass browser verification and all disposable databases were removed. A nonfailing pg adapter deprecation warning is traced and documented without suppression or dependency changes. No schema/migration, domain CRUD, new endpoint, UI change or future storage feature. Conventions and limits: [docs/operations/REPOSITORIES.md](docs/operations/REPOSITORIES.md). Next: Task 5.1.
+
 ---
 
 # PHASE 5 — Assets & Object Storage
