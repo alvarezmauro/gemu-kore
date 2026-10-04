@@ -939,6 +939,8 @@ Add extensive tests for:
 - object keys
 - metadata normalization
 
+Status: **Completed 2026-10-04.** Added 240 unit utility cases covering supported/forged MIME types and actual decoding, filename decoding/NFC/basename/length/control boundaries, canonical opaque keys and UUID/namespace isolation, strict metadata envelopes/checksums/numeric bounds, technical-only object headers, image resizing/transparency and all eight EXIF rotations/mirrors checked by pixel positions. Strengthened the APNG fixture with valid CRCs and an independent decoder check; generated compact real fixtures avoid network downloads and large raw photos. The tests exposed an inherited-property MIME allowlist bug; changed it to Object.hasOwn and added three authenticated 400/no-reservation regressions plus a private filename persistence/header regression. All 394 unit/component, 29 isolated asset-pipeline, 32 storage, 198 PostgreSQL and 66 desktop/mobile browser tests pass (719 total), with lint, typechecking, formatting, production builds and whitespace checks. Disposable databases and buckets are removed. No schema/migration, dependency, new endpoint, UI, development-data/storage-policy change or future phase implementation. Existing documented pg deprecation and tooling advisories are unchanged. Coverage and boundaries: [docs/operations/ASSET_UPLOADS.md](docs/operations/ASSET_UPLOADS.md#task-54-utility-regression-coverage). Next: Task 6.1.
+
 ---
 
 # PHASE 6 — Shared Collection Infrastructure

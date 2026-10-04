@@ -849,3 +849,38 @@ it("returns the existing completion when another request commits during verifica
   expect(await slow).toEqual(fast);
   expect(await db.catalogAsset.count()).toBe(1);
 });
+it.each(["constructor", "toString", "__proto__"])(
+  "rejects inherited MIME name %s at the authenticated upload boundary",
+  async (mime) => {
+    const response = await send(await image(), { "content-type": mime });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "The file or upload details are invalid.",
+    });
+    expect(await db.asset.count()).toBe(0);
+  },
+);
+it("persists only the normalized filename and omits it from object keys, DTOs and download headers", async () => {
+  const source = "C:\\private-owner\\photos\\Cafe\u0301.JPEG";
+  const response = await send(await image(), {
+    "x-file-name": encodeURIComponent(source),
+  });
+  expect(response.status).toBe(201);
+  const text = await response.text();
+  expect(text).not.toContain("private-owner");
+  expect(text).not.toContain("Café");
+  const dto = JSON.parse(text);
+  const original = (await db.asset.findUnique({
+    where: { id: dto.uploadId },
+  }))!;
+  expect(original.originalFilename).toBe("Café.JPEG");
+  expect(original.objectKey).not.toContain("Café");
+  const head = await privateMediaRequest(
+    new Request("http://localhost:3002/", { method: "HEAD", headers }),
+    dto.uploadId,
+  );
+  expect(head.status).toBe(200);
+  expect(head.headers.get("content-disposition")).toBe(
+    'attachment; filename="asset.jpeg"',
+  );
+});

@@ -36,7 +36,7 @@ export function uploadDescription(
   };
   if (
     !mimeType ||
-    !(mimeType in extensions) ||
+    !Object.hasOwn(extensions, mimeType) ||
     !encodedFilename ||
     encodedFilename.length > 1500
   )

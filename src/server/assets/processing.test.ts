@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import sharp from "sharp";
+import { pngChunk } from "../../../tests/helpers/png-fixtures";
 import { expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import { prepareUpload, uploadDescription, IMAGE_LIMIT } from "./processing";
@@ -105,15 +106,16 @@ it("rejects APNG animation markers even when the decoder would show only the fir
   })
     .png()
     .toBuffer();
-  const chunk = Buffer.alloc(20);
-  chunk.writeUInt32BE(8);
-  chunk.write("acTL", 4);
-  chunk.writeUInt32BE(2, 8);
+  const animationControl = Buffer.alloc(8);
+  animationControl.writeUInt32BE(2);
+  const chunk = pngChunk("acTL", animationControl);
   const animated = Buffer.concat([
     png.subarray(0, 33),
     chunk,
     png.subarray(33),
   ]);
+  expect((await sharp(animated).metadata()).width).toBe(2);
+  expect(await sharp(animated).raw().toBuffer()).toHaveLength(12);
   await expect(
     prepareUpload(
       body(animated),
