@@ -98,7 +98,7 @@ Names can gain trigram indexes and descriptive text full-text indexes in Phase 7
 
 ### 3.1 Authentication entities
 
-These are conceptual responsibilities, not a hand-written replacement for the authentication adapter schema. Better Auth defines User, Session, Account and Verification and supports schema generation for ORM adapters. Task 3.1/3.2 must validate the exact pinned-version requirements, compatible IDs and additional library fields. [Better Auth database documentation](https://better-auth.com/docs/concepts/database).
+These are conceptual responsibilities, not a hand-written replacement for the authentication adapter schema. Better Auth defines User, Session, Account and Verification and supports schema generation for ORM adapters. Task 3.1's [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md) pins the reviewed version and defines compatible UUID IDs, verified-email policy and session/account behavior. Task 3.2 must generate and verify the actual adapter fields and migration. [Better Auth database documentation](https://better-auth.com/docs/concepts/database).
 
 | Entity | Purpose and important fields | Relationships and ownership | Deletion | Uniqueness / likely indexes |
 | --- | --- | --- | --- | --- |
@@ -108,7 +108,7 @@ These are conceptual responsibilities, not a hand-written replacement for the au
 | `Verification` | Library-managed short-lived challenge/state: identifier, value, expiry and required timestamps. | Auth-owned; no catalog/collection relationship; user association only if the chosen adapter requires it. | Expiry cleanup according to library. | Library-required key semantics; identifier and expiry lookup. Do not invent single-challenge uniqueness that breaks the adapter. |
 | `AccessGrant` | Authorized normalized email, role ADMIN/EDITOR/VIEWER, enabled, timestamps. | App-owned policy; exists before a User. Runtime matches verified normalized email, not an unverified client claim. | Prefer disable for revocation; deletion also immediately removes authorization. No cascade to user/content. | Unique normalized email. Primary lookup uses that key; no separate role index initially. |
 
-Keep opaque provider credentials and session fields server-only. No public registration or OAuth callback can confer collection access without an enabled grant. Re-read current grant policy on private operations; session role snapshots are not the authority. Bootstrap the first grant using an explicit administrative setup procedure in Task 3.1. Account linking and verified-email changes remain authentication integration decisions, not extra catalog models.
+Keep opaque provider credentials and session fields server-only. No public registration or OAuth callback can confer collection access without an enabled grant. Re-read current grant policy on private operations; session role snapshots are not the authority. Task 3.1 defines the local first-admin procedure for implementation in Task 3.3, disables account linking and requires controlled recovery for verified-email changes. These remain authentication responsibilities, not extra catalog models.
 
 ### 3.2 Configuration entities
 
@@ -414,7 +414,7 @@ No core domain decision requires another round of C01–C17 questions. Task 0.3 
 
 The following are deliberately later implementation decisions:
 
-- Task 3.1: pinned Better Auth schema/configuration, verified-email/account-linking behavior and bootstrap/revocation procedure.
+- Task 3.1 completed the authentication design in [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md); Tasks 3.2–3.4 implement and verify its pinned adapter schema, verified-email/account-linking behavior and bootstrap/revocation procedure.
 - Task 4.1/4.2: exact migration syntax, Prisma mappings and tested enforcement of constraints not expressible directly in the ORM.
 - Phase 5: numerical upload limits, derivative codecs, storage provider configuration and retry/cleanup operations. Task 0.3 chooses authorized streaming without signed read URLs as the baseline; a different delivery policy requires an explicit access-lifetime decision.
 - Tasks 9.1/14.1: geometry axes, exact UV schemas, renderer budgets and template validation mechanics.

@@ -277,6 +277,8 @@ These are logical owners, not ten required folders on day one. Begin with files 
 
 `server/policies/` owns shared permission and publication predicates. Policies consume narrow facts/context and cannot fetch data. Auth context and publication facts are loaded through their own server boundaries, so a policy is reusable without hiding a database read inside a boolean helper.
 
+Task 3.1's [AUTH_ARCHITECTURE.md](AUTH_ARCHITECTURE.md) specifies the identity-to-grant context, provider guards, session lifecycle, permission matrix and bootstrap/revocation contract. Auth server configuration belongs under `server/auth/`; client login controls and their client SDK belong under `features/auth/`, preserving the shared import boundaries reviewed in Task 2.4.
+
 ### 5.2 Repositories
 
 Repositories express operations such as loading a release identity, listing owned games, inserting an item/subtype within a transaction, or selecting a public item projection. A repository is not a generic endpoint that accepts arbitrary client-provided Prisma `where`, `include`, `select` or sort objects.

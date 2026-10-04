@@ -617,6 +617,8 @@ GPT-6 Sol fixes actionable findings.
 
 ## TASK 3.1 — Auth Architecture Review
 
+Status: **Completed 2026-10-04.** [docs/architecture/AUTH_ARCHITECTURE.md](docs/architecture/AUTH_ARCHITECTURE.md) defines verified Google/GitHub identity, disabled account linking, fixed database sessions, current-grant authorization, first-admin bootstrap, revocation and implementation verification gates. Documentation only; Better Auth and AccessGrant implementation remain Tasks 3.2–3.4.
+
 MODEL:
 
 `GPT-6 Astra`
