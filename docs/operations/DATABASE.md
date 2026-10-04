@@ -1,6 +1,6 @@
 # Database development
 
-The foundation uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Task 4.1 adds the approved core catalog and owned-collection structures. See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
+The foundation uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Tasks 4.1–4.2 implement and review the approved core catalog and owned-collection structures. Findings and corrections are in [Prisma schema review](../architecture/PRISMA_SCHEMA_REVIEW.md). See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
 
 ## Local connection
 

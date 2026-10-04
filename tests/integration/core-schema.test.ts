@@ -198,6 +198,139 @@ it("rejects a mismatched subtype and a forged fixed child type", async () => {
 });
 
 it.each(["CONSOLE", "GAME", "ACCESSORY"] as const)(
+  "rejects changing a new %s root ID before its deferred check",
+  async (type) => {
+    await expect(
+      withTransaction(async (tx) => {
+        const root = await tx.collectionItem.create({ data: { type } });
+        await tx.$executeRaw`UPDATE collection_item SET id = ${randomUUID()}::uuid WHERE id = ${root.id}::uuid`;
+      }),
+    ).rejects.toThrow();
+    expect(await db.collectionItem.count()).toBe(0);
+  },
+);
+
+it.each(["CONSOLE", "GAME", "ACCESSORY"] as const)(
+  "rejects deleting a %s child then changing its root ID to bypass the deferred check",
+  async (type) => {
+    const root = await item(type);
+    await expect(
+      withTransaction(async (tx) => {
+        if (type === "CONSOLE")
+          await tx.ownedConsole.delete({
+            where: { collectionItemId: root.id },
+          });
+        if (type === "GAME")
+          await tx.ownedGame.delete({ where: { collectionItemId: root.id } });
+        if (type === "ACCESSORY")
+          await tx.ownedAccessory.delete({
+            where: { collectionItemId: root.id },
+          });
+        await tx.collectionItem.update({
+          where: { id: root.id },
+          data: { id: randomUUID() },
+        });
+      }),
+    ).rejects.toThrow();
+    const saved = await db.collectionItem.findUniqueOrThrow({
+      where: { id: root.id },
+      include: { ownedConsole: true, ownedGame: true, ownedAccessory: true },
+    });
+    expect(
+      [saved.ownedConsole, saved.ownedGame, saved.ownedAccessory].filter(
+        Boolean,
+      ),
+    ).toHaveLength(1);
+  },
+);
+
+const scalarLists = [
+  ["company", "aliases"],
+  ["console_platform", "aliases"],
+  ["game", "aliases"],
+  ["game_release", "languages"],
+] as const;
+
+it.each(scalarLists)(
+  "enforces a required flat string list for %s.%s",
+  async (table, column) => {
+    const id = {
+      company: companyId,
+      console_platform: platformId,
+      game: gameId,
+      game_release: releaseId,
+    }[table];
+    // These identifiers are fixed test constants, never request input.
+    const target = Prisma.raw(table);
+    const field = Prisma.raw(column);
+    for (const invalid of [
+      Prisma.sql`NULL`,
+      Prisma.sql`ARRAY['known', NULL]::text[]`,
+      Prisma.sql`ARRAY[['one'], ['two']]::text[]`,
+    ]) {
+      await expect(
+        db.$executeRaw(
+          Prisma.sql`UPDATE ${target} SET ${field} = ${invalid} WHERE id = ${id}::uuid`,
+        ),
+      ).rejects.toThrow();
+    }
+    await db.$executeRaw(
+      Prisma.sql`UPDATE ${target} SET ${field} = ARRAY['known']::text[] WHERE id = ${id}::uuid`,
+    );
+    const rows = await db.$queryRaw<{ values: string[] }[]>(
+      Prisma.sql`SELECT ${field} AS values FROM ${target} WHERE id = ${id}::uuid`,
+    );
+    expect(rows[0].values).toEqual(["known"]);
+    await db.$executeRaw(
+      Prisma.sql`UPDATE ${target} SET ${field} = ARRAY[]::text[] WHERE id = ${id}::uuid`,
+    );
+  },
+);
+
+it("covers every foreign key with a valid full index having its columns as a leading prefix", async () => {
+  const missing = await db.$queryRaw<{ name: string }[]>`
+    SELECT c.conname AS name
+    FROM pg_catalog.pg_constraint c
+    JOIN pg_catalog.pg_namespace n ON n.oid = c.connamespace
+    WHERE c.contype = 'f' AND n.nspname = 'public'
+      AND NOT EXISTS (
+        SELECT 1 FROM pg_catalog.pg_index i
+        WHERE i.indrelid = c.conrelid AND i.indisvalid AND i.indisready
+          AND i.indpred IS NULL
+          AND ARRAY(
+            SELECT key FROM unnest(i.indkey) WITH ORDINALITY AS k(key, position)
+            WHERE position <= cardinality(c.conkey) ORDER BY position
+          ) = c.conkey
+      )
+    ORDER BY c.conname`;
+  expect(missing).toEqual([]);
+});
+
+it("indexes each canonical history target for deterministic chronological reads", async () => {
+  const indexes = await db.$queryRaw<{ columns: string[] }[]>`
+    SELECT ARRAY(
+      SELECT a.attname::text
+      FROM unnest(i.indkey) WITH ORDINALITY AS k(key, position)
+      JOIN pg_catalog.pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.key
+      ORDER BY position
+    ) AS columns
+    FROM pg_catalog.pg_index i
+    WHERE i.indrelid = 'public.metadata_change'::regclass
+      AND i.indisvalid AND i.indisready AND i.indpred IS NULL`;
+  for (const target of [
+    "companyId",
+    "regionId",
+    "platformId",
+    "consoleModelId",
+    "gameId",
+    "gameReleaseId",
+    "accessoryId",
+    "accessoryVariantId",
+  ])
+    expect(indexes).toContainEqual({ columns: [target, "createdAt", "id"] });
+});
+
+it.each(["CONSOLE", "GAME", "ACCESSORY"] as const)(
   "rejects deletion of the sole %s subtype while its root survives",
   async (type) => {
     const root = await item(type);

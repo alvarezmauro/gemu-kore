@@ -113,6 +113,14 @@ Verified on 2026-10-04: 82 unit/component tests, 137 isolated PostgreSQL integra
 
 Both full and production dependency audits report two high upstream tooling advisories after the mysql2 update removes one high and one moderate advisory. Audit output is not suppressed or counted as a passing security gate. Reachability and follow-up are recorded in the review. The optional patched MySQL version was verified in both host and Docker dependency trees; `optimisticRepeatInstall: false` ensures repeated frozen installs check override/lockfile updates even when `package.json` is unchanged. Live provider consent and production ingress/rate-limit behavior remain outside these local checks.
 
+## Task 4.2 schema review verification
+
+The core suite now contains 52 database cases. Twelve new cases cover both root-ID orphan bypasses across the three subtypes, required flat/nonnullable scalar lists on four tables, complete leading-prefix foreign-key index coverage and all eight chronological history indexes. Before the corrections, 11 new cases failed as expected; the FK audit already passed. All cases pass after the additive review migration, while existing copy deletion, subtype replacement, credit scope, dates, targets, provenance and private defaults continue to pass.
+
+Verified on 2026-10-04: 82 unit/component tests, 189 isolated database integration tests and 64 desktop/mobile Chromium tests pass, **335 total**. Lint, TypeScript, formatting, schema validation, production builds and diff whitespace pass. Fresh migration replay, repeated deployment and Prisma-visible drift pass in the disposable database. The new migration is applied to development PostgreSQL, with current migration status, no detected drift and healthy connectivity. Docker's refreshed client exports all 30 models; login and design preview load without browser errors or overlays, and anonymous private entry redirects to login. The dedicated verification browser was closed and all disposable test containers were removed. No personal collection fixtures, live provider credentials or new dependency were introduced.
+
+Findings, migration validation/recovery boundaries and staged service responsibilities: [PRISMA_SCHEMA_REVIEW.md](../architecture/PRISMA_SCHEMA_REVIEW.md). Next: Task 4.3. Existing dependency advisories and live OAuth/deployment limitations from Task 3.6 are unchanged by this schema review.
+
 ## Task 4.1 core schema verification
 
 `tests/integration/core-schema.test.ts` adds 40 database cases using the existing disposable PostgreSQL runner. They exercise real Prisma nested/transactional aggregate creation and direct SQL constraint failures. Coverage includes all three matching owned subtypes, orphan commit failure, wrong/fixed types, subtype movement/deletion/replacement, catalog-preserving copy deletion, duplicate printings/copies, shared-reference deletion rules, explicit markets/variant compatibility, scoped credits, valid/invalid partial calendar dates, typed reference targets and uniqueness, locations/defects, private settings defaults, immutable metadata facts, deleted-user attribution and versioned technical JSON.
@@ -121,7 +129,7 @@ The runner replays the complete migration chain on a fresh database, then the co
 
 Verified on 2026-10-04: 82 unit/component tests, 177 isolated integration tests and 64 desktop/mobile Chromium tests pass, **323 total**. Lint, TypeScript, formatting, schema validation, production builds and diff whitespace pass. The core migration is applied to development PostgreSQL; migration status and a read-only drift check are clean, and connectivity is healthy. The restarted Docker app generated all 30 models and renders login/design preview without browser errors or an error overlay; anonymous private entry still redirects to login. All disposable test containers were removed. No real collection records or provider credentials were used for tests. The two dependency advisories recorded in Task 3.6 are unaffected by this schema-only task.
 
-Implementation contracts and remaining service responsibilities are in [CORE_DATABASE.md](CORE_DATABASE.md). Task 4.2 is still required as the next independent schema review; these checks do not claim completed domain CRUD, publication, location hierarchy services or media/enrichment functionality.
+Implementation contracts and remaining service responsibilities are in [CORE_DATABASE.md](CORE_DATABASE.md). The subsequent Task 4.2 review is recorded above; these checks do not claim completed domain CRUD, publication, location hierarchy services or media/enrichment functionality.
 
 ## Task 1.4 verification
 

@@ -825,6 +825,8 @@ implement them now.
 
 Do not postpone major schema problems.
 
+Status: **Completed 2026-10-04.** Reviewed relationships, FK index coverage, uniqueness/NULL semantics, deletion behavior, nullable fields, association tables, JSON and staged extensibility against the approved domain model. Reproduced six owned-root ID changes that bypassed deferred subtype checks, four nullable required-list cases and missing chronological history indexes. An additive migration makes copy IDs immutable, validates required flat string lists and adds the eight approved history access indexes; the unused future OwnedGame component candidate key was removed. Retained the composite subtype keys after Prisma validation confirmed their necessity. All 82 unit/component, 189 isolated integration and 64 desktop/mobile browser tests pass (335 total), including 12 new database cases; lint, typechecking, formatting, schema validation, production builds and whitespace checks pass. Local migration status, drift and connectivity are healthy. The refreshed Docker app generates all 30 models and passes login, private-redirect and home browser verification. Applied migration history is preserved; no new dependency, application endpoint, domain CRUD or future feature. Findings and service boundaries: [docs/architecture/PRISMA_SCHEMA_REVIEW.md](docs/architecture/PRISMA_SCHEMA_REVIEW.md). Next: Task 4.3.
+
 ---
 
 ## TASK 4.3 — Create Base Repositories

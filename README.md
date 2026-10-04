@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Task **4.1** implements the approved core catalog and collection database, including migration constraints and settings defaults. The root page remains a temporary design preview; catalog/collection CRUD and UI are not implemented. Next: **4.2 — Review Prisma Schema**.
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.2** implement and review the approved core catalog and collection database, including migration constraints and settings defaults. The schema review closes an owned-item ID bypass, enforces required string lists, adds history indexes and removes an unused future key. The root page remains a temporary design preview; catalog/collection CRUD and UI are not implemented. Next: **4.3 — Create Base Repositories**.
 
 ## Local development
 
@@ -65,6 +65,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Access grants, first administrator and recovery](docs/operations/ACCESS_GRANTS.md)
 - [Server role permissions and grant safeguards](docs/operations/RBAC.md)
 - [Core database structures, constraints and migration contracts](docs/operations/CORE_DATABASE.md)
+- [Prisma schema review and corrections](docs/architecture/PRISMA_SCHEMA_REVIEW.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

@@ -651,7 +651,6 @@ model OwnedGame {
   gameRelease      GameRelease        @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([collectionItemId, type])
-  @@unique([collectionItemId, gameReleaseId])
   @@index([gameReleaseId])
   @@map("owned_game")
 }
@@ -722,6 +721,14 @@ model MetadataChange {
   @@unique([gameReleaseId, rootRevision, fieldPath])
   @@unique([accessoryId, rootRevision, fieldPath])
   @@unique([accessoryVariantId, rootRevision, fieldPath])
+  @@index([companyId, createdAt, id])
+  @@index([regionId, createdAt, id])
+  @@index([platformId, createdAt, id])
+  @@index([consoleModelId, createdAt, id])
+  @@index([gameId, createdAt, id])
+  @@index([gameReleaseId, createdAt, id])
+  @@index([accessoryId, createdAt, id])
+  @@index([accessoryVariantId, createdAt, id])
   @@index([actorId])
   @@map("metadata_change")
 }
