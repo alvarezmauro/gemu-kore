@@ -41,6 +41,9 @@ export default async function PrivateEntryPage() {
       <Button asChild variant="outline">
         <Link href="/app/locations">Manage locations</Link>
       </Button>
+      <Button asChild variant="outline">
+        <Link href="/app/defects">Manage defects</Link>
+      </Button>
       <SignOutButton />
     </AuthCard>
   );

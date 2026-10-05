@@ -997,6 +997,8 @@ Implement:
 - description
 - collection relationship
 
+Status: **Completed 2026-10-05.** Added the private `/app/defects` manager for existing owned consoles, games and accessories, with separate records per copy, severity/status labels, description/repair notes, repair-date handling, active versus unresolved counts and confirmed deletion. Server Actions verify identity and current collection permission; the collection service validates copy-scoped IDs, serializes same-copy changes with a root row lock, rechecks waiting actors, rejects stale aggregate revisions, advances revision/actor atomically and resets publication approval when defects contribute to the public projection. No defects recorded is distinct from inspected/defect-free. All 439 unit/component, 267 PostgreSQL and 98 desktop/mobile browser cases pass (804 checks), plus lint, types, formatting, production browser builds and whitespace validation. No schema/migration, dependency, development fixture or future-phase implementation. Details: [docs/operations/DEFECTS.md](docs/operations/DEFECTS.md). Next: Task 6.3.
+
 ---
 
 ## TASK 6.3 — Collection Media

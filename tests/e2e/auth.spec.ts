@@ -49,6 +49,17 @@ test("private locations redirect to sign-in without exposing hierarchy data", as
   );
 });
 
+test("private defects redirect to sign-in without exposing copy condition data", async ({
+  page,
+}) => {
+  await page.goto("/app/defects");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("list", { name: "Defect records" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("button", { name: "Add defect" })).toHaveCount(0);
+});
+
 test("callback errors render a generic retry message", async ({ page }) => {
   await page.goto(
     "/login?error=provider_rejected&error_description=private-provider-details",

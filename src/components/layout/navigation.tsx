@@ -5,6 +5,7 @@ import {
   TextCursorInput,
   Inbox,
   MapPin,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ const icons = {
   forms: TextCursorInput,
   feedback: Inbox,
   locations: MapPin,
+  defects: Wrench,
 };
 
 export type NavigationItem = {

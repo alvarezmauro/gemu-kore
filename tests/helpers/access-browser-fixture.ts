@@ -14,7 +14,56 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-locations") {
+    if (command === "reset-defects") {
+      await database.$executeRaw`TRUNCATE TABLE collection_item, console_platform, game, accessory CASCADE`;
+    } else if (command === "seed-defect-items") {
+      const platform = await database.consolePlatform.create({
+        data: { name: "SNES", slug: randomUUID() },
+      });
+      const game = await database.game.create({
+        data: { name: "Chrono Trigger", slug: randomUUID() },
+      });
+      const release = await database.gameRelease.create({
+        data: {
+          slug: randomUUID(),
+          gameId: game.id,
+          platformId: platform.id,
+          editionName: "Original",
+        },
+      });
+      const first = await database.collectionItem.create({
+        data: {
+          type: "GAME",
+          ownedGame: { create: { gameReleaseId: release.id } },
+        },
+      });
+      const second = await database.collectionItem.create({
+        data: {
+          type: "GAME",
+          ownedGame: { create: { gameReleaseId: release.id } },
+        },
+      });
+      const model = await database.consoleModel.create({
+        data: {
+          name: "Super Nintendo",
+          slug: randomUUID(),
+          platformId: platform.id,
+        },
+      });
+      const consoleCopy = await database.collectionItem.create({
+        data: {
+          type: "CONSOLE",
+          ownedConsole: { create: { consoleModelId: model.id } },
+        },
+      });
+      result = {
+        firstId: first.id,
+        secondId: second.id,
+        consoleId: consoleCopy.id,
+      };
+    } else if (command === "defect-count") {
+      result = await database.defect.count();
+    } else if (command === "reset-locations") {
       await database.$executeRaw`TRUNCATE TABLE location CASCADE`;
     } else if (command === "seed-locations") {
       const home = await database.location.create({
