@@ -1043,6 +1043,8 @@ Design PostgreSQL search using:
 
 Avoid external search infrastructure.
 
+Status: **Completed 2026-10-13.** Defined live PostgreSQL full-text/prefix/trigram search across owned identity relationships, with one result per physical copy, cross-field AND matching, deterministic relevance, bounded pagination and a query-driven expression-index inventory. Private and public matching/projection are separate; hidden fields cannot affect public results, rankings, counts or suggestions, and public serial search stays excluded. Private free text travels in a read-only POST body to avoid placing serial/note queries in URLs. Documented text-array alias indexing, source/normalization limits, current-access/cache/transaction boundaries and the Task 7.2 acceptance plan. Nineteen isolated SQL design checks pass on PostgreSQL 16.15; selective FTS and trigram statements choose GIN indexes on 10,006 synthetic rows without forcing the planner. Formatting, internal links and documentation-only scope pass. No application code, migrations, production database objects, dependencies or UI changes. Details: [docs/architecture/SEARCH_ARCHITECTURE.md](docs/architecture/SEARCH_ARCHITECTURE.md). Next: Task 7.2.
+
 ---
 
 ## TASK 7.2 — Implement Search
