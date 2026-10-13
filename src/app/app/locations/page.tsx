@@ -35,6 +35,7 @@ export default async function LocationsPage() {
           current: true,
         },
         { label: "Defects", href: "/app/defects", icon: "defects" },
+        { label: "Photos", href: "/app/media", icon: "photos" },
       ]}
     >
       <PageContainer>

@@ -1,4 +1,5 @@
 import "server-only";
+import { nextMediaOrder } from "./collection/media";
 import { getDatabase } from "../db/client";
 import type { Prisma } from "../db/generated/client";
 import type { TransactionClient } from "../db/transaction";
@@ -79,7 +80,12 @@ export async function makeReady(
   const base = { id: manifest.data.useId, assetId };
   if (target.kind === "collection")
     return tx.collectionItemMedia.create({
-      data: { ...base, collectionItemId: target.id, type: target.type },
+      data: {
+        ...base,
+        collectionItemId: target.id,
+        type: target.type,
+        sortOrder: await nextMediaOrder(target.id, tx),
+      },
     });
   if (target.kind === "application")
     return tx.appAsset.create({

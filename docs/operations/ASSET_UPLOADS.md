@@ -93,3 +93,7 @@ The PNG fixtures carry valid chunk CRCs. The animation test proves its fixture r
 The new MIME regressions exposed an inherited-property lookup in `uploadDescription`. Its allowlist now uses `Object.hasOwn`; values such as `constructor`, `toString` and `__proto__` receive the normal invalid-input error instead of an internal failure. Authenticated PostgreSQL/MinIO integration tests verify the HTTP result is 400 and no Asset is reserved. Another integration case verifies normalized filenames remain private database metadata and never appear in response DTOs, object keys or download headers.
 
 This task adds tests and that focused validation correction. It introduces no schema, migration, dependency, endpoint, UI, storage-policy change or Phase 6 functionality. Task 5.3 verification figures above describe its original handoff; current coverage is recorded in the development plan and testing guide.
+
+## Task 6.3 collection photo integration
+
+The private photo manager at `/app/media` now uses these endpoints for sequential library/camera uploads, transfer progress and explicit completion recovery. Collection completion locks the owned root before assets, appends the media order and advances the root revision/actor atomically. Repeated completion preserves that revision. New uses remain unapproved; UI photo removal detaches the use without deleting bytes or lineage. Details: [COLLECTION_MEDIA.md](COLLECTION_MEDIA.md).

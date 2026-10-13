@@ -33,6 +33,11 @@ import {
   MODEL_LIMIT,
 } from "../assets/processing";
 
+import {
+  lockCollectionItem,
+  findCollectionItem,
+  advanceCollectionItem,
+} from "../repositories/collection/items";
 let processing = false;
 async function authorizeTarget(
   context: PrivateAccessContext,
@@ -302,7 +307,10 @@ export async function completeUpload(
     }
   }
   return withTransaction(async (tx) => {
-    await authorizeTarget(
+    // Consistent root-before-asset order shared by collection mutations.
+    if (manifest.data.target.kind === "collection")
+      await lockCollectionItem(manifest.data.target.id, tx);
+    const actor = await authorizeTarget(
       context,
       manifest.data.target,
       original.kind === "IMAGE" ? "IMAGE" : "MODEL_3D",
@@ -323,6 +331,19 @@ export async function completeUpload(
       if ((await findAsset(expected.id, tx))?.state !== "PENDING")
         throw new AssetError("CONFLICT");
     await makeReady(manifest, tx);
+    if (manifest.data.target.kind === "collection") {
+      const item = await findCollectionItem(manifest.data.target.id, tx);
+      if (!item) throw new AssetError("NOT_FOUND");
+      // New personal uses are private and do not change approved public output.
+      const advanced = await advanceCollectionItem(
+        item.id,
+        item.revision,
+        actor.userId,
+        false,
+        tx,
+      );
+      if (advanced.count !== 1) throw new AssetError("CONFLICT");
+    }
     return result(manifest);
   }).catch((error: unknown) => {
     if (

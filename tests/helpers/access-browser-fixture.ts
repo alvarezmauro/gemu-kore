@@ -14,7 +14,24 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-defects") {
+    if (command === "reset-media") {
+      await database.$executeRaw`TRUNCATE TABLE asset, collection_item, console_platform, game, accessory CASCADE`;
+    } else if (command === "media-records") {
+      result = await database.collectionItemMedia.findMany({
+        where: argument ? { collectionItemId: argument } : {},
+        select: {
+          id: true,
+          assetId: true,
+          type: true,
+          caption: true,
+          sortOrder: true,
+          publicApproved: true,
+        },
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+      });
+    } else if (command === "asset-count") {
+      result = await database.asset.count();
+    } else if (command === "reset-defects") {
       await database.$executeRaw`TRUNCATE TABLE collection_item, console_platform, game, accessory CASCADE`;
     } else if (command === "seed-defect-items") {
       const platform = await database.consolePlatform.create({

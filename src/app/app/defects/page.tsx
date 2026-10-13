@@ -43,6 +43,7 @@ export default async function DefectsPage({
           icon: "defects",
           current: true,
         },
+        { label: "Photos", href: "/app/media", icon: "photos" },
       ]}
     >
       <PageContainer>

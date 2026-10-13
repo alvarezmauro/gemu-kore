@@ -1019,6 +1019,8 @@ Implement:
 - upload progress
 - mobile photo upload
 
+Status: **Completed 2026-10-13.** Added private collection photos at `/app/media` for existing owned consoles, games and accessories: all eleven classifications, captions/image descriptions, private thumbnails and full-image viewing, confirmed removal, mouse/touch drag ordering and keyboard reorder buttons. Sequential library/camera uploads show actual transfer progress separately from processing and expose explicit completion recovery without blind reupload. Copy-scoped actions and upload attachment revalidate current access, lock the owned root, preserve aggregate revisions and reject stale changes; changed approved uses require fresh review, with publication reset when personal photos contribute to public output. Originals, shared assets and provenance survive detachment. All 488 unit/component, 298 PostgreSQL, 30 asset-pipeline, 32 storage and 118 desktop/mobile browser cases pass (1,066 checks), plus lint, types, formatting, production browser builds and whitespace validation. The authenticated browser runner uses disposable private MinIO behind trusted test-only TLS. No dependency, schema/migration, personal-data fixture or future-phase feature. Details: [docs/operations/COLLECTION_MEDIA.md](docs/operations/COLLECTION_MEDIA.md). Next: Task 7.1.
+
 ---
 
 # PHASE 7 — Search / Filtering / Collection Views

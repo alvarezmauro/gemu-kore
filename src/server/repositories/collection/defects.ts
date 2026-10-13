@@ -4,35 +4,6 @@ import { getDatabase } from "../../db/client";
 import type { TransactionClient } from "../../db/transaction";
 import type { DefectSeverity, DefectStatus } from "../../db/generated/client";
 
-const identity = {
-  id: true,
-  type: true,
-  ownedConsole: {
-    select: {
-      consoleModel: {
-        select: { name: true, platform: { select: { name: true } } },
-      },
-    },
-  },
-  ownedGame: {
-    select: {
-      gameRelease: {
-        select: {
-          editionName: true,
-          game: { select: { name: true } },
-          platform: { select: { name: true } },
-        },
-      },
-    },
-  },
-  ownedAccessory: {
-    select: {
-      accessoryVariant: {
-        select: { name: true, accessory: { select: { name: true } } },
-      },
-    },
-  },
-} as const;
 const defectSelect = {
   id: true,
   collectionItemId: true,
@@ -45,23 +16,6 @@ const defectSelect = {
   createdAt: true,
   updatedAt: true,
 } as const;
-export function listDefectItemOptions(
-  database: TransactionClient = getDatabase(),
-) {
-  return database.collectionItem.findMany({
-    select: identity,
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  });
-}
-export function findDefectItem(
-  id: string,
-  database: TransactionClient = getDatabase(),
-) {
-  return database.collectionItem.findUnique({
-    where: { id },
-    select: { ...identity, revision: true, publicationStatus: true },
-  });
-}
 export function listItemDefects(
   collectionItemId: string,
   database: TransactionClient = getDatabase(),
@@ -81,12 +35,6 @@ export function findItemDefect(
     where: { id, collectionItemId },
     select: defectSelect,
   });
-}
-export async function lockDefectItem(
-  id: string,
-  transaction: TransactionClient,
-) {
-  await transaction.$queryRaw`SELECT id FROM collection_item WHERE id = ${id}::uuid FOR UPDATE`;
 }
 type DefectFields = {
   title: string;
@@ -126,25 +74,10 @@ export function readDefectPublicationPolicy(transaction: TransactionClient) {
     select: { showDefects: true },
   });
 }
-export function advanceDefectItem(
-  id: string,
-  revision: number,
-  actorId: string,
-  unpublish: boolean,
-  transaction: TransactionClient,
-) {
-  return transaction.collectionItem.updateMany({
-    where: { id, revision },
-    data: {
-      revision: { increment: 1 },
-      updatedById: actorId,
-      ...(unpublish
-        ? {
-            publicationStatus: "PRIVATE",
-            publishedAt: null,
-            publishedById: null,
-          }
-        : {}),
-    },
-  });
-}
+
+export {
+  listCollectionItemOptions as listDefectItemOptions,
+  findCollectionItem as findDefectItem,
+  lockCollectionItem as lockDefectItem,
+  advanceCollectionItem as advanceDefectItem,
+} from "./items";

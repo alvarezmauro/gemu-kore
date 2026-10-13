@@ -1,9 +1,7 @@
 import "server-only";
+import { itemOption } from "./items";
 
-import type {
-  DefectItemOption,
-  DefectSummary,
-} from "@/features/defects/contracts";
+import type { DefectSummary } from "@/features/defects/contracts";
 import { defectItemId, defectMutation } from "@/features/defects/validation";
 import type { PrivateAccessContext } from "../../auth/access";
 import { requirePermission } from "../../auth/permissions";
@@ -41,20 +39,6 @@ export class DefectError extends Error {
     );
     this.name = "DefectError";
   }
-}
-function itemOption(
-  item: Awaited<ReturnType<typeof listDefectItemOptions>>[number],
-): DefectItemOption {
-  let name: string;
-  if (item.type === "CONSOLE" && item.ownedConsole)
-    name = `${item.ownedConsole.consoleModel.platform.name} · ${item.ownedConsole.consoleModel.name}`;
-  else if (item.type === "GAME" && item.ownedGame) {
-    const release = item.ownedGame.gameRelease;
-    name = `${release.game.name} · ${release.platform.name}${release.editionName ? ` · ${release.editionName}` : ""}`;
-  } else if (item.type === "ACCESSORY" && item.ownedAccessory)
-    name = `${item.ownedAccessory.accessoryVariant.accessory.name} · ${item.ownedAccessory.accessoryVariant.name}`;
-  else throw new DefectError("UNAVAILABLE");
-  return { id: item.id, label: `${name} · Copy ${item.id.slice(0, 8)}` };
 }
 function defectSummary(
   defect: Awaited<ReturnType<typeof listItemDefects>>[number],

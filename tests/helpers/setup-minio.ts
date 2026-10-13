@@ -12,7 +12,7 @@ declare module "vitest" {
   }
 }
 
-export default async function setup(project: TestProject) {
+export async function startTestMinio() {
   const name = `gemukore-storage-test-${randomUUID()}`;
   const accessKeyId = randomUUID();
   const secretAccessKey = randomUUID();
@@ -73,17 +73,23 @@ export default async function setup(project: TestProject) {
         throw new Error("Test MinIO readiness deadline exceeded.");
       await setTimeout(250);
     }
-    project.provide("storageConfig", {
+    const config: StorageEnvironment = {
       endpoint,
       region: "us-east-1",
       bucket: `gemukore-test-${randomUUID()}`,
       accessKeyId,
       secretAccessKey,
       forcePathStyle: true,
-    });
-    return cleanup;
+    };
+    return { config, cleanup };
   } catch (error) {
     await cleanup();
     throw error;
   }
+}
+
+export default async function setup(project: TestProject) {
+  const storage = await startTestMinio();
+  project.provide("storageConfig", storage.config);
+  return storage.cleanup;
 }

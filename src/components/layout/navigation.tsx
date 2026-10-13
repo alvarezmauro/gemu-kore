@@ -6,6 +6,7 @@ import {
   Inbox,
   MapPin,
   Wrench,
+  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const icons = {
   feedback: Inbox,
   locations: MapPin,
   defects: Wrench,
+  photos: Camera,
 };
 
 export type NavigationItem = {

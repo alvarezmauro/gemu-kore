@@ -884,3 +884,79 @@ it("persists only the normalized filename and omits it from object keys, DTOs an
     'attachment; filename="asset.jpeg"',
   );
 });
+
+it("appends collection photos in order, advances revision once and resolves authenticated thumbnails", async () => {
+  const { getMediaManagement, mutateMedia } =
+    await import("@/server/services/collection/media");
+  const context = await requirePrivateAccess(headers);
+  const platform = await db.consolePlatform.create({
+    data: { name: "SNES", slug: randomUUID() },
+  });
+  const model = await db.consoleModel.create({
+    data: {
+      name: "Super Nintendo",
+      platformId: platform.id,
+      slug: randomUUID(),
+    },
+  });
+  const item = await db.collectionItem.create({
+    data: {
+      type: "CONSOLE",
+      ownedConsole: { create: { consoleModelId: model.id } },
+    },
+  });
+  const upload = async (type: string) =>
+    uploadAsset(
+      context,
+      {
+        target: { kind: "collection", id: item.id, type },
+        mimeType: "image/jpeg",
+        filename: "photo.jpg",
+        body: body(await image()),
+      },
+      signal(),
+      storage,
+    );
+  const a = await upload("FRONT");
+  const b = await upload("BOX");
+  expect(
+    await db.collectionItem.findUnique({ where: { id: item.id } }),
+  ).toMatchObject({ revision: 3, updatedById: userId });
+  expect(
+    (
+      await db.collectionItemMedia.findMany({
+        where: { collectionItemId: item.id },
+        orderBy: { sortOrder: "asc" },
+      })
+    ).map((row) => row.id),
+  ).toEqual([a.useId, b.useId]);
+  await completeUpload(context, a.uploadId, signal(), storage);
+  const management = await getMediaManagement(context, item.id);
+  expect(management.selected?.revision).toBe(3);
+  expect(management.photos.map((photo) => photo.type)).toEqual([
+    "FRONT",
+    "BOX",
+  ]);
+  expect(management.photos[0].thumbnailUrl).toBe(
+    a.files.find((file) => file.variant === "thumbnail")?.url,
+  );
+  expect(management.photos[0].displayUrl).toBe(
+    a.files.find((file) => file.variant === "display")?.url,
+  );
+  await mutateMedia(context, {
+    operation: "delete",
+    collectionItemId: item.id,
+    expectedRevision: 3,
+    id: a.useId,
+  });
+  expect(await db.asset.count()).toBe(6);
+  expect(await db.assetDependency.count()).toBe(4);
+  expect(
+    (
+      await privateMediaRequest(
+        new Request("http://localhost:3002" + a.files[2].url, { headers }),
+        a.files[2].id,
+      )
+    ).status,
+  ).toBe(200);
+});
