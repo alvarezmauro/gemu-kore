@@ -1,0 +1,24 @@
+-- Task 7.2: live normalized search; no duplicated per-copy search documents.
+BEGIN;
+DO $$ BEGIN IF current_setting('server_encoding') <> 'UTF8' THEN RAISE EXCEPTION 'Collection search requires UTF8'; END IF; END $$;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE FUNCTION search_alias_text(input text[]) RETURNS text LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$ SELECT pg_catalog.array_to_string(COALESCE(input, ARRAY[]::text[]), ' ') $$;
+CREATE INDEX company_search_fts ON company USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)));
+CREATE INDEX company_search_trgm ON company USING gin (lower(normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)) gin_trgm_ops);
+CREATE INDEX console_platform_search_fts ON console_platform USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)));
+CREATE INDEX console_platform_search_trgm ON console_platform USING gin (lower(normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)) gin_trgm_ops);
+CREATE INDEX game_search_fts ON game USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)));
+CREATE INDEX game_search_trgm ON game USING gin (lower(normalize(COALESCE(name, '') || ' ' || search_alias_text(aliases), NFC)) gin_trgm_ops);
+CREATE INDEX console_model_search_fts ON console_model USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, '') || ' ' || COALESCE("modelNumber", ''), NFC)));
+CREATE INDEX console_model_search_trgm ON console_model USING gin (lower(normalize(COALESCE(name, ''), NFC)) gin_trgm_ops);
+CREATE INDEX accessory_search_fts ON accessory USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, ''), NFC)));
+CREATE INDEX accessory_search_trgm ON accessory USING gin (lower(normalize(COALESCE(name, ''), NFC)) gin_trgm_ops);
+CREATE INDEX game_release_search_fts ON game_release USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE("editionName", '') || ' ' || COALESCE("printingLabel", ''), NFC)));
+CREATE INDEX game_release_search_trgm ON game_release USING gin (lower(normalize(COALESCE("editionName", '') || ' ' || COALESCE("printingLabel", ''), NFC)) gin_trgm_ops);
+CREATE INDEX accessory_variant_search_fts ON accessory_variant USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(name, '') || ' ' || COALESCE(edition, '') || ' ' || COALESCE(color, '') || ' ' || COALESCE("modelNumber", ''), NFC)));
+CREATE INDEX accessory_variant_search_trgm ON accessory_variant USING gin (lower(normalize(COALESCE(name, '') || ' ' || COALESCE(edition, '') || ' ' || COALESCE(color, ''), NFC)) gin_trgm_ops);
+CREATE INDEX collection_item_notes_fts ON collection_item USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(notes,''),NFC)));
+CREATE INDEX collection_item_serial_prefix ON collection_item (lower(normalize("serialNumber",NFC)) text_pattern_ops) WHERE "serialNumber" IS NOT NULL;
+CREATE INDEX defect_text_fts ON defect USING gin (to_tsvector('pg_catalog.simple'::regconfig, normalize(COALESCE(title,'') || ' ' || COALESCE(description,''),NFC)));
+CREATE INDEX product_identifier_value_prefix ON product_identifier (lower(normalize(value,NFC)) text_pattern_ops);
+COMMIT;
