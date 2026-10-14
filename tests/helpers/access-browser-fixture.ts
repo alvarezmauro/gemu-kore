@@ -1,3 +1,4 @@
+import { seedSearchData, resetSearchData } from "./search-data";
 import { randomUUID } from "node:crypto";
 import { disconnectDatabase, getDatabase } from "../../src/server/db/client";
 
@@ -14,7 +15,17 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-media") {
+    if (command === "reset-search") {
+      await resetSearchData(database);
+    } else if (command === "seed-search") {
+      result = await seedSearchData(database);
+    } else if (command === "rename-search-game") {
+      const input = JSON.parse(argument) as { id: string; name: string };
+      await database.game.update({
+        where: { id: input.id },
+        data: { name: input.name },
+      });
+    } else if (command === "reset-media") {
       await database.$executeRaw`TRUNCATE TABLE asset, collection_item, console_platform, game, accessory CASCADE`;
     } else if (command === "media-records") {
       result = await database.collectionItemMedia.findMany({

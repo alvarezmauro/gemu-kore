@@ -1,0 +1,207 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { searchInput } from "../validation";
+import { requestCollectionSearch } from "../client";
+import type { SearchResult } from "../contracts";
+type State =
+  | { status: "idle" | "pending" }
+  | { status: "error"; message: string }
+  | { status: "ready"; result: SearchResult };
+const labels = { CONSOLE: "Console", GAME: "Game", ACCESSORY: "Accessory" };
+export function CollectionSearch() {
+  const [q, setQ] = useState("");
+  const [state, setState] = useState<State>({ status: "idle" });
+  const [retry, setRetry] = useState(0);
+  const generation = useRef(0);
+  const active = useRef<AbortController | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const input = searchInput.safeParse({ q });
+    if (!input.success || [...input.data.q].length < 2) return;
+    const controller = new AbortController();
+    active.current = controller;
+    const id = generation.current;
+    timer.current = setTimeout(() => {
+      void requestCollectionSearch(
+        input.data.q,
+        AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]),
+      )
+        .then((result) => {
+          if (!controller.signal.aborted && id === generation.current)
+            setState({ status: "ready", result });
+        })
+        .catch((error) => {
+          if (!controller.signal.aborted && id === generation.current)
+            setState({
+              status: "error",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Search is unavailable.",
+            });
+        });
+    }, 250);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      controller.abort();
+    };
+  }, [q, retry]);
+  function update(value: string) {
+    generation.current++;
+    active.current?.abort();
+    setQ(value);
+    const input = searchInput.safeParse({ q: value });
+    setState(
+      !input.success
+        ? {
+            status: "error",
+            message: "Use up to 160 characters and eight words.",
+          }
+        : [...input.data.q].length < 2
+          ? { status: "idle" }
+          : { status: "pending" },
+    );
+  }
+  return (
+    <section aria-label="Collection search" className="space-y-6">
+      <div className="max-w-2xl space-y-2">
+        <Label htmlFor="collection-query">Search your collection</Label>
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute top-3.5 left-3 size-5 text-muted-foreground"
+          />
+          <Input
+            id="collection-query"
+            type="search"
+            className="min-h-12 pl-10"
+            maxLength={640}
+            value={q}
+            autoComplete="off"
+            spellCheck={false}
+            aria-invalid={!searchInput.safeParse({ q }).success}
+            aria-describedby={
+              state.status === "error"
+                ? "search-help search-error"
+                : "search-help"
+            }
+            onChange={(event) => update(event.target.value)}
+          />
+        </div>
+        <p id="search-help" className="text-sm text-muted-foreground">
+          Find physical copies by name, platform, company, edition, region,
+          serial number, notes or defects. Add another word to narrow your
+          search.
+        </p>
+      </div>
+      <noscript>
+        Enable JavaScript to search without placing private search terms in the
+        URL.
+      </noscript>
+      <div aria-busy={state.status === "pending"} className="space-y-4">
+        <p role="status" className="text-sm text-muted-foreground">
+          {state.status === "pending"
+            ? "Searching your collection…"
+            : state.status === "ready"
+              ? `${state.result.items.length} ${state.result.items.length === 1 ? "physical copy" : "physical copies"} on this page${state.result.hasMore ? " · More matches available" : ""}`
+              : ""}
+        </p>
+        {state.status === "idle" && (
+          <EmptyState
+            title="Find a physical copy"
+            description="Enter at least two characters. Each copy appears separately, including copies of the same release."
+          />
+        )}
+        {state.status === "error" && (
+          <div className="space-y-3">
+            <p
+              id="search-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
+              {state.message}
+            </p>
+            <Button
+              disabled={!searchInput.safeParse({ q }).success}
+              variant="outline"
+              onClick={() => {
+                generation.current++;
+                setState({ status: "pending" });
+                setRetry((value) => value + 1);
+              }}
+            >
+              Try search again
+            </Button>
+          </div>
+        )}
+        {state.status === "ready" && state.result.items.length === 0 && (
+          <EmptyState
+            title="No matching copies"
+            description="Try a shorter name, another spelling or fewer words. Only items already in your collection appear here."
+          />
+        )}
+        {state.status === "ready" && state.result.items.length > 0 && (
+          <>
+            <ol aria-label="Search results" className="space-y-3">
+              {state.result.items.map((item) => (
+                <li
+                  key={item.id}
+                  className="min-w-0 space-y-3 rounded-xl bg-card p-5"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{labels[item.type]}</Badge>
+                    {item.identificationStatus === "INCOMPLETE" && (
+                      <Badge variant="outline">Identity incomplete</Badge>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="break-words font-heading text-lg">
+                      {item.title}
+                    </h2>
+                    <p className="mt-1 break-words text-sm text-muted-foreground">
+                      {item.context} · Copy {item.id.slice(0, 8)}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Matched: {item.matchSources.join(", ")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline">
+                      <Link
+                        href={`/app/media?itemId=${item.id}`}
+                        aria-label={`Photos for ${item.title}, copy ${item.id.slice(0, 8)}`}
+                      >
+                        Photos
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost">
+                      <Link
+                        href={`/app/defects?itemId=${item.id}`}
+                        aria-label={`Defects for ${item.title}, copy ${item.id.slice(0, 8)}`}
+                      >
+                        Defects
+                      </Link>
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {state.result.hasMore && (
+              <p className="text-sm text-muted-foreground">
+                Showing the first {state.result.items.length} matches. Add
+                another word to narrow your search.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}

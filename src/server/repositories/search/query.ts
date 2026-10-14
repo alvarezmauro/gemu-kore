@@ -29,19 +29,30 @@ export type SearchRow = {
     | "Repair note"
   )[];
 };
+export type PublicSearchRow = Omit<SearchRow, "matchSources"> & {
+  matchSources: Exclude<
+    SearchRow["matchSources"][number],
+    "Serial number" | "Repair note"
+  >[];
+};
 const vector = (sql: Prisma.Sql) =>
   Prisma.sql`to_tsvector('pg_catalog.simple'::regconfig, ${sql})`;
 const escapePrefix = (value: string) => value.replace(/[\\%_]/g, "\\$&") + "%";
-function canonicalMatches(terms: ParsedTerm[], q: string) {
-  void terms;
+function canonicalMatches(q: string) {
   return Prisma.join(
     canonicalSources.map((definition) => {
       const v = vector(fragment(definition.vectorText));
       const fuzzy = Prisma.sql`lower(${fragment(definition.fuzzyText)})`;
+      // Whole-name promotion belongs to owned identity, not a related brand or
+      // market that happens to have exactly the requested name.
+      const whole =
+        definition.priority === 0
+          ? Prisma.sql`EXISTS(SELECT FROM unnest(${fragment(definition.whole)}) w WHERE lower(normalize(w, NFC))=lower(${q}))`
+          : Prisma.sql`false`;
       return Prisma.sql`SELECT ${definition.kind}::text AS kind, s.id AS target, t.ordinal,
       CASE WHEN ${v} @@ t.exact THEN 1 WHEN ${v} @@ t.prefix THEN 2 ELSE 3 END AS class,
       ${definition.priority}::int AS priority, ${definition.source}::text AS source,
-      EXISTS(SELECT FROM unnest(${fragment(definition.whole)}) w WHERE lower(normalize(w, NFC))=lower(${q})) AS whole,
+      ${whole} AS whole,
       CASE WHEN ${v} @@ t.exact THEN ts_rank_cd(${v},t.exact,32) WHEN ${v} @@ t.prefix THEN ts_rank_cd(${v},t.prefix,32) ELSE word_similarity(t.term,${fuzzy}) END AS strength
       FROM ${fragment(definition.table)} s CROSS JOIN terms t
       WHERE ${v} @@ t.exact OR ${v} @@ t.prefix OR (t.fuzzy AND t.term <% ${fuzzy})`;
@@ -71,9 +82,14 @@ function buildQuery(
   const repairs = vector(
     Prisma.sql`normalize(COALESCE(d."repairNote",''),NFC)`,
   );
+  // Request-local CTEs calculate shared identity hits and copy relationships
+  // once. Inlining these unions causes repeated join work for common terms.
+  // They are not persisted search documents or materialized database views.
+  // Page only complete, deduplicated matches, then hydrate market context for
+  // those IDs. Joining that projection before paging repeats work on broad hits.
   return Prisma.sql`WITH terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (VALUES ${Prisma.join(parsed.map((t) => Prisma.sql`(${t.ordinal}::int,${t.term}::text,${t.exact}::tsquery,${t.prefix}::tsquery,${t.fuzzy}::boolean,${escapePrefix(t.term)}::text)`))}),
-  roots AS NOT MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate}),
-  links AS NOT MATERIALIZED (
+  roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate}),
+  links AS MATERIALIZED (
     SELECT r.id,'model'::text kind,o."consoleModelId" target FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id
     UNION ALL SELECT r.id,'platform',m."platformId" FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId"
     UNION ALL SELECT r.id,'company',m."manufacturerId" FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" WHERE m."manufacturerId" IS NOT NULL
@@ -92,7 +108,7 @@ function buildQuery(
     UNION ALL SELECT r.id,'company',a."producerId" FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId" WHERE a."producerId" IS NOT NULL
     UNION ALL SELECT r.id,'platform',vp."platformId" FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant_platform vp ON vp."accessoryVariantId"=o."accessoryVariantId"
     UNION ALL SELECT r.id,'region',vr."regionId" FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant_region vr ON vr."accessoryVariantId"=o."accessoryVariantId"
-  ), canonical AS NOT MATERIALIZED (${canonicalMatches(parsed, input.q)}),
+  ), canonical AS MATERIALIZED (${canonicalMatches(input.q)}),
   candidates AS (
     SELECT l.id,m.ordinal,m.class,m.priority,m.source,m.whole,m.strength FROM canonical m JOIN links l ON l.kind=m.kind AND l.target=m.target
     UNION ALL SELECT l.id,t.ordinal,CASE WHEN lower(normalize(i.value,NFC))=t.term THEN 0 ELSE 2 END,0,'Identifier',lower(normalize(i.value,NFC))=lower(${input.q}),0::real
@@ -109,13 +125,20 @@ function buildQuery(
     UNION ALL SELECT r.id,t.ordinal,1,1,'Edition',false,0::real FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release g ON g.id=o."gameReleaseId" CROSS JOIN terms t WHERE replace(lower(g."editionType"::text),'_',' ') = t.term OR to_tsvector('pg_catalog.simple',replace(lower(g."editionType"::text),'_',' ')) @@ t.exact
   ), best AS (SELECT DISTINCT ON(id,ordinal) * FROM candidates ORDER BY id,ordinal,class,priority,strength DESC,source),
   matched AS (SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}),
-  identity AS NOT MATERIALIZED (
-    SELECT r.id,r.type,p.name title,concat_ws(' · ',m.name,m."modelNumber") context,m."identificationStatus" status FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
-    UNION ALL SELECT r.id,r.type,g.name,concat_ws(' · ',p.name,gr."editionName",gr."printingLabel"),gr."identificationStatus" FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId" JOIN console_platform p ON p.id=gr."platformId"
-    UNION ALL SELECT r.id,r.type,a.name,concat_ws(' · ',v.name,v.edition,v.color,v."modelNumber"),v."identificationStatus" FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
+  titles AS MATERIALIZED (
+    SELECT r.id,r.type,p.name title FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
+    UNION ALL SELECT r.id,r.type,g.name FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId"
+    UNION ALL SELECT r.id,r.type,a.name FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
+  ), page AS MATERIALIZED (
+    SELECT i.id,i.type,i.title,m.whole,m.class,m.priority,m.strength,m.sources FROM matched m JOIN titles i ON i.id=m.id
+    ORDER BY m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id LIMIT ${input.limit + 1} OFFSET ${input.offset}
+  ), identity AS (
+    SELECT r.id,r.type,p.name title,concat_ws(' · ',m.name,CASE WHEN m."modelNumber" IS DISTINCT FROM m.name THEN m."modelNumber" END,(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM console_model_region mr JOIN region reg ON reg.id=mr."regionId" WHERE mr."consoleModelId"=m.id)) context,m."identificationStatus" status FROM page r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
+    UNION ALL SELECT r.id,r.type,g.name,concat_ws(' · ',p.name,gr."editionName",gr."printingLabel",(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM game_release_region rr JOIN region reg ON reg.id=rr."regionId" WHERE rr."gameReleaseId"=gr.id)),gr."identificationStatus" FROM page r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId" JOIN console_platform p ON p.id=gr."platformId"
+    UNION ALL SELECT r.id,r.type,a.name,concat_ws(' · ',v.name,v.edition,v.color,CASE WHEN v."modelNumber" IS DISTINCT FROM v.name THEN v."modelNumber" END,(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM accessory_variant_region vr JOIN region reg ON reg.id=vr."regionId" WHERE vr."accessoryVariantId"=v.id)),v."identificationStatus" FROM page r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
   )
-  SELECT i.id,i.type,i.title,i.context,i.status AS "identificationStatus",m.sources AS "matchSources" FROM matched m JOIN identity i ON i.id=m.id
-  ORDER BY m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id LIMIT ${input.limit + 1} OFFSET ${input.offset}`;
+  SELECT i.id,i.type,i.title,i.context,i.status AS "identificationStatus",m.sources AS "matchSources" FROM page m JOIN identity i ON i.id=m.id
+  ORDER BY m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id`;
 }
 export const privateSearchQuery = (
   input: SearchParameters,

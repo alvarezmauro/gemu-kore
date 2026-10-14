@@ -39,6 +39,9 @@ export default async function PrivateEntryPage() {
         be available as the application takes shape.
       </p>
       <Button asChild variant="outline">
+        <Link href="/app/search">Search collection</Link>
+      </Button>
+      <Button asChild variant="outline">
         <Link href="/app/locations">Manage locations</Link>
       </Button>
       <Button asChild variant="outline">

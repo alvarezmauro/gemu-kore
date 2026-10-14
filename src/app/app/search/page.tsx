@@ -1,0 +1,46 @@
+import { redirect } from "next/navigation";
+import { ApplicationShell } from "@/components/layout/application-shell";
+import { PageContainer } from "@/components/layout/page-container";
+import { PageHeader } from "@/components/layout/page-header";
+import { AuthCard } from "@/features/auth/components/auth-card";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { getPrivateWelcomePageData } from "@/features/auth/queries.server";
+import { CollectionSearch } from "@/features/search/components/collection-search";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Search | GemuKore", referrer: "same-origin" };
+export default async function SearchPage() {
+  const result = await getPrivateWelcomePageData();
+  if (result.status !== "authorized") {
+    if (result.status === "UNAUTHENTICATED") redirect("/login");
+    if (result.status === "DENIED") redirect("/access-denied");
+    return (
+      <AuthCard
+        title="Search unavailable"
+        description="We couldn't check your access right now. Please try again."
+      >
+        <SignOutButton />
+      </AuthCard>
+    );
+  }
+  return (
+    <ApplicationShell
+      context="Your collection"
+      items={[
+        { label: "Your collection", href: "/app", icon: "overview" },
+        { label: "Search", href: "/app/search", icon: "search", current: true },
+        { label: "Locations", href: "/app/locations", icon: "locations" },
+        { label: "Defects", href: "/app/defects", icon: "defects" },
+        { label: "Photos", href: "/app/media", icon: "photos" },
+      ]}
+    >
+      <PageContainer>
+        <PageHeader
+          title="Search"
+          description="Find the consoles, games and accessories you own, including the details of each physical copy."
+        />
+        <CollectionSearch />
+        <SignOutButton />
+      </PageContainer>
+    </ApplicationShell>
+  );
+}

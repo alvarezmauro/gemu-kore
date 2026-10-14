@@ -7,6 +7,7 @@ import {
   MapPin,
   Wrench,
   Camera,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const icons = {
   locations: MapPin,
   defects: Wrench,
   photos: Camera,
+  search: Search,
 };
 
 export type NavigationItem = {

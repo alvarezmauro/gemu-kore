@@ -1073,6 +1073,8 @@ Search:
 - notes
 - defects
 
+Status: **Completed 2026-10-13.** Added private global collection search at `/app/search` with one result per physical copy across live console, game and accessory identities. PostgreSQL full-text, prefix and bounded trigram matching cover names/aliases, companies and credits, editions, platforms, commercial markets, identifiers, serials, notes and defects/repair notes. Cross-field AND, deterministic relevance and bounded paging preserve copy isolation; cards use narrow projections and existing exact-copy photo/defect links. Read-only POST keeps private free text out of URLs; current access, strict input/body limits, transaction-local timeouts, cancellation and accessible mobile/error states are enforced. The additive UTF-8/pg_trgm migration adds 18 expression indexes and is applied to local development. All 516 unit/component, 346 PostgreSQL and 134 desktop/mobile browser cases pass (996 checks), with lint, types, formatting, production browser builds and whitespace validation. Complete-query plans on 3,004 owned copies verify selective GIN use and common-word/short-prefix execution within the configured timeout. Reserved public SQL is separately tested without exposing a public endpoint. No dependency, personal fixture, command palette, filter/sort or future collection-view UI. Details: [docs/operations/SEARCH.md](docs/operations/SEARCH.md). Next: Task 7.3.
+
 ---
 
 ## TASK 7.3 — Command Palette

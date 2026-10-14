@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the core catalog/collection database and repository boundaries. Tasks **5.1–5.4** add private S3-compatible storage and the authenticated asset upload pipeline: validated images/GLB, preserved originals, image derivatives, provenance/use records, recovery and private streamed reads, with extensive utility and failure regressions. Task **6.1** adds the private [location manager](docs/operations/LOCATIONS.md) at `/app/locations`, with nested places, moves, sibling ordering, breadcrumbs and guarded deletion. Task **6.2** adds private [defect management](docs/operations/DEFECTS.md) at `/app/defects`, with copy-specific records, severity, status and repair details. Task **6.3** adds private [collection photos](docs/operations/COLLECTION_MEDIA.md) at `/app/media`: classifications, captions, authenticated images, mouse/touch ordering, upload progress and a mobile camera picker. The root page remains a temporary design preview; catalog/collection CRUD arrives in its assigned phases. Task **7.1** defines the [PostgreSQL search architecture](docs/architecture/SEARCH_ARCHITECTURE.md), including live catalog relationships, copy-specific results, indexed text/typo matching and separate private/public queries. Next: **7.2 — Implement Search**. See [asset upload operations](docs/operations/ASSET_UPLOADS.md).
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the core catalog/collection database and repository boundaries. Tasks **5.1–5.4** add private S3-compatible storage and the authenticated asset upload pipeline: validated images/GLB, preserved originals, image derivatives, provenance/use records, recovery and private streamed reads, with extensive utility and failure regressions. Task **6.1** adds the private [location manager](docs/operations/LOCATIONS.md) at `/app/locations`, with nested places, moves, sibling ordering, breadcrumbs and guarded deletion. Task **6.2** adds private [defect management](docs/operations/DEFECTS.md) at `/app/defects`, with copy-specific records, severity, status and repair details. Task **6.3** adds private [collection photos](docs/operations/COLLECTION_MEDIA.md) at `/app/media`: classifications, captions, authenticated images, mouse/touch ordering, upload progress and a mobile camera picker. The root page remains a temporary design preview; catalog/collection CRUD arrives in its assigned phases. Tasks **7.1–7.2** design and implement [private collection search](docs/operations/SEARCH.md) at `/app/search`, using live catalog relationships, separate physical copies, PostgreSQL text/typo matching and protected serial/note/defect queries. See the [search architecture](docs/architecture/SEARCH_ARCHITECTURE.md). Next: **7.3 — Command Palette**. See [asset upload operations](docs/operations/ASSET_UPLOADS.md).
 
 ## Local development
 
@@ -11,6 +11,7 @@ Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. 
 ```sh
 pnpm install --frozen-lockfile
 pnpm docker:up
+pnpm db:deploy
 pnpm dev
 ```
 
@@ -69,6 +70,8 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Repository conventions and transaction boundaries](docs/operations/REPOSITORIES.md)
 - [Storage architecture and Phase 5 implementation contracts](docs/architecture/STORAGE_ARCHITECTURE.md)
 - [Storage service configuration, behavior and verification](docs/operations/STORAGE.md)
+- [PostgreSQL search architecture](docs/architecture/SEARCH_ARCHITECTURE.md)
+- [Private collection search and migration](docs/operations/SEARCH.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)
