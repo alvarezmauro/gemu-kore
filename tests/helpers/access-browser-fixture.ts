@@ -43,6 +43,91 @@ async function main() {
         copies: await database.collectionItem.count(),
         history: await database.metadataChange.count(),
       };
+    } else if (command === "seed-console-creation") {
+      const company = await database.company.create({
+        data: { name: "Sony", slug: randomUUID() },
+      });
+      const platform = await database.consolePlatform.create({
+        data: {
+          name: "PlayStation",
+          aliases: ["PSX"],
+          slug: randomUUID(),
+          manufacturerId: company.id,
+          originalReleaseYear: 1994,
+          generation: 5,
+        },
+      });
+      const model = await database.consoleModel.create({
+        data: {
+          name: "SCPH-1000",
+          modelNumber: "SCPH-1000",
+          slug: randomUUID(),
+          platformId: platform.id,
+          releaseYear: 1994,
+        },
+      });
+      await database.consoleModel.create({
+        data: { name: "PS one", slug: randomUUID(), platformId: platform.id },
+      });
+      const solo = await database.consolePlatform.create({
+        data: { name: "Nintendo Entertainment System", slug: randomUUID() },
+      });
+      await database.consoleModel.create({
+        data: { name: "NES-001", slug: randomUUID(), platformId: solo.id },
+      });
+      await database.consolePlatform.create({
+        data: { name: "No hardware yet", slug: randomUUID() },
+      });
+      const region = await database.region.create({
+        data: { name: "Japan", code: "JP", slug: randomUUID() },
+      });
+      await database.consoleModelRegion.create({
+        data: { consoleModelId: model.id, regionId: region.id },
+      });
+      const home = await database.location.create({
+        data: { name: "Home", normalizedName: "home", type: "PROPERTY" },
+      });
+      const shelf = await database.location.create({
+        data: {
+          name: "Shelf",
+          normalizedName: "shelf",
+          parentId: home.id,
+          type: "SHELF",
+        },
+      });
+      result = {
+        platformId: platform.id,
+        modelId: model.id,
+        shelfId: shelf.id,
+      };
+    } else if (command === "console-creation-state") {
+      result = await database.collectionItem.findMany({
+        select: {
+          id: true,
+          serialNumber: true,
+          notes: true,
+          observedMarkings: true,
+          hasBox: true,
+          locationId: true,
+          publicationStatus: true,
+          ownedConsole: { select: { consoleModelId: true } },
+          defects: { select: { title: true, severity: true } },
+          media: {
+            select: {
+              type: true,
+              isPrimary: true,
+              publicApproved: true,
+              asset: { select: { kind: true, state: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+    } else if (command === "change-console-model") {
+      await database.consoleModel.update({
+        where: { id: argument },
+        data: { revision: { increment: 1 }, name: "Revised SCPH-1000" },
+      });
     } else if (command === "seed-catalog-pages") {
       await database.company.createMany({
         data: Array.from({ length: 27 }, (_, i) => ({

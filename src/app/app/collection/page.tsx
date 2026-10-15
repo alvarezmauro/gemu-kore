@@ -7,6 +7,8 @@ import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { getSearchPageData } from "@/features/search/queries.server";
 import { CollectionWorkspace } from "@/features/search/components/collection-workspace";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Collection | GemuKore",
@@ -48,6 +50,13 @@ export default async function CollectionPage() {
         <PageHeader
           title="Your collection"
           description="Browse your consoles, games and accessories. Each physical copy has its own place here."
+          action={
+            result.canAddConsole ? (
+              <Button asChild>
+                <Link href="/app/consoles/new">Add console</Link>
+              </Button>
+            ) : undefined
+          }
         />
         <CollectionWorkspace options={result.options} collectionHome />
         <SignOutButton />

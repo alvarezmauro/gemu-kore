@@ -1259,6 +1259,8 @@ Review
 Save
 ```
 
+Status: **Completed 2026-10-15.** Added `/app/consoles/new` for administrators/editors, linked from the private entry and collection browser. The six-step flow provides paged active console/model search, sole-model selection, canonical identity preview, private physical details, separate initial defects, local photo/camera staging, copy-only logo/GLB overrides and a review before saving. Services validate current permissions, model/platform membership and reviewed revisions under the existing catalog/location locks; root, subtype and defects save atomically and privately. A stable in-memory copy reference deduplicates concurrent or uncertain retries. Files upload afterward through the existing private pipeline, with progress, explicit completion recovery and no copy recreation on failure; override activation cannot replace another primary selection or change approved public uses. All 704 unit/component, 428 PostgreSQL, 168 authenticated desktop/mobile and 44 general browser cases pass (1,344 distinct checks), with lint, types, formatting, production builds, seed validation, documentation links and whitespace checks. The full authenticated regression run passed its 156 existing cases; a final creation-only run passed all 12 new cases after keyboard-focus and selector corrections. No schema/migration, dependency, seed import, existing-console CRUD/detail page or 3D renderer is added. Temporary test services were removed; the local development app remains healthy and no personal catalog fixtures were created. Usage, scope and recovery: [docs/operations/CONSOLE_CREATION.md](docs/operations/CONSOLE_CREATION.md). Next: Task 8.5.
+
 ---
 
 ## TASK 8.5 — Console CRUD
