@@ -5,12 +5,12 @@ import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
-import { getPrivateWelcomePageData } from "@/features/auth/queries.server";
-import { CollectionSearch } from "@/features/search/components/collection-search";
+import { getSearchPageData } from "@/features/search/queries.server";
+import { CollectionWorkspace } from "@/features/search/components/collection-workspace";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Search | GemuKore", referrer: "same-origin" };
 export default async function SearchPage() {
-  const result = await getPrivateWelcomePageData();
+  const result = await getSearchPageData();
   if (result.status !== "authorized") {
     if (result.status === "UNAUTHENTICATED") redirect("/login");
     if (result.status === "DENIED") redirect("/access-denied");
@@ -40,7 +40,7 @@ export default async function SearchPage() {
           title="Search"
           description="Find the consoles, games and accessories you own, including the details of each physical copy."
         />
-        <CollectionSearch />
+        <CollectionWorkspace options={result.options} />
         <SignOutButton />
       </PageContainer>
     </ApplicationShell>

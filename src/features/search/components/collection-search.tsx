@@ -1,4 +1,6 @@
 "use client";
+import type { ReactNode } from "react";
+import type { SearchResult } from "../contracts";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,8 +12,16 @@ import { searchInput } from "../validation";
 import { requestCollectionSearch } from "../client";
 import { usePrivateSearch } from "../use-private-search";
 const labels = { CONSOLE: "Console", GAME: "Game", ACCESSORY: "Accessory" };
-export function CollectionSearch() {
-  const { q, state, update, retry } = usePrivateSearch(requestCollectionSearch);
+export function CollectionSearch({
+  request = requestCollectionSearch,
+  mode,
+  controls,
+}: {
+  request?: (q: string, signal: AbortSignal) => Promise<SearchResult>;
+  mode?: { key: string; browse: boolean };
+  controls?: ReactNode;
+} = {}) {
+  const { q, state, update, retry } = usePrivateSearch(request, mode);
   return (
     <section aria-label="Collection search" className="space-y-6">
       <div className="max-w-2xl space-y-2">
@@ -44,6 +54,7 @@ export function CollectionSearch() {
           search.
         </p>
       </div>
+      {controls}
       <noscript>
         Enable JavaScript to search without placing private search terms in the
         URL.
@@ -83,7 +94,7 @@ export function CollectionSearch() {
         {state.status === "ready" && state.result.items.length === 0 && (
           <EmptyState
             title="No matching copies"
-            description="Try a shorter name, another spelling or fewer words. Only items already in your collection appear here."
+            description="Try another name or adjust your filters. Only items already in your collection appear here."
           />
         )}
         {state.status === "ready" && state.result.items.length > 0 && (
@@ -108,9 +119,25 @@ export function CollectionSearch() {
                       {item.context} · Copy {item.id.slice(0, 8)}
                     </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Matched: {item.matchSources.join(", ")}
-                  </p>
+                  {item.details && (
+                    <p className="break-words text-sm text-muted-foreground">
+                      {item.details.releaseYear === null
+                        ? "Year unknown"
+                        : `Year ${item.details.releaseYear}`}{" "}
+                      · {item.details.location ?? "Unassigned location"}
+                      {item.details.platform
+                        ? ` · Platform ${item.details.platform}`
+                        : ""}
+                      {item.details.publisher
+                        ? ` · Publisher ${item.details.publisher}`
+                        : ""}
+                    </p>
+                  )}
+                  {item.matchSources.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Matched: {item.matchSources.join(", ")}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline">
                       <Link
@@ -135,7 +162,7 @@ export function CollectionSearch() {
             {state.result.hasMore && (
               <p className="text-sm text-muted-foreground">
                 Showing the first {state.result.items.length} matches. Add
-                another word to narrow your search.
+                another word or use filters to narrow your search.
               </p>
             )}
           </>

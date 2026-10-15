@@ -1,11 +1,17 @@
 import "server-only";
 import {
+  optionsQuery,
+  type OptionRow,
+  type ControlParameters,
+} from "./controls-query";
+import {
   privateCatalogSearchQuery,
   type CatalogSearchRow,
 } from "./catalog-query";
 import type { TransactionClient } from "../../db/transaction";
 import {
   privateSearchQuery,
+  filteredPrivateSearchQuery,
   type ParsedTerm,
   type SearchParameters,
   type SearchRow,
@@ -35,4 +41,26 @@ export async function searchCatalogRows(
   tx: TransactionClient,
 ) {
   return tx.$queryRaw<CatalogSearchRow[]>(privateCatalogSearchQuery(q, terms));
+}
+
+export type FilteredSearchRow = SearchRow & {
+  details: {
+    releaseYear: number | null;
+    location: string | null;
+    platform: string | null;
+    publisher: string | null;
+  };
+};
+export function searchFilteredRows(
+  input: SearchParameters,
+  terms: ParsedTerm[],
+  controls: ControlParameters,
+  tx: TransactionClient,
+) {
+  return tx.$queryRaw<FilteredSearchRow[]>(
+    filteredPrivateSearchQuery(input, terms, controls),
+  );
+}
+export function listFilterOptions(tx: TransactionClient) {
+  return tx.$queryRaw<OptionRow[]>(optionsQuery());
 }

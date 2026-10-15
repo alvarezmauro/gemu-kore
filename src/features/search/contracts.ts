@@ -20,6 +20,12 @@ export type SearchHit = {
   context: string;
   identificationStatus: "INCOMPLETE" | "CONFIRMED";
   matchSources: MatchSource[];
+  details?: {
+    releaseYear: number | null;
+    location: string | null;
+    platform: string | null;
+    publisher: string | null;
+  };
 };
 export type SearchResult = {
   state: "idle" | "ready";

@@ -6,18 +6,42 @@ export type SearchState<T> =
   | { status: "idle" | "pending" }
   | { status: "error"; message: string }
   | { status: "ready"; result: T };
-
 export function usePrivateSearch<T>(
   request: (q: string, signal: AbortSignal) => Promise<T>,
+  mode: { key?: string; browse?: boolean } = {},
 ) {
   const [q, setQ] = useState("");
-  const [state, setState] = useState<SearchState<T>>({ status: "idle" });
+  const [saved, setSaved] = useState<{
+    key: string;
+    value: SearchState<T>;
+    request?: typeof request;
+  }>({
+    key: "",
+    value: { status: "idle" },
+  });
   const [attempt, setAttempt] = useState(0);
   const generation = useRef(0);
   const active = useRef<AbortController | null>(null);
+  const scope = mode.key ?? "";
+  const browse = mode.browse ?? false;
+  const key = JSON.stringify([scope, q]);
+  const parsed = searchInput.safeParse({ q });
+  const shouldSearch =
+    parsed.success &&
+    ([...parsed.data.q].length >= 2 || (browse && parsed.data.q === ""));
+  const fallback: SearchState<T> = !parsed.success
+    ? { status: "error", message: "Use up to 160 characters and eight words." }
+    : { status: shouldSearch ? "pending" : "idle" };
+  const state =
+    saved.key === key && saved.request === request ? saved.value : fallback;
   useEffect(() => {
     const input = searchInput.safeParse({ q });
-    if (!input.success || [...input.data.q].length < 2) return;
+    if (
+      !input.success ||
+      (![...input.data.q].length && !browse) ||
+      [...input.data.q].length === 1
+    )
+      return;
     const controller = new AbortController();
     active.current = controller;
     const id = generation.current;
@@ -28,16 +52,20 @@ export function usePrivateSearch<T>(
       )
         .then((result) => {
           if (!controller.signal.aborted && id === generation.current)
-            setState({ status: "ready", result });
+            setSaved({ key, request, value: { status: "ready", result } });
         })
         .catch((error: unknown) => {
           if (!controller.signal.aborted && id === generation.current)
-            setState({
-              status: "error",
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "Search is unavailable.",
+            setSaved({
+              key,
+              request,
+              value: {
+                status: "error",
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "Search is unavailable.",
+              },
             });
         });
     }, 250);
@@ -45,35 +73,35 @@ export function usePrivateSearch<T>(
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q, attempt, request]);
+  }, [q, attempt, request, browse, key]);
   function update(value: string) {
+    if (value === q) return;
     generation.current++;
     active.current?.abort();
-    setQ(value);
     const input = searchInput.safeParse({ q: value });
-    setState(
-      !input.success
+    setSaved({
+      key: JSON.stringify([scope, value]),
+      request,
+      value: !input.success
         ? {
             status: "error",
             message: "Use up to 160 characters and eight words.",
           }
-        : [...input.data.q].length < 2
-          ? { status: "idle" }
-          : { status: "pending" },
-    );
+        : {
+            status:
+              [...input.data.q].length >= 2 || (browse && input.data.q === "")
+                ? "pending"
+                : "idle",
+          },
+    });
+    setQ(value);
   }
   function retry() {
-    if (!searchInput.safeParse({ q }).success) return;
+    if (!shouldSearch) return;
     generation.current++;
     active.current?.abort();
-    setState({ status: "pending" });
+    setSaved({ key, request, value: { status: "pending" } });
     setAttempt((value) => value + 1);
   }
-  return {
-    q,
-    state,
-    update,
-    retry,
-    valid: searchInput.safeParse({ q }).success,
-  };
+  return { q, state, update, retry, valid: parsed.success };
 }

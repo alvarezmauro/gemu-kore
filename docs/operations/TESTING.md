@@ -238,3 +238,24 @@ pnpm test:e2e:access tests/access-e2e/palette.spec.ts
 ```
 
 `cmdk` 1.1.1 is pinned as the only new dependency, with lockfile integrity and the existing compatible Radix/React packages. The local app initially needed a dependency refresh after its source mount changed; restarting the existing container completed its frozen install and restored healthy `/api/health` 200 behavior on port 3002. Anonymous `/app/search` still redirects to `/login`, and anonymous `POST /api/search/palette` returns 401 with private no-store headers. Existing local OAuth provider configuration is unchanged; live consent is not claimed. The known nonfailing pg adapter deprecation remains unchanged. Details: [COMMAND_PALETTE.md](COMMAND_PALETTE.md). Next: Task 7.4 — Filters and Sorting.
+
+## Task 7.4 filters and sorting verification
+
+Verified on 2026-10-15: **558 unit/component, 393 PostgreSQL integration and 168 desktop/mobile browser cases pass (1,119 distinct checks)**. Lint, TypeScript, formatting, production browser builds, internal documentation links and whitespace checks pass. Task 7.4 adds 31 unit/component, 32 PostgreSQL and 16 browser cases. Browser coverage comprises 44 general cases and 124 authenticated cases: the existing authenticated journeys passed across the full run and a final focused search/filter rerun after updating keyboard expectations for the added controls and correcting ambiguous test selectors. Asset-pipeline/storage suites retain earlier verification and are not included in this rerun total.
+
+Unit/component cases verify strict URL serialization/validation, unknown and duplicate keys, malformed values, supported sort enums, private POST bodies, restored controls, unavailable selections and cancellation/late-response rejection across filter scopes. The shared request hook also retains all existing collection/palette tests. Invalid controls never produce a broad collection request; a stale but valid option remains selected until removed.
+
+Actual PostgreSQL service/query cases verify all supported filters across owned consoles, games and accessories; box false versus unknown; unresolved versus repaired defects; model manufacturer versus platform brand; explicit accessory family/variant producers; scoped release publisher credits; selected-market year correlation and unknowns; no guessed date/year inheritance; edition; hierarchy/descendant/unassigned locations; owned-reachable narrow option labels; deterministic sorts, UUID ties, unknowns last and filtering before bounded paging. Separate physical copies remain separate. Real sessions cover all three read roles, origin/body validation, strict privileged-field rejection and revocation. Existing reserved public-query privacy tests still pass without a new public filter service.
+
+The 3,004-copy search plan fixture additionally executes the filtered service and complete filtered SQL plans for selective exact/typo terms, cross-source matching, a common word and a short prefix. They complete within the existing two-second statement timeout using the existing schema/indexes. This is a disposable hobby-scale plan regression, not a production throughput guarantee. No schema migration or external search dependency is added.
+
+Desktop/mobile browser journeys exercise bookmarks, reload, Back/Forward, filter removal/clear/browse, regional publisher/year combinations, model/producer filters, box and defect states, copy ordering, nested locations, private free text retained across control changes but absent from URLs, invalid/duplicate controls, unavailable selections, grant revocation and access-denied reload. Keyboard focus and the command palette coexist with controls at 320px in dark mode and reduced motion, with long titles and no horizontal overflow. Screenshots were inspected. The production runner uses disposable PostgreSQL/MinIO and actual signed test sessions; it never writes collection fixtures to development.
+
+To rerun the filter cases:
+
+```sh
+pnpm test:integration tests/integration/search.test.ts
+pnpm test:e2e:access tests/access-e2e/filters.spec.ts
+```
+
+Ratings remain deferred to their approved Phase 11 fields; unsupported rating filters are rejected. Grid/list/pagination UI and persistent view preferences remain Task 7.5. The existing local Docker application requires no dependency refresh or migration for this task. Local `/api/health` returns 200 and anonymous `POST /api/search/filtered` returns 401 with private no-store headers; existing OAuth provider configuration remains unchanged. Authenticated behavior is verified in the disposable production runner. See [FILTERS_AND_SORTING.md](FILTERS_AND_SORTING.md) for contracts and semantics. Next: Task 7.5 — Grid/List Views.

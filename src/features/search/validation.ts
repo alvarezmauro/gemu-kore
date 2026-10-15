@@ -26,6 +26,15 @@ export const searchResult = z
             context: z.string(),
             identificationStatus: z.enum(["INCOMPLETE", "CONFIRMED"]),
             matchSources: z.array(z.enum(matchSources)),
+            details: z
+              .object({
+                releaseYear: z.number().int().nullable(),
+                location: z.string().nullable(),
+                platform: z.string().nullable(),
+                publisher: z.string().nullable(),
+              })
+              .strict()
+              .optional(),
           })
           .strict(),
       )

@@ -4,6 +4,8 @@ Task 7.2 implements private collection search at `/app/search`, linked from the 
 
 Task 7.3 reuses this collection query inside the [command palette](COMMAND_PALETTE.md), alongside a separate typed canonical lookup. Its private palette endpoint and canonical preview scope are documented there. Full-page search keeps its existing request/result contract; both interfaces share the cancellable client request hook.
 
+Task 7.4 adds [URL filters and sorting](FILTERS_AND_SORTING.md) on the same page, including browsing without text and a private filtered endpoint. The original unfiltered endpoint, matching semantics and command palette remain available. The sections below describe Task 7.2; the filter guide documents current controls and release-year/location rules.
+
 ## Using search
 
 Enter at least two characters. Results represent individual owned consoles, games and accessories: two copies of one release appear separately. Catalog records without an owned copy are excluded. Archived catalog identities remain searchable through their existing owned copies; incomplete identities carry an **Identity incomplete** label.
@@ -16,7 +18,7 @@ Canonical names support word prefixes and bounded typo tolerance for alphabetic 
 
 Results show identity, model/release/variant context, commercial markets, a short copy ID and the matched field categories. Notes, serial values, defect excerpts and repair text are not returned in the search cards. **Photos** and **Defects** open the existing manager for that exact copy. Owned-detail pages remain in their assigned phases.
 
-Search waits briefly after typing, cancels obsolete requests and clears previous results when input changes. Idle, loading, empty, validation, unavailable and changed-access states are accessible; errors retain input and allow an explicit retry when input is valid. The page supports keyboard use, mobile layouts, dark mode and reduced motion. The first 20 matches are shown; when more exist, the page asks for another word. Command palette, filtering/sorting and collection-view pagination controls remain Tasks 7.3–7.5.
+Search waits briefly after typing, cancels obsolete requests and clears previous results when input changes. Idle, loading, empty, validation, unavailable and changed-access states are accessible; errors retain input and allow an explicit retry when input is valid. The page supports keyboard use, mobile layouts, dark mode and reduced motion. The first 20 matches are shown; when more exist, the page asks for another word. The command palette and URL filtering/sorting are now implemented by Tasks 7.3–7.4; collection-view pagination controls remain Task 7.5.
 
 ## Transport, authorization and limits
 

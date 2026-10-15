@@ -256,6 +256,26 @@ test("keeps search and keyboard actions usable at 320px in dark mode with reduce
   await expect(results(page).getByRole("listitem")).toHaveCount(1);
   await page.keyboard.press("Tab");
   await expect(
+    page.getByRole("button", { name: "Browse all copies" }),
+  ).toBeFocused();
+  const controls = page.getByRole("region", { name: "Collection filters" });
+  for (const label of [
+    "Item type",
+    "Platform",
+    "Region",
+    "Box",
+    "Unresolved defects",
+    "Sort by",
+  ]) {
+    await page.keyboard.press("Tab");
+    await expect(controls.getByLabel(label, { exact: true })).toBeFocused();
+  }
+  await page.keyboard.press("Tab");
+  await expect(
+    controls.getByText("More filters", { exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
     results(page).getByRole("link", { name: /Photos for/ }),
   ).toBeFocused();
   expect(

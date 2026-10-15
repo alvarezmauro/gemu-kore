@@ -6,7 +6,7 @@ function isolated() {
 }
 export async function resetSearchData(db: PrismaClient) {
   isolated();
-  await db.$executeRaw`TRUNCATE TABLE company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
+  await db.$executeRaw`TRUNCATE TABLE location, company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
   await db.publicSettings.update({
     where: { id: 1 },
     data: {
@@ -208,4 +208,106 @@ export async function seedSearchData(db: PrismaClient) {
     squareId: square.id,
     japanId: japan.id,
   };
+}
+
+export async function seedFilterData(db: PrismaClient) {
+  isolated();
+  const data = await seedSearchData(db);
+  const companies = await db.company.findMany({
+    select: { id: true, name: true },
+  });
+  for (const c of companies)
+    await db.company.update({
+      where: { id: c.id },
+      data: { slug: c.name.toLowerCase() },
+    });
+  await db.consolePlatform.update({
+    where: { id: data.platformId },
+    data: { slug: "snes", originalReleaseYear: 1983 },
+  });
+  await db.consoleModel.update({
+    where: { id: data.modelId },
+    data: { slug: "sns-001", releaseYear: 1990 },
+  });
+  const regions = await db.region.findMany({
+    select: { id: true, code: true },
+  });
+  for (const r of regions)
+    await db.region.update({
+      where: { id: r.id },
+      data: { slug: r.code === "JP" ? "japan" : "north-america" },
+    });
+  const usaId = regions.find((r) => r.code === "NA")!.id;
+  await db.gameRelease.update({
+    where: { id: data.releaseId },
+    data: { firstReleaseYear: 1994 },
+  });
+  await db.gameReleaseRegion.update({
+    where: {
+      gameReleaseId_regionId: {
+        gameReleaseId: data.releaseId,
+        regionId: data.japanId,
+      },
+    },
+    data: { releaseYear: 1995 },
+  });
+  await db.gameReleaseRegion.update({
+    where: {
+      gameReleaseId_regionId: {
+        gameReleaseId: data.releaseId,
+        regionId: usaId,
+      },
+    },
+    data: { releaseYear: 1996 },
+  });
+  await db.accessoryVariant.update({
+    where: { id: data.variantId },
+    data: { releaseYear: 1998 },
+  });
+  const sega = await db.company.create({
+    data: { name: "Sega", slug: "sega" },
+  });
+  await db.gameReleaseCompany.create({
+    data: {
+      gameReleaseId: data.releaseId,
+      companyId: sega.id,
+      role: "PUBLISHER",
+      regionId: data.japanId,
+    },
+  });
+  const root = await db.location.create({
+    data: { name: "Home", normalizedName: "home" },
+  });
+  const shelf = await db.location.create({
+    data: { name: "Shelf", normalizedName: "shelf", parentId: root.id },
+  });
+  await db.collectionItem.update({
+    where: { id: data.firstId },
+    data: {
+      hasBox: true,
+      locationId: shelf.id,
+      createdAt: new Date("2019-01-01Z"),
+    },
+  });
+  await db.collectionItem.update({
+    where: { id: data.secondId },
+    data: {
+      hasBox: false,
+      locationId: root.id,
+      createdAt: new Date("2020-01-01Z"),
+    },
+  });
+  await db.collectionItem.update({
+    where: { id: data.consoleId },
+    data: { hasBox: null, createdAt: new Date("2018-01-01Z") },
+  });
+  await db.collectionItem.update({
+    where: { id: data.accessoryId },
+    data: {
+      hasBox: true,
+      locationId: shelf.id,
+      createdAt: new Date("2022-01-01Z"),
+    },
+  });
+  return { ...data, usaId, rootId: root.id, shelfId: shelf.id };
 }

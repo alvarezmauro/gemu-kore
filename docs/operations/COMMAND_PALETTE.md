@@ -20,7 +20,7 @@ Catalog lookup is a separate, bounded private use case. It searches each canonic
 
 Unowned catalog identities can appear in Catalog, independently of owned hits. Archived canonical records are omitted from Catalog; models/releases/variants also require their identity parents to remain unarchived. Collection results retain archived identities already referenced by an owned copy. Each catalog target is explicitly `(kind, id)`, never an unchecked collection-item ID. The response contains only title, context, kind, UUID and identification status; it excludes history, descriptions, evidence, technical JSON, provenance and private copy fields.
 
-The palette requests up to 20 owned results and 10 catalog results, each with an independent `hasMore` flag determined using one extra row. Where more exist, it asks for another word. This is a quick lookup, not a new paginated collection view. URL filters/sorting and grid/list/pagination UI remain Tasks 7.4–7.5; catalog CRUD remains in its assigned phases.
+The palette requests up to 20 owned results and 10 catalog results, each with an independent `hasMore` flag determined using one extra row. Where more exist, it asks for another word. This is a quick lookup, not a new paginated collection view. Task 7.4 implements [URL filters and sorting](FILTERS_AND_SORTING.md) on the full search page; palette queries stay independent of those controls. Grid/list/pagination UI remains Task 7.5; catalog CRUD remains in its assigned phases.
 
 ## Transport and access
 

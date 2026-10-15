@@ -1,6 +1,11 @@
+import {
+  searchFilteredCollection,
+  getCollectionFilterOptions,
+} from "@/server/services/search/filtered";
 import * as searchRepository from "@/server/repositories/search";
 import { Prisma } from "@/server/db/generated/client";
 import { privateCatalogSearchQuery } from "@/server/repositories/search/catalog-query";
+import { filteredPrivateSearchQuery } from "@/server/repositories/search/query";
 import { privateSearchQuery } from "@/server/repositories/search/query";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, expect, it, vi } from "vitest";
@@ -13,6 +18,7 @@ import {
 import {
   privateSearchRequest,
   privatePaletteRequest,
+  privateFilteredRequest,
 } from "@/server/http/search";
 import { withTransaction } from "@/server/db/transaction";
 import {
@@ -25,7 +31,11 @@ import {
 } from "@/server/repositories/search/query";
 import type { AccessRole } from "@/features/auth/contracts";
 import { signedSessionCookie } from "../helpers/access-session";
-import { resetSearchData, seedSearchData } from "../helpers/search-data";
+import {
+  resetSearchData,
+  seedSearchData,
+  seedFilterData,
+} from "../helpers/search-data";
 const db = getDatabase();
 const secret = "search-integration-secret-longer-than-thirty-two-characters";
 async function actor(role: AccessRole = "VIEWER") {
@@ -641,6 +651,21 @@ it("measures complete search plans with representative owned graphs and index-ba
   ]) {
     const result = await searchPrivateCollection(context, { q });
     expect(result.state).toBe("ready");
+    const filtered = await searchFilteredCollection(context, {
+      q,
+      controls: { type: "game", sort: "year-desc" },
+      limit: 2,
+      offset: 1,
+    });
+    expect(filtered.state).toBe("ready");
+    expect(filtered.items.length).toBeLessThanOrEqual(2);
+    await withTransaction(async (tx) => {
+      await configureSearch(tx);
+      const terms = await parseSearchTerms(q, tx);
+      await tx.$queryRaw(
+        Prisma.sql`EXPLAIN(ANALYZE,BUFFERS,FORMAT JSON) ${filteredPrivateSearchQuery({ q, limit: 20, offset: 0 }, terms, { type: "game", sort: "year-desc" })}`,
+      );
+    });
     const palette = await searchPrivatePalette(context, { q });
     expect(palette.collection).toEqual(result);
     expect(palette.catalog.length).toBeLessThanOrEqual(10);
@@ -696,3 +721,364 @@ it("measures complete search plans with representative owned graphs and index-ba
     );
   }
 }, 30000);
+
+it.each([
+  [{ type: "console" }, "console"],
+  [{ type: "accessory" }, "accessory"],
+  [{ platform: "snes" }, "all"],
+  [{ model: "sns-001" }, "console"],
+  [{ manufacturer: "sharp" }, "console"],
+  [{ manufacturer: "nintendo" }, "none"],
+  [{ producer: "hori" }, "accessory"],
+  [{ producer: "nintendo" }, "accessory"],
+  [{ publisher: "square" }, "games"],
+  [{ publisher: "sega", region: "japan" }, "games"],
+  [{ publisher: "sega", region: "north-america" }, "none"],
+  [{ publisher: "square", region: "north-america" }, "games"],
+  [{ region: "north-america" }, "games"],
+  [{ year: "1995" }, "games"],
+  [{ year: "1996", region: "north-america" }, "games"],
+  [{ year: "1995", region: "north-america" }, "none"],
+  [{ edition: "STANDARD" }, "games"],
+  [{ hasBox: "unknown" }, "console"],
+  [{ hasBox: "false" }, "second"],
+  [{ hasBox: "true", type: "game" }, "first"],
+  [{ hasDefects: "true" }, "first"],
+  [{ hasDefects: "false", type: "game" }, "second"],
+  [{ platform: "missing-platform" }, "none"],
+])("filters owned graphs with %j", async (controls, expected) => {
+  const { context } = await actor();
+  const data = await seedFilterData(db);
+  const result = await searchFilteredCollection(context, { q: "", controls });
+  const expectIds =
+    expected === "all"
+      ? [data.firstId, data.secondId, data.consoleId, data.accessoryId]
+      : expected === "games"
+        ? [data.firstId, data.secondId]
+        : expected === "console"
+          ? [data.consoleId]
+          : expected === "accessory"
+            ? [data.accessoryId]
+            : expected === "first"
+              ? [data.firstId]
+              : expected === "second"
+                ? [data.secondId]
+                : [];
+  expect(ids(result)).toEqual(expectIds.sort());
+});
+it("filters locations through descendants without matching unassigned copies", async () => {
+  const { context } = await actor();
+  const data = await seedFilterData(db);
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { location: data.rootId },
+      }),
+    ),
+  ).toEqual([data.firstId, data.secondId, data.accessoryId].sort());
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { location: data.shelfId },
+      }),
+    ),
+  ).toEqual([data.firstId, data.accessoryId].sort());
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { location: "unassigned" },
+      }),
+    ),
+  ).toEqual([data.consoleId]);
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { location: randomUUID() },
+      }),
+    ),
+  ).toEqual([]);
+});
+it("keeps selected-market unknown years and model/variant years truthful", async () => {
+  const { context } = await actor();
+  const data = await seedFilterData(db);
+  await db.gameReleaseRegion.update({
+    where: {
+      gameReleaseId_regionId: {
+        gameReleaseId: data.releaseId,
+        regionId: data.japanId,
+      },
+    },
+    data: { releaseYear: null },
+  });
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { region: "japan", year: "unknown", type: "game" },
+      }),
+    ),
+  ).toEqual([data.firstId, data.secondId].sort());
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { region: "japan", year: "1994" },
+      }),
+    ),
+  ).toEqual([]);
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { year: "1996" },
+      }),
+    ),
+  ).toEqual([data.firstId, data.secondId].sort());
+  await db.gameReleaseRegion.updateMany({
+    where: { gameReleaseId: data.releaseId },
+    data: { releaseYear: null },
+  });
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { year: "1994" },
+      }),
+    ),
+  ).toEqual([data.firstId, data.secondId].sort());
+  await db.consoleModel.update({
+    where: { id: data.modelId },
+    data: { releaseYear: null },
+  });
+  await db.accessoryVariant.update({
+    where: { id: data.variantId },
+    data: { releaseYear: null },
+  });
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "",
+        controls: { year: "unknown" },
+      }),
+    ),
+  ).toEqual([data.consoleId, data.accessoryId].sort());
+});
+it("sorts the complete eligible copies before bounded paging with nulls last and stable ties", async () => {
+  const { context } = await actor();
+  const d = await seedFilterData(db);
+  const run = async (sort: string, extra = {}) =>
+    await searchFilteredCollection(context, {
+      q: "",
+      controls: { sort },
+      ...extra,
+    });
+  expect((await run("name-asc")).items.map((x) => x.id)).toEqual([
+    ...[d.firstId, d.secondId].sort(),
+    d.accessoryId,
+    d.consoleId,
+  ]);
+  expect((await run("name-desc")).items.map((x) => x.id)).toEqual([
+    d.consoleId,
+    d.accessoryId,
+    ...[d.firstId, d.secondId].sort(),
+  ]);
+  expect((await run("newest")).items.map((x) => x.id)).toEqual([
+    d.accessoryId,
+    d.secondId,
+    d.firstId,
+    d.consoleId,
+  ]);
+  expect((await run("oldest")).items.map((x) => x.id)).toEqual([
+    d.consoleId,
+    d.firstId,
+    d.secondId,
+    d.accessoryId,
+  ]);
+  expect((await run("year-asc")).items.map((x) => x.id)).toEqual([
+    d.consoleId,
+    ...[d.firstId, d.secondId].sort(),
+    d.accessoryId,
+  ]);
+  expect((await run("year-desc")).items.map((x) => x.id)).toEqual([
+    d.accessoryId,
+    ...[d.firstId, d.secondId].sort(),
+    d.consoleId,
+  ]);
+  const all = (await run("location")).items;
+  expect(all.at(-1)?.id).toBe(d.consoleId);
+  const limited = await run("newest", { limit: 1, offset: 1 });
+  expect(limited.items[0].id).toBe(d.secondId);
+  expect(limited.hasMore).toBe(true);
+  expect((await run("newest", { offset: 5000 })).items).toEqual([]);
+  const atari = await db.consolePlatform.create({
+    data: { name: "Atari", slug: "atari" },
+  });
+  await db.accessoryVariantPlatform.create({
+    data: { accessoryVariantId: d.variantId, platformId: atari.id },
+  });
+  const byPlatform = (await run("platform")).items;
+  expect(byPlatform.map((x) => x.id)).toEqual([
+    d.accessoryId,
+    ...[d.firstId, d.secondId].sort(),
+    d.consoleId,
+  ]);
+  expect(byPlatform[0].details?.platform).toBe("Atari, Super Nintendo");
+  expect(
+    (await run("publisher")).items
+      .slice(0, 2)
+      .map((x) => x.id)
+      .sort(),
+  ).toEqual([d.firstId, d.secondId].sort());
+  await db.consoleModel.update({
+    where: { id: d.modelId },
+    data: { releaseYear: null },
+  });
+  expect((await run("year-asc")).items.at(-1)?.id).toBe(d.consoleId);
+  expect((await run("year-desc")).items.at(-1)?.id).toBe(d.consoleId);
+});
+it("combines private text and structured controls without broadening empty or short queries", async () => {
+  const { context } = await actor();
+  const d = await seedFilterData(db);
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "chrono",
+        controls: { hasBox: "true" },
+      }),
+    ),
+  ).toEqual([d.firstId]);
+  expect(
+    ids(
+      await searchFilteredCollection(context, {
+        q: "00-ABC-123",
+        controls: { hasBox: "false" },
+      }),
+    ),
+  ).toEqual([]);
+  for (const q of ["", "c", "%_"])
+    expect(
+      (await searchFilteredCollection(context, { q, controls: {} })).items,
+    ).toEqual([]);
+  expect(
+    (
+      await searchFilteredCollection(context, {
+        q: "c",
+        controls: { type: "game" },
+      })
+    ).state,
+  ).toBe("idle");
+  const result = await searchFilteredCollection(context, {
+    q: "",
+    controls: { sort: "newest" },
+  });
+  expect(result.items[0].details).toMatchObject({
+    releaseYear: 1998,
+    location: "Home / Shelf",
+  });
+  expect(result.items[0].matchSources).toEqual([]);
+  expect(JSON.stringify(result)).not.toContain("repairsecret");
+  expect(JSON.stringify(result)).not.toContain("00-ABC-123");
+});
+it("offers only owned-reachable filters, with private narrow labels and archived owned identities retained", async () => {
+  const { context } = await actor();
+  const d = await seedFilterData(db);
+  await db.consolePlatform.create({
+    data: { name: "Unowned", slug: "unowned" },
+  });
+  await db.consolePlatform.update({
+    where: { id: d.platformId },
+    data: { archivedAt: new Date() },
+  });
+  const options = await getCollectionFilterOptions(context);
+  expect(options.platform).toEqual([
+    { value: "snes", label: "Super Nintendo" },
+  ]);
+  expect(options.manufacturer).toEqual([{ value: "sharp", label: "Sharp" }]);
+  expect(options.publisher.map((x) => x.value).sort()).toEqual([
+    "sega",
+    "square",
+  ]);
+  expect(options.location.map((x) => x.label).sort()).toEqual([
+    "Home",
+    "Home / Shelf",
+  ]);
+  expect(options.year.map((x) => x.value)).toEqual([
+    "1990",
+    "1995",
+    "1996",
+    "1998",
+  ]);
+  expect(JSON.stringify(options)).not.toContain("description");
+});
+it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
+  "checks current %s filter access and strict private transport",
+  async (role) => {
+    const { context, headers, grant } = await actor(role);
+    await seedFilterData(db);
+    const send = (data: unknown, h = headers) =>
+      privateFilteredRequest(
+        new Request("http://localhost:3002/api/search/filtered", {
+          method: "POST",
+          headers: h,
+          body: JSON.stringify(data),
+        }),
+      );
+    const result = await send({ q: "", controls: { type: "game" } });
+    expect(result.status).toBe(200);
+    expect(result.headers.get("cache-control")).toBe("private, no-store");
+    for (const controls of [
+      { sort: "drop table" },
+      { hasBox: true },
+      { year: "0" },
+      { location: "fake" },
+      { rating: "4" },
+      { type: "GAME" },
+      { includePrivate: true },
+    ])
+      expect((await send({ q: "chrono", controls })).status).toBe(400);
+    const outside = new Headers(headers);
+    outside.set("origin", "https://elsewhere.example");
+    expect(
+      (await send({ q: "", controls: { type: "game" } }, outside)).status,
+    ).toBe(403);
+    await db.accessGrant.update({
+      where: { id: grant.id },
+      data: { enabled: false },
+    });
+    await expect(getCollectionFilterOptions(context)).rejects.toThrow();
+    expect((await send({ q: "", controls: { type: "game" } })).status).toBe(
+      403,
+    );
+  },
+);
+
+it("executes filter persistence with narrow columns and live hierarchical options", async () => {
+  await actor();
+  const d = await seedFilterData(db);
+  await withTransaction(async (tx) => {
+    const options = await searchRepository.listFilterOptions(tx);
+    expect(options.some((x) => x.label === "Home / Shelf")).toBe(true);
+    const rows = await searchRepository.searchFilteredRows(
+      { q: "", limit: 20, offset: 0 },
+      [],
+      { sort: "relevance", type: "console" },
+      tx,
+    );
+    expect(rows.map((x) => x.id)).toEqual([d.consoleId]);
+    expect(Object.keys(rows[0]).sort()).toEqual(
+      [
+        "id",
+        "type",
+        "title",
+        "context",
+        "identificationStatus",
+        "matchSources",
+        "details",
+      ].sort(),
+    );
+  });
+});

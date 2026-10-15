@@ -1,5 +1,10 @@
 import "server-only";
 import { Prisma } from "../../db/generated/client";
+import {
+  controlRows,
+  controlOrder,
+  type ControlParameters,
+} from "./controls-query";
 import { canonicalSources, fragment } from "./expressions";
 export type ParsedTerm = {
   ordinal: number;
@@ -71,8 +76,13 @@ function buildQuery(
   input: SearchParameters,
   parsed: ParsedTerm[],
   audience: "private" | "public",
+  controls?: ControlParameters,
 ) {
   const isPublic = audience === "public";
+  const order = controls
+    ? controlOrder(controls.sort)
+    : Prisma.sql`m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id`;
+  const emptyTerms = Prisma.sql`SELECT NULL::int,NULL::text,NULL::tsquery,NULL::tsquery,NULL::boolean,NULL::text WHERE false`;
   const rootGate = isPublic
     ? Prisma.sql`AND c."publicationStatus"='PUBLISHED' AND EXISTS(SELECT FROM public_settings WHERE id=1 AND "publicCollectionEnabled")`
     : Prisma.empty;
@@ -94,8 +104,8 @@ function buildQuery(
   // They are not persisted search documents or materialized database views.
   // Page only complete, deduplicated matches, then hydrate market context for
   // those IDs. Joining that projection before paging repeats work on broad hits.
-  return Prisma.sql`WITH terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (VALUES ${termValues(parsed)}),
-  roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate}),
+  return Prisma.sql`WITH ${controls ? Prisma.sql`controls AS MATERIALIZED (${controlRows(controls)}),` : Prisma.empty} terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (${parsed.length ? Prisma.sql`VALUES ${termValues(parsed)}` : emptyTerms}),
+  roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate} ${controls ? Prisma.sql`AND c.id IN (SELECT id FROM controls)` : Prisma.empty}),
   links AS MATERIALIZED (
     SELECT r.id,'model'::text kind,o."consoleModelId" target FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id
     UNION ALL SELECT r.id,'platform',m."platformId" FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId"
@@ -131,21 +141,21 @@ function buildQuery(
     }
     UNION ALL SELECT r.id,t.ordinal,1,1,'Edition',false,0::real FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release g ON g.id=o."gameReleaseId" CROSS JOIN terms t WHERE replace(lower(g."editionType"::text),'_',' ') = t.term OR to_tsvector('pg_catalog.simple',replace(lower(g."editionType"::text),'_',' ')) @@ t.exact
   ), best AS (SELECT DISTINCT ON(id,ordinal) * FROM candidates ORDER BY id,ordinal,class,priority,strength DESC,source),
-  matched AS (SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}),
+  matched AS (${parsed.length ? Prisma.sql`SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}` : Prisma.sql`SELECT id,false whole,0 class,0::bigint priority,0::real strength,ARRAY[]::text[] sources FROM roots`}),
   titles AS MATERIALIZED (
     SELECT r.id,r.type,p.name title FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
     UNION ALL SELECT r.id,r.type,g.name FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId"
     UNION ALL SELECT r.id,r.type,a.name FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
   ), page AS MATERIALIZED (
-    SELECT i.id,i.type,i.title,m.whole,m.class,m.priority,m.strength,m.sources FROM matched m JOIN titles i ON i.id=m.id
-    ORDER BY m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id LIMIT ${input.limit + 1} OFFSET ${input.offset}
+    SELECT i.id,i.type,i.title,m.sources,row_number() OVER(ORDER BY ${order}) position ${controls ? Prisma.sql`,x.year,x."locationLabel",x."platformLabel",x."publisherLabel"` : Prisma.empty} FROM matched m JOIN titles i ON i.id=m.id ${controls ? Prisma.sql`JOIN controls x ON x.id=i.id` : Prisma.empty}
+    ORDER BY ${order} LIMIT ${input.limit + 1} OFFSET ${input.offset}
   ), identity AS (
     SELECT r.id,r.type,p.name title,concat_ws(' · ',m.name,CASE WHEN m."modelNumber" IS DISTINCT FROM m.name THEN m."modelNumber" END,(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM console_model_region mr JOIN region reg ON reg.id=mr."regionId" WHERE mr."consoleModelId"=m.id)) context,m."identificationStatus" status FROM page r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
     UNION ALL SELECT r.id,r.type,g.name,concat_ws(' · ',p.name,gr."editionName",gr."printingLabel",(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM game_release_region rr JOIN region reg ON reg.id=rr."regionId" WHERE rr."gameReleaseId"=gr.id)),gr."identificationStatus" FROM page r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId" JOIN console_platform p ON p.id=gr."platformId"
     UNION ALL SELECT r.id,r.type,a.name,concat_ws(' · ',v.name,v.edition,v.color,CASE WHEN v."modelNumber" IS DISTINCT FROM v.name THEN v."modelNumber" END,(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM accessory_variant_region vr JOIN region reg ON reg.id=vr."regionId" WHERE vr."accessoryVariantId"=v.id)),v."identificationStatus" FROM page r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
   )
-  SELECT i.id,i.type,i.title,i.context,i.status AS "identificationStatus",m.sources AS "matchSources" FROM page m JOIN identity i ON i.id=m.id
-  ORDER BY m.whole DESC,m.class,m.priority,m.strength DESC,lower(normalize(i.title,NFC)),i.id`;
+  SELECT i.id,i.type,i.title,i.context,i.status AS "identificationStatus",m.sources AS "matchSources" ${controls ? Prisma.sql`,jsonb_build_object('releaseYear',m.year,'location',m."locationLabel",'platform',m."platformLabel",'publisher',m."publisherLabel") details` : Prisma.empty} FROM page m JOIN identity i ON i.id=m.id
+  ORDER BY m.position`;
 }
 export const privateSearchQuery = (
   input: SearchParameters,
@@ -157,3 +167,9 @@ export const publicSearchQuery = (
   input: SearchParameters,
   terms: ParsedTerm[],
 ) => buildQuery(input, terms, "public");
+
+export const filteredPrivateSearchQuery = (
+  input: SearchParameters,
+  terms: ParsedTerm[],
+  controls: ControlParameters,
+) => buildQuery(input, terms, "private", controls);

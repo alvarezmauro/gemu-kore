@@ -1115,6 +1115,8 @@ Example:
 /app/games?platform=snes&region=us&hasBox=true
 ```
 
+Status: **Completed 2026-10-15.** Added bookmarkable filters and sorting to the existing private `/app/search` workspace, with shared contracts for later category pages. Controls cover owned type, platform, model manufacturer/model, release publisher/edition, accessory producer, commercial market, truthful release year, nested/unassigned location, box true/false/unknown and unresolved defects. Fixed sorts include relevance, name, added date, release year, location, platform and publisher, with stable copy UUID ties and unknowns last where relevant. Native URL history restores controls across reload/Back/Forward while private free text remains in POST bodies and survives control changes within the page session. Parameterized PostgreSQL applies controls before complete matching, copy deduplication and bounded paging; current access, narrow private projections, cancellation, invalid/stale selections and accessible desktop/mobile layouts are verified. All 558 unit/component, 393 PostgreSQL and 168 desktop/mobile browser cases pass (1,119 checks), plus lint, types, formatting, production browser builds, documentation links and whitespace validation. Filtered plans extend the existing 3,004-copy fixture within the statement timeout. Ratings are explicitly deferred to the approved Phase 11 rating fields; no premature rating schema, category CRUD, grid/list/pagination UI, public filter endpoint, migration, dependency or personal fixture is added. Local Docker app is healthy on port 3002 and the anonymous filtered endpoint rejects access. Details: [docs/operations/FILTERS_AND_SORTING.md](docs/operations/FILTERS_AND_SORTING.md). Next: Task 7.5.
+
 ---
 
 ## TASK 7.5 — Grid/List Views

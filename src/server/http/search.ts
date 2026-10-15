@@ -1,4 +1,5 @@
 import "server-only";
+import { searchFilteredCollection } from "../services/search/filtered";
 import { requirePrivateAccess, PrivateAccessError } from "../auth/access";
 import { PermissionError } from "../auth/permissions";
 import { getAuthEnv } from "../config/env";
@@ -76,9 +77,17 @@ export async function privatePaletteRequest(
 ): Promise<Response> {
   return handlePrivateSearch(request, searchPrivatePalette);
 }
+export async function privateFilteredRequest(
+  request: Request,
+): Promise<Response> {
+  return handlePrivateSearch(request, searchFilteredCollection);
+}
 async function handlePrivateSearch(
   request: Request,
-  search: typeof searchPrivateCollection | typeof searchPrivatePalette,
+  search:
+    | typeof searchPrivateCollection
+    | typeof searchPrivatePalette
+    | typeof searchFilteredCollection,
 ): Promise<Response> {
   try {
     const context = await requirePrivateAccess(request.headers);

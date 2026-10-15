@@ -1,4 +1,4 @@
-import { seedSearchData, resetSearchData } from "./search-data";
+import { seedSearchData, resetSearchData, seedFilterData } from "./search-data";
 import { randomUUID } from "node:crypto";
 import { disconnectDatabase, getDatabase } from "../../src/server/db/client";
 
@@ -17,8 +17,16 @@ async function main() {
     let result: unknown = null;
     if (command === "reset-search") {
       await resetSearchData(database);
+    } else if (command === "seed-filters") {
+      result = await seedFilterData(database);
     } else if (command === "seed-search") {
       result = await seedSearchData(database);
+    } else if (command === "rename-filter-platform") {
+      const input = JSON.parse(argument) as { id: string; name: string };
+      await database.consolePlatform.update({
+        where: { id: input.id },
+        data: { name: input.name },
+      });
     } else if (command === "rename-search-game") {
       const input = JSON.parse(argument) as { id: string; name: string };
       await database.game.update({

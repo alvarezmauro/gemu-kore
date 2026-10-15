@@ -1,3 +1,4 @@
+import type { CollectionControls } from "./controls";
 import { paletteResult } from "./palette-validation";
 import type { PaletteResult } from "./palette-contracts";
 import { searchResult } from "./validation";
@@ -22,15 +23,27 @@ export async function requestPaletteSearch(
     throw new Error("We couldn't load these search results. Please try again.");
   return parsed.data;
 }
-async function requestSearch(
-  path: "/api/search/private" | "/api/search/palette",
+export async function requestFilteredSearch(
   q: string,
   signal: AbortSignal,
+  controls: CollectionControls,
+): Promise<SearchResult> {
+  const data = await requestSearch("/api/search/filtered", q, signal, controls);
+  const parsed = searchResult.safeParse(data);
+  if (!parsed.success)
+    throw new Error("We couldn't load these search results. Please try again.");
+  return parsed.data;
+}
+async function requestSearch(
+  path: "/api/search/private" | "/api/search/palette" | "/api/search/filtered",
+  q: string,
+  signal: AbortSignal,
+  controls?: CollectionControls,
 ): Promise<unknown> {
   const response = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ q }),
+    body: JSON.stringify(controls ? { q, controls } : { q }),
     cache: "no-store",
     signal,
   }).catch(() => {

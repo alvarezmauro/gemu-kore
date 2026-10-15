@@ -1,5 +1,9 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { requestCollectionSearch, requestPaletteSearch } from "./client";
+import {
+  requestCollectionSearch,
+  requestPaletteSearch,
+  requestFilteredSearch,
+} from "./client";
 afterEach(() => vi.unstubAllGlobals());
 const result = {
   state: "ready",
@@ -8,6 +12,30 @@ const result = {
   offset: 0,
   limit: 20,
 };
+it("posts validated structured controls separately from private free text", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => result });
+  vi.stubGlobal("fetch", fetcher);
+  const signal = new AbortController().signal;
+  const controls = {
+    type: "game" as const,
+    hasBox: "unknown" as const,
+    sort: "year-desc" as const,
+  };
+  expect(
+    await requestFilteredSearch("private serial", signal, controls),
+  ).toEqual(result);
+  expect(fetcher).toHaveBeenCalledWith(
+    "/api/search/filtered",
+    expect.objectContaining({
+      method: "POST",
+      cache: "no-store",
+      body: JSON.stringify({ q: "private serial", controls }),
+      signal,
+    }),
+  );
+});
 it("keeps private search text in a no-store POST body", async () => {
   const fetcher = vi
     .fn()
