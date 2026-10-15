@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "platforms": [
+    {
+      "seedKey": "platform:sony.playstation",
+      "name": "PlayStation",
+      "slug": "playstation",
+      "manufacturerSeedKey": "company:sony",
+      "originalReleaseYear": 1994,
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/en-us/playstation-history/1994-ps-one/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation history: 1994",
+            "url": "https://www.playstation.com/en-us/playstation-history/1994-ps-one/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The general platform launched in Japan in 1994. A platform launch year is not automatically copied to its hardware models."
+      }
+    }
+  ]
+}

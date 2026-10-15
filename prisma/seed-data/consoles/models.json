@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "seedKey": "model:sony.playstation.scph-1000",
+      "name": "PlayStation SCPH-1000",
+      "slug": "playstation-scph-1000",
+      "platformSeedKey": "platform:sony.playstation",
+      "modelNumber": "SCPH-1000",
+      "releaseYear": 1994,
+      "identificationStatus": "INCOMPLETE",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        },
+        {
+          "provider": "sony",
+          "url": "https://www.sony.com/en/SonyInfo/csr/library/reports/sis4ug000000jyws-att/CSR2005E.pdf"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Sony CSR Report 2005: product history, page 9",
+            "url": "https://www.sony.com/en/SonyInfo/csr/library/reports/sis4ug000000jyws-att/CSR2005E.pdf",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "PlayStation Japan: hardware repair support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Sony's report identifies PlayStation SCPH-1000 with 1994; the Japanese support list identifies the model for this market. Support end dates are not manufacturing discontinuation dates. Actual manufacturer, locking, dimensions, weight and detailed specifications remain unasserted."
+      }
+    }
+  ]
+}

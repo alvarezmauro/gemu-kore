@@ -36,7 +36,8 @@
     "docker:down": "docker compose --env-file .env.local --profile app down",
     "docker:status": "docker compose --env-file .env.local --profile app ps",
     "docker:logs": "docker compose --env-file .env.local --profile app logs --follow --tail 100",
-    "test:assets": "pnpm db:generate && vitest run --config vitest.assets.config.mts"
+    "test:assets": "pnpm db:generate && vitest run --config vitest.assets.config.mts",
+    "seed:validate": "tsx scripts/check-console-seeds.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1146.0",

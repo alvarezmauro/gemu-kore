@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "regions": [
+    {
+      "seedKey": "region:jp",
+      "name": "Japan",
+      "slug": "japan",
+      "code": "JP",
+      "provenance": {
+        "sources": [],
+        "note": "Curated commercial market from PROJECT_SPEC.md section 97. JP is the catalog market code; it does not describe region locking, television standards or language."
+      }
+    }
+  ]
+}

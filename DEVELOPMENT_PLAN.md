@@ -1184,6 +1184,8 @@ Create clean seed structure.
 
 Do not populate hundreds of consoles yet.
 
+Status: **Completed 2026-10-15.** Established version-1 JSON inputs under `prisma/seed-data/companies`, `regions` and `consoles`, with immutable namespaced seed keys, explicit company/platform/market relationships, typed optional facts, versioned specifications, exact measurement strings and record-level source evidence. A small officially sourced Sony/Japan/PlayStation/SCPH-1000 starter exercises the format without expanding the catalog. Added `pnpm seed:validate`: a bounded read-only offline checker that validates all four files together, duplicate identities, unresolved links, market/locking distinctions, references and provenance. Documented future insert-only idempotence, collision review, SEED history, current administrator authorization and preservation of manual edits; no database applicator or automatic seed hook is introduced. All 66 new seed-format/tooling checks and the full 689 unit/component tests pass, with typechecking, lint, formatting, documentation links and whitespace checks. Repeated CLI runs from a different working directory with deliberately invalid database configuration preserve input hashes and produce the same counts. No dependency, schema/migration, UI/persistence behavior, live database data or future catalog expansion is changed; database/browser suites are not applicable to this format-only task. Format, source evidence and authoring rules: [prisma/seed-data/README.md](prisma/seed-data/README.md). Next: Task 8.3.
+
 ---
 
 ## TASK 8.3 — Expand Console Seed Data

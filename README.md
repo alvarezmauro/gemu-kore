@@ -2,7 +2,7 @@
 
 A web application for managing and showcasing a physical video game collection.
 
-Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the core catalog/collection database and repository boundaries. Tasks **5.1–5.4** add private S3-compatible storage and the authenticated asset upload pipeline: validated images/GLB, preserved originals, image derivatives, provenance/use records, recovery and private streamed reads, with extensive utility and failure regressions. Task **6.1** adds the private [location manager](docs/operations/LOCATIONS.md) at `/app/locations`, with nested places, moves, sibling ordering, breadcrumbs and guarded deletion. Task **6.2** adds private [defect management](docs/operations/DEFECTS.md) at `/app/defects`, with copy-specific records, severity, status and repair details. Task **6.3** adds private [collection photos](docs/operations/COLLECTION_MEDIA.md) at `/app/media`: classifications, captions, authenticated images, mouse/touch ordering, upload progress and a mobile camera picker. The root page remains a temporary design preview; catalog/collection CRUD arrives in its assigned phases. Tasks **7.1–7.2** design and implement [private collection search](docs/operations/SEARCH.md) at `/app/search`, using live catalog relationships, separate physical copies, PostgreSQL text/typo matching and protected serial/note/defect queries. See the [search architecture](docs/architecture/SEARCH_ARCHITECTURE.md). Task **7.3** adds the [command palette](docs/operations/COMMAND_PALETTE.md): ⌘K / Ctrl+K, grouped owned/catalog results, identity previews and existing copy actions. Task **7.4** adds [filters and sorting](docs/operations/FILTERS_AND_SORTING.md) to `/app/search`, with bookmarkable controls, private search text, regional release facts and stable copy ordering. Rating controls follow the planned Phase 11 rating fields. Task **7.5** adds the private [collection browser](docs/operations/COLLECTION_VIEWS.md) at `/app/collection`, with grid/list layouts, private photo previews, URL pagination and a locally saved view choice. Next: **8.1 — Console Catalog**. See [asset upload operations](docs/operations/ASSET_UPLOADS.md).
+Tasks **1.1–1.4** provide the application and testing foundation. Tasks **2.1–2.4** provide and review the warm-paper design system, responsive UI, themes and motion. Tasks **3.1–3.6** implement, test and review verified OAuth identity, current grants and role permissions. Tasks **4.1–4.3** implement and review the core catalog/collection database and repository boundaries. Tasks **5.1–5.4** add private S3-compatible storage and the authenticated asset upload pipeline: validated images/GLB, preserved originals, image derivatives, provenance/use records, recovery and private streamed reads, with extensive utility and failure regressions. Task **6.1** adds the private [location manager](docs/operations/LOCATIONS.md) at `/app/locations`, with nested places, moves, sibling ordering, breadcrumbs and guarded deletion. Task **6.2** adds private [defect management](docs/operations/DEFECTS.md) at `/app/defects`, with copy-specific records, severity, status and repair details. Task **6.3** adds private [collection photos](docs/operations/COLLECTION_MEDIA.md) at `/app/media`: classifications, captions, authenticated images, mouse/touch ordering, upload progress and a mobile camera picker. The root page remains a temporary design preview; catalog/collection CRUD arrives in its assigned phases. Tasks **7.1–7.2** design and implement [private collection search](docs/operations/SEARCH.md) at `/app/search`, using live catalog relationships, separate physical copies, PostgreSQL text/typo matching and protected serial/note/defect queries. See the [search architecture](docs/architecture/SEARCH_ARCHITECTURE.md). Task **7.3** adds the [command palette](docs/operations/COMMAND_PALETTE.md): ⌘K / Ctrl+K, grouped owned/catalog results, identity previews and existing copy actions. Task **7.4** adds [filters and sorting](docs/operations/FILTERS_AND_SORTING.md) to `/app/search`, with bookmarkable controls, private search text, regional release facts and stable copy ordering. Rating controls follow the planned Phase 11 rating fields. Task **7.5** adds the private [collection browser](docs/operations/COLLECTION_VIEWS.md) at `/app/collection`, with grid/list layouts, private photo previews, URL pagination and a locally saved view choice. Task **8.1** adds the administrator-only [console catalog](docs/operations/CONSOLE_CATALOG.md). Task **8.2** defines the [versioned console seed format](prisma/seed-data/README.md), with a small sourced starter and a read-only validator. Next: **8.3 — Expand Console Seed Data**. See [asset upload operations](docs/operations/ASSET_UPLOADS.md).
 
 ## Local development
 
@@ -34,12 +34,17 @@ pnpm db:check
 
 Use `pnpm db:migrate --create-only --name describe_the_change` to prepare a future development migration for review. Full migration instructions, pool limits and environment loading are in the database guide. `/api/health` reports application liveness only; database connectivity is checked through the private `db:check` command.
 
+## Console seed inputs
+
+`pnpm seed:validate` checks the small, version-controlled catalog input files in `prisma/seed-data/`. It runs offline without database credentials and makes no database changes. See the [seed format and future application rules](prisma/seed-data/README.md). Bulk catalog data and the database writer are not included in this format task.
+
 ## Checks and production build
 
 ```sh
 pnpm lint
 pnpm typecheck
 pnpm format:check
+pnpm seed:validate
 pnpm test
 pnpm test:integration
 pnpm test:e2e
@@ -75,6 +80,8 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Command palette, shortcuts and catalog preview](docs/operations/COMMAND_PALETTE.md)
 - [Collection filters, URL controls and sorting](docs/operations/FILTERS_AND_SORTING.md)
 - [Collection grid/list views, photos and pagination](docs/operations/COLLECTION_VIEWS.md)
+- [Console catalog administration](docs/operations/CONSOLE_CATALOG.md)
+- [Console seed format, evidence and preservation rules](prisma/seed-data/README.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

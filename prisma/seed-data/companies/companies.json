@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "companies": [
+    {
+      "seedKey": "company:sony",
+      "name": "Sony",
+      "slug": "sony",
+      "countryCode": "JP",
+      "foundedYear": 1946,
+      "website": "https://www.sony.com/",
+      "references": [
+        {
+          "provider": "sony",
+          "url": "https://www.sony.com/en/SonyInfo/CorporateInfo/History/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Sony corporate history",
+            "url": "https://www.sony.com/en/SonyInfo/CorporateInfo/History/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Sony is used as the platform brand. This does not establish the actual manufacturer of a particular hardware model."
+      }
+    }
+  ]
+}
