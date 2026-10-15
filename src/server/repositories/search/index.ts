@@ -1,4 +1,8 @@
 import "server-only";
+import {
+  privateCatalogSearchQuery,
+  type CatalogSearchRow,
+} from "./catalog-query";
 import type { TransactionClient } from "../../db/transaction";
 import {
   privateSearchQuery,
@@ -23,4 +27,12 @@ export function searchPrivateRows(
   tx: TransactionClient,
 ) {
   return tx.$queryRaw<SearchRow[]>(privateSearchQuery(input, terms));
+}
+
+export async function searchCatalogRows(
+  q: string,
+  terms: ParsedTerm[],
+  tx: TransactionClient,
+) {
+  return tx.$queryRaw<CatalogSearchRow[]>(privateCatalogSearchQuery(q, terms));
 }

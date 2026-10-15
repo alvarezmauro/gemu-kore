@@ -1093,6 +1093,8 @@ Implement:
 
 using shadcn Command.
 
+Status: **Completed 2026-10-15.** Added private Quick search with ⌘K / Ctrl+K and visible desktop/mobile triggers, using shadcn Command adapted to the existing Radix Dialog and pinned `cmdk` 1.1.1. Results group owned Consoles, Games and Accessories separately from typed canonical Catalog identities; previews retain copy/catalog boundaries and offer existing exact-copy photo/defect actions without fabricating future detail routes. A private, strict POST endpoint reads both scopes under current permissions in one repeatable-read snapshot, reusing PostgreSQL indexes and resource/privacy limits. Shared request handling cancels obsolete work and clears private input/results on dismissal. Focus trapping/restoration, Escape/outside dismissal, arrow/Enter navigation, open-modal safeguards, subtle reduced-motion-aware results and 320px layouts are verified. All 527 unit/component, 361 PostgreSQL and 152 desktop/mobile browser cases pass (1,040 checks), plus lint, types, formatting, production browser builds and whitespace validation. Catalog plan/index checks extend the 3,004-copy fixture. Local Docker app refreshed and healthy on port 3002. No schema/migration, personal fixtures, public palette, catalog CRUD or filter/view implementation. Details: [docs/operations/COMMAND_PALETTE.md](docs/operations/COMMAND_PALETTE.md). Next: Task 7.4.
+
 ---
 
 ## TASK 7.4 — Filters and Sorting

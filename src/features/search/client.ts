@@ -1,10 +1,33 @@
+import { paletteResult } from "./palette-validation";
+import type { PaletteResult } from "./palette-contracts";
 import { searchResult } from "./validation";
 import type { SearchResult } from "./contracts";
 export async function requestCollectionSearch(
   q: string,
   signal: AbortSignal,
 ): Promise<SearchResult> {
-  const response = await fetch("/api/search/private", {
+  const data = await requestSearch("/api/search/private", q, signal);
+  const parsed = searchResult.safeParse(data);
+  if (!parsed.success)
+    throw new Error("We couldn't load these search results. Please try again.");
+  return parsed.data;
+}
+export async function requestPaletteSearch(
+  q: string,
+  signal: AbortSignal,
+): Promise<PaletteResult> {
+  const data = await requestSearch("/api/search/palette", q, signal);
+  const parsed = paletteResult.safeParse(data);
+  if (!parsed.success)
+    throw new Error("We couldn't load these search results. Please try again.");
+  return parsed.data;
+}
+async function requestSearch(
+  path: "/api/search/private" | "/api/search/palette",
+  q: string,
+  signal: AbortSignal,
+): Promise<unknown> {
+  const response = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ q }),
@@ -24,8 +47,5 @@ export async function requestCollectionSearch(
   const data: unknown = await response.json().catch(() => {
     throw new Error("We couldn't load these search results. Please try again.");
   });
-  const parsed = searchResult.safeParse(data);
-  if (!parsed.success)
-    throw new Error("We couldn't load these search results. Please try again.");
-  return parsed.data;
+  return data;
 }

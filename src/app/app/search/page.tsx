@@ -1,3 +1,4 @@
+import { PaletteTrigger } from "@/features/search/components/command-palette";
 import { redirect } from "next/navigation";
 import { ApplicationShell } from "@/components/layout/application-shell";
 import { PageContainer } from "@/components/layout/page-container";
@@ -24,6 +25,7 @@ export default async function SearchPage() {
   }
   return (
     <ApplicationShell
+      headerActions={<PaletteTrigger compact />}
       context="Your collection"
       items={[
         { label: "Your collection", href: "/app", icon: "overview" },

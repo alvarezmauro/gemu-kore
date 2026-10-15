@@ -38,7 +38,7 @@ export type PublicSearchRow = Omit<SearchRow, "matchSources"> & {
 const vector = (sql: Prisma.Sql) =>
   Prisma.sql`to_tsvector('pg_catalog.simple'::regconfig, ${sql})`;
 const escapePrefix = (value: string) => value.replace(/[\\%_]/g, "\\$&") + "%";
-function canonicalMatches(q: string) {
+export function canonicalMatches(q: string, catalog = false) {
   return Prisma.join(
     canonicalSources.map((definition) => {
       const v = vector(fragment(definition.vectorText));
@@ -46,7 +46,7 @@ function canonicalMatches(q: string) {
       // Whole-name promotion belongs to owned identity, not a related brand or
       // market that happens to have exactly the requested name.
       const whole =
-        definition.priority === 0
+        catalog || definition.priority === 0
           ? Prisma.sql`EXISTS(SELECT FROM unnest(${fragment(definition.whole)}) w WHERE lower(normalize(w, NFC))=lower(${q}))`
           : Prisma.sql`false`;
       return Prisma.sql`SELECT ${definition.kind}::text AS kind, s.id AS target, t.ordinal,
@@ -55,11 +55,18 @@ function canonicalMatches(q: string) {
       ${whole} AS whole,
       CASE WHEN ${v} @@ t.exact THEN ts_rank_cd(${v},t.exact,32) WHEN ${v} @@ t.prefix THEN ts_rank_cd(${v},t.prefix,32) ELSE word_similarity(t.term,${fuzzy}) END AS strength
       FROM ${fragment(definition.table)} s CROSS JOIN terms t
-      WHERE ${v} @@ t.exact OR ${v} @@ t.prefix OR (t.fuzzy AND t.term <% ${fuzzy})`;
+      WHERE (${v} @@ t.exact OR ${v} @@ t.prefix OR (t.fuzzy AND t.term <% ${fuzzy})) ${catalog ? Prisma.sql`AND s."archivedAt" IS NULL` : Prisma.empty}`;
     }),
     " UNION ALL ",
   );
 }
+export const termValues = (parsed: ParsedTerm[]) =>
+  Prisma.join(
+    parsed.map(
+      (t) =>
+        Prisma.sql`(${t.ordinal}::int,${t.term}::text,${t.exact}::tsquery,${t.prefix}::tsquery,${t.fuzzy}::boolean,${escapePrefix(t.term)}::text)`,
+    ),
+  );
 function buildQuery(
   input: SearchParameters,
   parsed: ParsedTerm[],
@@ -87,7 +94,7 @@ function buildQuery(
   // They are not persisted search documents or materialized database views.
   // Page only complete, deduplicated matches, then hydrate market context for
   // those IDs. Joining that projection before paging repeats work on broad hits.
-  return Prisma.sql`WITH terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (VALUES ${Prisma.join(parsed.map((t) => Prisma.sql`(${t.ordinal}::int,${t.term}::text,${t.exact}::tsquery,${t.prefix}::tsquery,${t.fuzzy}::boolean,${escapePrefix(t.term)}::text)`))}),
+  return Prisma.sql`WITH terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (VALUES ${termValues(parsed)}),
   roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate}),
   links AS MATERIALIZED (
     SELECT r.id,'model'::text kind,o."consoleModelId" target FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id

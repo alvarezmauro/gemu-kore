@@ -1,3 +1,4 @@
+import { PaletteTrigger } from "@/features/search/components/command-palette";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
@@ -27,6 +28,7 @@ export default async function PrivateEntryPage() {
       title="Your collection"
       description="Your account has access to GemuKore."
     >
+      <PaletteTrigger />
       <Badge variant="secondary">
         {result.welcome.role === "ADMIN"
           ? "Administrator"

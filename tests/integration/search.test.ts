@@ -1,12 +1,19 @@
 import * as searchRepository from "@/server/repositories/search";
 import { Prisma } from "@/server/db/generated/client";
+import { privateCatalogSearchQuery } from "@/server/repositories/search/catalog-query";
 import { privateSearchQuery } from "@/server/repositories/search/query";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, expect, it, vi } from "vitest";
 import { getDatabase, disconnectDatabase } from "@/server/db/client";
 import { requirePrivateAccess } from "@/server/auth/access";
-import { searchPrivateCollection } from "@/server/services/search";
-import { privateSearchRequest } from "@/server/http/search";
+import {
+  searchPrivateCollection,
+  searchPrivatePalette,
+} from "@/server/services/search";
+import {
+  privateSearchRequest,
+  privatePaletteRequest,
+} from "@/server/http/search";
 import { withTransaction } from "@/server/db/transaction";
 import {
   configureSearch,
@@ -69,6 +76,151 @@ afterAll(async () => {
 });
 const ids = (result: Awaited<ReturnType<typeof searchPrivateCollection>>) =>
   result.items.map((item) => item.id).sort();
+it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
+  "offers separate canonical and owned palette scopes for %s",
+  async (role) => {
+    const { context } = await actor(role);
+    const data = await seedSearchData(db);
+    const result = await searchPrivatePalette(context, { q: "chrono" });
+    expect(ids(result.collection)).toEqual(
+      [data.firstId, data.secondId].sort(),
+    );
+    expect(result.catalog).toEqual([
+      {
+        id: data.gameId,
+        kind: "game",
+        title: "Chrono Trigger",
+        context: "",
+        identificationStatus: null,
+      },
+    ]);
+  },
+);
+it.each([
+  ["SNS-001", "model"],
+  ["snes", "platform"],
+  ["chronoo", "game"],
+  ["first printing", "release"],
+  ["controller", "accessory"],
+  ["tournament black", "variant"],
+  ["squaresoft", "company"],
+  ["japan", "region"],
+])("finds canonical %s identities in the typed %s scope", async (q, kind) => {
+  const { context } = await actor();
+  await seedSearchData(db);
+  const result = await searchPrivatePalette(context, { q });
+  expect(result.catalog.some((item) => item.kind === kind)).toBe(true);
+});
+it("keeps unowned identities in catalog only, excludes archived catalog records and observes committed edits", async () => {
+  const { context } = await actor();
+  const data = await seedSearchData(db);
+  const game = await db.game.create({
+    data: { name: "Unowned museum title", slug: randomUUID() },
+  });
+  const before = await searchPrivatePalette(context, { q: "unowned museum" });
+  expect(before.collection.items).toEqual([]);
+  expect(before.catalog.map((item) => item.id)).toEqual([game.id]);
+  await db.game.update({
+    where: { id: game.id },
+    data: { name: "Changed canonical name" },
+  });
+  expect(
+    (await searchPrivatePalette(context, { q: "unowned museum" })).catalog,
+  ).toEqual([]);
+  expect(
+    (await searchPrivatePalette(context, { q: "changed canonical" })).catalog[0]
+      .id,
+  ).toBe(game.id);
+  await db.game.update({
+    where: { id: data.gameId },
+    data: { archivedAt: new Date() },
+  });
+  const archived = await searchPrivatePalette(context, { q: "chrono" });
+  expect(archived.catalog).toEqual([]);
+  expect(ids(archived.collection)).toEqual(
+    [data.firstId, data.secondId].sort(),
+  );
+});
+it("keeps serial/note/defect data out of catalog matching and every palette projection", async () => {
+  const { context } = await actor();
+  const data = await seedSearchData(db);
+  for (const q of ["00-ABC-123", "ownersecret", "repairsecret", "cracked"]) {
+    const result = await searchPrivatePalette(context, { q });
+    expect(result.collection.items.map((item) => item.id)).toEqual([
+      data.firstId,
+    ]);
+    expect(result.catalog).toEqual([]);
+    expect(JSON.stringify(result)).not.toContain(q);
+  }
+});
+it("bounds and deduplicates canonical results with stable typed IDs", async () => {
+  const { context } = await actor();
+  await db.game.createMany({
+    data: Array.from({ length: 15 }, (_, n) => ({
+      name: `Palette fixture ${n}`,
+      aliases: ["Palette fixture"],
+      slug: randomUUID(),
+    })),
+  });
+  const first = await searchPrivatePalette(context, { q: "palette" });
+  expect(first.catalog).toHaveLength(10);
+  expect(first.catalogHasMore).toBe(true);
+  expect(first.collection.items).toEqual([]);
+  expect(
+    new Set(first.catalog.map((item) => `${item.kind}:${item.id}`)).size,
+  ).toBe(10);
+  expect(await searchPrivatePalette(context, { q: "palette" })).toEqual(first);
+});
+it("enforces current palette access, strict scope inputs, resource limits and redacted failures", async () => {
+  const { context, headers, grant } = await actor();
+  await seedSearchData(db);
+  const send = (body: string, requestHeaders = headers) =>
+    privatePaletteRequest(
+      new Request("http://localhost:3002/api/search/palette", {
+        method: "POST",
+        headers: requestHeaders,
+        body,
+      }),
+    );
+  const response = await send(JSON.stringify({ q: "chrono" }));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(response.headers.get("vary")).toBe("Cookie");
+  expect((await response.json()).catalog).toHaveLength(1);
+  for (const extra of [
+    { includePrivate: true },
+    { audience: "public" },
+    { limit: 100 },
+    { offset: 1 },
+  ])
+    expect((await send(JSON.stringify({ q: "chrono", ...extra }))).status).toBe(
+      400,
+    );
+  expect((await send(" ".repeat(4097))).status).toBe(413);
+  expect((await send("not json")).status).toBe(400);
+  const foreign = new Headers(headers);
+  foreign.set("origin", "https://outside.example");
+  expect((await send('{"q":"chrono"}', foreign)).status).toBe(403);
+  const anonymous = new Headers(headers);
+  anonymous.delete("cookie");
+  expect((await send('{"q":"chrono"}', anonymous)).status).toBe(401);
+  const spy = vi
+    .spyOn(searchRepository, "searchCatalogRows")
+    .mockRejectedValueOnce(new Error("private catalog credentials"));
+  try {
+    const failed = await send('{"q":"chrono"}');
+    expect(failed.status).toBe(503);
+    expect(await failed.text()).not.toContain("credentials");
+  } finally {
+    spy.mockRestore();
+  }
+  await db.accessGrant.update({
+    where: { id: grant.id },
+    data: { enabled: false },
+  });
+  await expect(searchPrivatePalette(context, { q: "" })).rejects.toThrow();
+  expect((await send('{"q":"chrono"}')).status).toBe(403);
+});
 it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
   "allows current %s read access",
   async (role) => {
@@ -489,6 +641,24 @@ it("measures complete search plans with representative owned graphs and index-ba
   ]) {
     const result = await searchPrivateCollection(context, { q });
     expect(result.state).toBe("ready");
+    const palette = await searchPrivatePalette(context, { q });
+    expect(palette.collection).toEqual(result);
+    expect(palette.catalog.length).toBeLessThanOrEqual(10);
+    await withTransaction(async (tx) => {
+      await configureSearch(tx);
+      const terms = await parseSearchTerms(q, tx);
+      const catalogPlan = await tx.$queryRaw<
+        { "QUERY PLAN": { Plan: Plan }[] }[]
+      >(
+        Prisma.sql`EXPLAIN(ANALYZE,BUFFERS,FORMAT JSON) ${privateCatalogSearchQuery(q, terms)}`,
+      );
+      if (q === "chrono" || q === "chronoo")
+        expect(
+          indexes(catalogPlan[0]["QUERY PLAN"][0].Plan).some(
+            (name) => name === "game_search_fts" || name === "game_search_trgm",
+          ),
+        ).toBe(true);
+    });
     const plans = await withTransaction(async (tx) => {
       await configureSearch(tx);
       const terms = await parseSearchTerms(q, tx);

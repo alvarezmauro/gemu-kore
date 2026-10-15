@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { requestCollectionSearch } from "./client";
+import { requestCollectionSearch, requestPaletteSearch } from "./client";
 afterEach(() => vi.unstubAllGlobals());
 const result = {
   state: "ready",
@@ -79,4 +79,44 @@ it("checks the narrow result contract before rendering", async () => {
   await expect(
     requestCollectionSearch("chrono", new AbortController().signal),
   ).rejects.toThrow(/couldn't load/);
+});
+it("uses a separate private POST and validates both palette scopes", async () => {
+  const data = {
+    collection: result,
+    catalog: [
+      {
+        id: "b41b30e9-0562-4896-9740-f9b742c102eb",
+        kind: "game",
+        title: "Chrono Trigger",
+        context: "",
+        identificationStatus: null,
+      },
+    ],
+    catalogHasMore: false,
+  };
+  const fetcher = vi
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => data });
+  vi.stubGlobal("fetch", fetcher);
+  const signal = new AbortController().signal;
+  expect(await requestPaletteSearch("private note", signal)).toEqual(data);
+  expect(fetcher).toHaveBeenCalledWith(
+    "/api/search/palette",
+    expect.objectContaining({
+      method: "POST",
+      cache: "no-store",
+      body: '{"q":"private note"}',
+      signal,
+    }),
+  );
+  fetcher.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      ...data,
+      catalog: [{ ...data.catalog[0], serialNumber: "secret" }],
+    }),
+  });
+  await expect(requestPaletteSearch("note", signal)).rejects.toThrow(
+    /couldn't load/,
+  );
 });

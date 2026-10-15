@@ -2,6 +2,8 @@
 
 Task 7.2 implements private collection search at `/app/search`, linked from the private entry page and workspace navigation. It follows the [search architecture](../architecture/SEARCH_ARCHITECTURE.md) using live PostgreSQL relations, full-text matching and `pg_trgm`. No additional dependency, external search engine or duplicated per-copy search document is introduced.
 
+Task 7.3 reuses this collection query inside the [command palette](COMMAND_PALETTE.md), alongside a separate typed canonical lookup. Its private palette endpoint and canonical preview scope are documented there. Full-page search keeps its existing request/result contract; both interfaces share the cancellable client request hook.
+
 ## Using search
 
 Enter at least two characters. Results represent individual owned consoles, games and accessories: two copies of one release appear separately. Catalog records without an owned copy are excluded. Archived catalog identities remain searchable through their existing owned copies; incomplete identities carry an **Identity incomplete** label.

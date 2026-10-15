@@ -2,7 +2,11 @@ import "server-only";
 import { requirePrivateAccess, PrivateAccessError } from "../auth/access";
 import { PermissionError } from "../auth/permissions";
 import { getAuthEnv } from "../config/env";
-import { searchPrivateCollection, SearchError } from "../services/search";
+import {
+  searchPrivateCollection,
+  searchPrivatePalette,
+  SearchError,
+} from "../services/search";
 const headers = {
   "Cache-Control": "private, no-store",
   Vary: "Cookie",
@@ -65,6 +69,17 @@ async function readInput(request: Request): Promise<unknown> {
 export async function privateSearchRequest(
   request: Request,
 ): Promise<Response> {
+  return handlePrivateSearch(request, searchPrivateCollection);
+}
+export async function privatePaletteRequest(
+  request: Request,
+): Promise<Response> {
+  return handlePrivateSearch(request, searchPrivatePalette);
+}
+async function handlePrivateSearch(
+  request: Request,
+  search: typeof searchPrivateCollection | typeof searchPrivatePalette,
+): Promise<Response> {
   try {
     const context = await requirePrivateAccess(request.headers);
     const auth = getAuthEnv();
@@ -74,10 +89,9 @@ export async function privateSearchRequest(
       request.headers.get("sec-fetch-site") === "cross-site"
     )
       throw new PermissionError("FORBIDDEN");
-    return Response.json(
-      await searchPrivateCollection(context, await readInput(request)),
-      { headers },
-    );
+    return Response.json(await search(context, await readInput(request)), {
+      headers,
+    });
   } catch (error) {
     if (error instanceof PrivateAccessError)
       return Response.json(

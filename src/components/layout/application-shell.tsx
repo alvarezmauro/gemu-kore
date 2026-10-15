@@ -7,10 +7,12 @@ export function ApplicationShell({
   children,
   items,
   context,
+  headerActions,
 }: {
   children: ReactNode;
   items: readonly NavigationItem[];
   context: string;
+  headerActions?: ReactNode;
 }) {
   return (
     <>
@@ -40,7 +42,10 @@ export function ApplicationShell({
               {context}
             </p>
           </div>
-          <ThemeMenu />
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+            <ThemeMenu />
+          </div>
         </header>
         <main id="main-content" tabIndex={-1} className="outline-none">
           {children}

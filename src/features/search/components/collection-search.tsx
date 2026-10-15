@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,66 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { searchInput } from "../validation";
 import { requestCollectionSearch } from "../client";
-import type { SearchResult } from "../contracts";
-type State =
-  | { status: "idle" | "pending" }
-  | { status: "error"; message: string }
-  | { status: "ready"; result: SearchResult };
+import { usePrivateSearch } from "../use-private-search";
 const labels = { CONSOLE: "Console", GAME: "Game", ACCESSORY: "Accessory" };
 export function CollectionSearch() {
-  const [q, setQ] = useState("");
-  const [state, setState] = useState<State>({ status: "idle" });
-  const [retry, setRetry] = useState(0);
-  const generation = useRef(0);
-  const active = useRef<AbortController | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const input = searchInput.safeParse({ q });
-    if (!input.success || [...input.data.q].length < 2) return;
-    const controller = new AbortController();
-    active.current = controller;
-    const id = generation.current;
-    timer.current = setTimeout(() => {
-      void requestCollectionSearch(
-        input.data.q,
-        AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]),
-      )
-        .then((result) => {
-          if (!controller.signal.aborted && id === generation.current)
-            setState({ status: "ready", result });
-        })
-        .catch((error) => {
-          if (!controller.signal.aborted && id === generation.current)
-            setState({
-              status: "error",
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "Search is unavailable.",
-            });
-        });
-    }, 250);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-      controller.abort();
-    };
-  }, [q, retry]);
-  function update(value: string) {
-    generation.current++;
-    active.current?.abort();
-    setQ(value);
-    const input = searchInput.safeParse({ q: value });
-    setState(
-      !input.success
-        ? {
-            status: "error",
-            message: "Use up to 160 characters and eight words.",
-          }
-        : [...input.data.q].length < 2
-          ? { status: "idle" }
-          : { status: "pending" },
-    );
-  }
+  const { q, state, update, retry } = usePrivateSearch(requestCollectionSearch);
   return (
     <section aria-label="Collection search" className="space-y-6">
       <div className="max-w-2xl space-y-2">
@@ -131,11 +74,7 @@ export function CollectionSearch() {
             <Button
               disabled={!searchInput.safeParse({ q }).success}
               variant="outline"
-              onClick={() => {
-                generation.current++;
-                setState({ status: "pending" });
-                setRetry((value) => value + 1);
-              }}
+              onClick={retry}
             >
               Try search again
             </Button>
