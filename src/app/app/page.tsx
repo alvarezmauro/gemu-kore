@@ -55,6 +55,11 @@ export default async function PrivateEntryPage() {
       <Button asChild variant="outline">
         <Link href="/app/media">Manage photos</Link>
       </Button>
+      {result.welcome.role === "ADMIN" ? (
+        <Button asChild variant="outline">
+          <Link href="/app/catalog">Manage console catalog</Link>
+        </Button>
+      ) : null}
       <SignOutButton />
     </AuthCard>
   );

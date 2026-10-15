@@ -20,7 +20,37 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-search") {
+    if (command === "reset-catalog") {
+      await database.$executeRaw`TRUNCATE TABLE company, region, console_platform, game, accessory CASCADE`;
+    } else if (command === "catalog-state") {
+      result = {
+        companies: await database.company.count(),
+        models: await database.consoleModel.findMany({
+          select: {
+            name: true,
+            platformId: true,
+            manufacturerId: true,
+            revision: true,
+            archivedAt: true,
+            regionLock: true,
+            specifications: true,
+            regions: { select: { regionId: true } },
+            externalReferences: {
+              select: { provider: true, externalId: true, normalizedUrl: true },
+            },
+          },
+        }),
+        copies: await database.collectionItem.count(),
+        history: await database.metadataChange.count(),
+      };
+    } else if (command === "seed-catalog-pages") {
+      await database.company.createMany({
+        data: Array.from({ length: 27 }, (_, i) => ({
+          name: `Company ${String(i).padStart(2, "0")}`,
+          slug: `company-${i}`,
+        })),
+      });
+    } else if (command === "reset-search") {
       await resetSearchData(database);
     } else if (command === "seed-collection") {
       result = await seedBrowseData(database);
