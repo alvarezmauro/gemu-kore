@@ -10,6 +10,46 @@
         "sources": [],
         "note": "Curated commercial market from PROJECT_SPEC.md section 97. JP is the catalog market code; it does not describe region locking, television standards or language."
       }
+    },
+    {
+      "seedKey": "region:na",
+      "name": "North America",
+      "slug": "north-america",
+      "code": "NA",
+      "provenance": {
+        "sources": [],
+        "note": "Broad commercial market, explicitly named in Xbox launch sources. Membership of individual countries is not inferred by a geographic hierarchy."
+      }
+    },
+    {
+      "seedKey": "region:us",
+      "name": "United States",
+      "slug": "united-states",
+      "code": "US",
+      "provenance": {
+        "sources": [],
+        "note": "Country market used when a hardware manual explicitly labels a USA model. It is distinct from broad North America coverage."
+      }
+    },
+    {
+      "seedKey": "region:eu",
+      "name": "Europe",
+      "slug": "europe",
+      "code": "EU",
+      "provenance": {
+        "sources": [],
+        "note": "Commercial Europe market, not a television standard or a legal claim about European Union membership."
+      }
+    },
+    {
+      "seedKey": "region:au",
+      "name": "Australia",
+      "slug": "australia",
+      "code": "AU",
+      "provenance": {
+        "sources": [],
+        "note": "Country market used for products explicitly listed in Nintendo Australia's product-security declaration."
+      }
     }
   ]
 }

@@ -23,6 +23,443 @@
         ],
         "note": "The general platform launched in Japan in 1994. A platform launch year is not automatically copied to its hardware models."
       }
+    },
+    {
+      "seedKey": "platform:nintendo.nes",
+      "name": "Nintendo Entertainment System",
+      "slug": "nintendo-nes",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 1983,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "One ecosystem for NES and Famicom, as described by Nintendo. The year is the first Japanese Famicom launch, not the later NES launch in each market. Regional hardware/cartridge differences are not universal compatibility."
+      },
+      "aliases": ["NES", "Family Computer", "Famicom"]
+    },
+    {
+      "seedKey": "platform:nintendo.snes",
+      "name": "Super Nintendo Entertainment System",
+      "slug": "nintendo-snes",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 1990,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "One ecosystem for Super NES and Super Famicom. The year is the Japanese launch; other markets launched later and retain distinct physical designs."
+      },
+      "aliases": ["SNES", "Super NES", "Super Famicom"]
+    },
+    {
+      "seedKey": "platform:nintendo.n64",
+      "name": "Nintendo 64",
+      "slug": "nintendo-n64",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 1996,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "First known launch year for the platform; dates are not inherited by its hardware models."
+      },
+      "aliases": ["N64"]
+    },
+    {
+      "seedKey": "platform:nintendo.gamecube",
+      "name": "Nintendo GameCube",
+      "slug": "nintendo-gamecube",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 2001,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "First known launch year for the platform; dates are not inherited by its hardware models."
+      },
+      "aliases": ["GameCube", "GCN"]
+    },
+    {
+      "seedKey": "platform:nintendo.wii",
+      "name": "Wii",
+      "slug": "nintendo-wii",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 2006,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "First known launch year for the platform; dates are not inherited by its hardware models."
+      }
+    },
+    {
+      "seedKey": "platform:nintendo.switch",
+      "name": "Nintendo Switch",
+      "slug": "nintendo-switch",
+      "manufacturerSeedKey": "company:nintendo",
+      "originalReleaseYear": 2017,
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/corporate/en/history/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo company and hardware history",
+            "url": "https://www.nintendo.co.jp/corporate/en/history/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Switch, Switch Lite and Switch OLED are hardware models of this ecosystem. Switch 2 is a separate later system and is not folded into this platform."
+      }
+    },
+    {
+      "seedKey": "platform:sega.master-system",
+      "name": "SEGA Master System",
+      "slug": "sega-master-system",
+      "manufacturerSeedKey": "company:sega",
+      "originalReleaseYear": 1986,
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/mastersystem/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Master System hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/mastersystem/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "SEGA explicitly dates the overseas Master System to 1986 and the Japanese MK-2000 to 1987. The platform year must not be replaced with the Japanese model's year; the earlier Mark III is not automatically added as a model here."
+      },
+      "aliases": ["Master System"]
+    },
+    {
+      "seedKey": "platform:sega.mega-drive",
+      "name": "SEGA Mega Drive / Genesis",
+      "slug": "sega-mega-drive",
+      "manufacturerSeedKey": "company:sega",
+      "originalReleaseYear": 1988,
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/megadrive/index.html"
+        },
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/companyTimeline/en/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Mega Drive hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/megadrive/index.html",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "SEGA hardware history timeline",
+            "url": "https://www.sega.jp/history/companyTimeline/en/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Mega Drive and Genesis are regional names of one ecosystem. Japanese launch was 1988; SEGA dates the North American Genesis branding to 1989. Physical regional models remain distinct."
+      },
+      "aliases": ["Mega Drive", "Genesis", "SEGA Genesis"]
+    },
+    {
+      "seedKey": "platform:sega.saturn",
+      "name": "SEGA Saturn",
+      "slug": "sega-saturn",
+      "manufacturerSeedKey": "company:sega",
+      "originalReleaseYear": 1994,
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/segasaturn/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Saturn hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/segasaturn/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "First known launch year for the platform; dates are not inherited by its hardware models."
+      },
+      "aliases": ["Saturn"]
+    },
+    {
+      "seedKey": "platform:sega.dreamcast",
+      "name": "SEGA Dreamcast",
+      "slug": "sega-dreamcast",
+      "manufacturerSeedKey": "company:sega",
+      "originalReleaseYear": 1998,
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/companyTimeline/en/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA hardware history timeline",
+            "url": "https://www.sega.jp/history/companyTimeline/en/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "First known launch year for the platform; dates are not inherited by its hardware models."
+      },
+      "aliases": ["Dreamcast"]
+    },
+    {
+      "seedKey": "platform:sony.playstation-2",
+      "name": "PlayStation 2",
+      "slug": "sony-playstation-2",
+      "manufacturerSeedKey": "company:sony",
+      "originalReleaseYear": 2000,
+      "references": [
+        {
+          "provider": "sony",
+          "url": "https://www.playstation.com/en-us/playstation-history/2000-ps2-psp/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation 2 official history",
+            "url": "https://www.playstation.com/en-us/playstation-history/2000-ps2-psp/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Year is the earliest launch documented by the official regional timeline. Neither later regional launches nor repair-support end dates are copied into hardware model dates."
+      },
+      "aliases": ["PS2"]
+    },
+    {
+      "seedKey": "platform:sony.playstation-3",
+      "name": "PlayStation 3",
+      "slug": "sony-playstation-3",
+      "manufacturerSeedKey": "company:sony",
+      "originalReleaseYear": 2006,
+      "references": [
+        {
+          "provider": "sony",
+          "url": "https://www.playstation.com/en-us/playstation-history/2007-ps3-ps-vita/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation 3 official regional history",
+            "url": "https://www.playstation.com/en-us/playstation-history/2007-ps3-ps-vita/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Year is the earliest launch documented by the official regional timeline. Neither later regional launches nor repair-support end dates are copied into hardware model dates."
+      },
+      "aliases": ["PS3"]
+    },
+    {
+      "seedKey": "platform:sony.playstation-4",
+      "name": "PlayStation 4",
+      "slug": "sony-playstation-4",
+      "manufacturerSeedKey": "company:sony",
+      "originalReleaseYear": 2013,
+      "references": [
+        {
+          "provider": "sony",
+          "url": "https://www.playstation.com/en-us/playstation-history/2013-ps4-ps-vr/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation 4 official regional history",
+            "url": "https://www.playstation.com/en-us/playstation-history/2013-ps4-ps-vr/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Year is the earliest launch documented by the official regional timeline. Neither later regional launches nor repair-support end dates are copied into hardware model dates."
+      },
+      "aliases": ["PS4"]
+    },
+    {
+      "seedKey": "platform:sony.playstation-5",
+      "name": "PlayStation 5",
+      "slug": "sony-playstation-5",
+      "manufacturerSeedKey": "company:sony",
+      "originalReleaseYear": 2020,
+      "references": [
+        {
+          "provider": "sony",
+          "url": "https://www.playstation.com/en-us/playstation-history/2020-ps5-ps-vr2/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation 5 official history",
+            "url": "https://www.playstation.com/en-us/playstation-history/2020-ps5-ps-vr2/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Year is the earliest launch documented by the official regional timeline. Neither later regional launches nor repair-support end dates are copied into hardware model dates."
+      },
+      "aliases": ["PS5"]
+    },
+    {
+      "seedKey": "platform:microsoft.xbox",
+      "name": "Xbox",
+      "slug": "microsoft-xbox",
+      "manufacturerSeedKey": "company:microsoft",
+      "originalReleaseYear": 2001,
+      "references": [
+        {
+          "provider": "microsoft",
+          "url": "https://news.xbox.com/en-us/2021/05/13/celebrating-20-years-of-xbox/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox original North American launch history",
+            "url": "https://news.xbox.com/en-us/2021/05/13/celebrating-20-years-of-xbox/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Microsoft is the platform brand company. Named hardware revisions remain models of their own ecosystem; Xbox One X is not an Xbox Series X model."
+      },
+      "aliases": ["Original Xbox"]
+    },
+    {
+      "seedKey": "platform:microsoft.xbox-360",
+      "name": "Xbox 360",
+      "slug": "microsoft-xbox-360",
+      "manufacturerSeedKey": "company:microsoft",
+      "originalReleaseYear": 2005,
+      "references": [
+        {
+          "provider": "microsoft",
+          "url": "https://news.xbox.com/en-us/2005/11/22/798/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox 360 North American launch",
+            "url": "https://news.xbox.com/en-us/2005/11/22/798/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Microsoft is the platform brand company. Named hardware revisions remain models of their own ecosystem; Xbox One X is not an Xbox Series X model."
+      }
+    },
+    {
+      "seedKey": "platform:microsoft.xbox-one",
+      "name": "Xbox One",
+      "slug": "microsoft-xbox-one",
+      "manufacturerSeedKey": "company:microsoft",
+      "originalReleaseYear": 2013,
+      "references": [
+        {
+          "provider": "microsoft",
+          "url": "https://news.xbox.com/en-us/2013/11/22/xbox-one-launch-blog/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox One 2013 launch markets",
+            "url": "https://news.xbox.com/en-us/2013/11/22/xbox-one-launch-blog/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Microsoft is the platform brand company. Named hardware revisions remain models of their own ecosystem; Xbox One X is not an Xbox Series X model."
+      }
+    },
+    {
+      "seedKey": "platform:microsoft.xbox-series",
+      "name": "Xbox Series X / S",
+      "slug": "microsoft-xbox-series",
+      "manufacturerSeedKey": "company:microsoft",
+      "originalReleaseYear": 2020,
+      "references": [
+        {
+          "provider": "microsoft",
+          "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox Series X and S launch announcement",
+            "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Microsoft is the platform brand company. Named hardware revisions remain models of their own ecosystem; Xbox One X is not an Xbox Series X model."
+      },
+      "aliases": ["Xbox Series", "Xbox Series X|S"]
     }
   ]
 }

@@ -24,6 +24,78 @@
         ],
         "note": "Sony is used as the platform brand. This does not establish the actual manufacturer of a particular hardware model."
       }
+    },
+    {
+      "seedKey": "company:nintendo",
+      "name": "Nintendo",
+      "slug": "nintendo",
+      "countryCode": "JP",
+      "foundedYear": 1889,
+      "website": "https://www.nintendo.com/",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/en-za/Hardware/Nintendo-History/Nintendo-History-625945.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo worldwide history",
+            "url": "https://www.nintendo.com/en-za/Hardware/Nintendo-History/Nintendo-History-625945.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Founding year follows Nintendo's stated historical origin, not the later incorporation or company-name change. Brand affiliation does not identify a particular model's actual factory/manufacturer."
+      }
+    },
+    {
+      "seedKey": "company:sega",
+      "name": "SEGA",
+      "slug": "sega",
+      "countryCode": "JP",
+      "foundedYear": 1960,
+      "website": "https://www.sega.com/",
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.co.jp/en/company/outline/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA company outline",
+            "url": "https://www.sega.co.jp/en/company/outline/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Founding year and country follow SEGA's company outline. Historical brand identity is represented without constructing a corporate-succession graph."
+      }
+    },
+    {
+      "seedKey": "company:microsoft",
+      "name": "Microsoft",
+      "slug": "microsoft",
+      "countryCode": "US",
+      "foundedYear": 1975,
+      "website": "https://www.microsoft.com/",
+      "references": [
+        {
+          "provider": "microsoft",
+          "url": "https://news.microsoft.com/facts-about-microsoft/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Microsoft corporate facts and launch dates",
+            "url": "https://news.microsoft.com/facts-about-microsoft/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Microsoft is the company behind the Xbox brand; Xbox is not duplicated as a separate manufacturer company."
+      }
     }
   ]
 }

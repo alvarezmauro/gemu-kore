@@ -1,6 +1,6 @@
 # Console seed format — version 1
 
-Task 8.2 defines version-controlled, production-safe catalog **inputs**. It does not apply them to a database. Task 8.3 expands the data after this format is reviewed. The starter contains one company, one market, one platform and one hardware model, with no owned copies or synthetic catalog products.
+Task 8.2 defines version-controlled, production-safe catalog **inputs**. Task 8.3 expands these inputs to **4 companies, 5 markets, 19 platforms and 35 hardware entries** without changing the format or applying them to a database. There are no owned copies or synthetic catalog products. See [coverage and evidence limits](CONSOLE_COVERAGE.md) for the included systems and deliberately incomplete facts.
 
 Run from the project root:
 
@@ -95,12 +95,16 @@ The format is ready for a later, separately implemented applicator. That applica
 
 These are requirements for a future writer, not a claim that this task implements database seeding or exercises its idempotence. The validation command is read-only. No database schema change is necessary for this format.
 
-## Small starter and evidence
+## Original Task 8.2 starter and evidence
 
-The starter contains Sony, Japan, PlayStation and SCPH-1000. It establishes a linked example without expanding Task 8.3's catalog. [Sony's corporate history](https://www.sony.com/en/SonyInfo/CorporateInfo/History/) supports the company origin; the [official PlayStation timeline](https://www.playstation.com/en-us/playstation-history/1994-ps-one/) supports the platform's 1994 Japanese launch. [Sony's 2005 CSR report, printed page 9](https://www.sony.com/en/SonyInfo/csr/library/reports/sis4ug000000jyws-att/CSR2005E.pdf) identifies the SCPH-1000 and year, and the [Japanese hardware support list](https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/) supplies model/market context. That context is deliberately limited: a repair-support end date is not a manufacturing discontinuation date, and the support list is not a complete worldwide distribution record. The model remains INCOMPLETE; unsupported measurements, actual manufacturer, locking and detailed specifications are omitted.
+The original starter contains Sony, Japan, PlayStation and SCPH-1000; those records retain their keys and facts in the expanded catalog. [Sony's corporate history](https://www.sony.com/en/SonyInfo/CorporateInfo/History/) supports the company origin; the [official PlayStation timeline](https://www.playstation.com/en-us/playstation-history/1994-ps-one/) supports the platform's 1994 Japanese launch. [Sony's 2005 CSR report, printed page 9](https://www.sony.com/en/SonyInfo/csr/library/reports/sis4ug000000jyws-att/CSR2005E.pdf) identifies the SCPH-1000 and year, and the [Japanese hardware support list](https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/) supplies model/market context. That context is deliberately limited: a repair-support end date is not a manufacturing discontinuation date, and the support list is not a complete worldwide distribution record. The model remains INCOMPLETE; unsupported measurements, actual manufacturer, locking and detailed specifications are omitted.
 
-For Task 8.3, add a few reviewed systems at a time to the same files, retain existing keys, cite evidence, leave uncertainty explicit, and run `pnpm seed:validate` before review. Do not change the Prisma schema to fit seed data. Keep synthetic test fixtures and private collection records out of this directory.
+For later additions, add a few reviewed systems at a time to the same files, retain existing keys, cite evidence, leave uncertainty explicit, and run `pnpm seed:validate` before review. Do not change the Prisma schema to fit seed data. Keep synthetic test fixtures and private collection records out of this directory.
 
 ## Task 8.2 verification
 
 All 66 seed-format/tooling checks and the full 689-test unit/component suite pass, along with lint, TypeScript, formatting, documentation links and whitespace checks. Tests cover linked starter data, field bounds and unknowns, source dates, duplicate/cross-category identities, unresolved relationships, market/locking distinctions, specifications, reference scope and normalization, compatibility with the existing manual catalog input, malformed/oversized/missing files, repeated offline CLI execution and unchanged input hashes. Existing UI, services, schema and database writes are outside this task, so database and browser suites were not rerun for this format-only change.
+
+## Task 8.3 verification
+
+The expanded graph passes `pnpm seed:validate`, all 690 unit/component tests (including 67 seed-format/tooling checks), typechecking, lint, formatting, local documentation links and whitespace checks. Catalog compatibility now covers every committed record; the new coverage check requires the planned platform families to have physical hardware and source evidence. Repeated offline validation still leaves input hashes unchanged. The original four starter records are unchanged. This data-only expansion does not require database or browser suites; it neither changes the schema/format nor loads records into a database.

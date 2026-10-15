@@ -13,7 +13,19 @@ import { consoleSeedFiles, consoleSeedSchema } from "./format";
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const directory = join(root, "prisma/seed-data");
 const tsxLoader = createRequire(import.meta.url).resolve("tsx");
-const starter = await loadConsoleSeeds(directory);
+const catalog = await loadConsoleSeeds(directory);
+// Keep mutation fixtures small as the reviewed catalog grows.
+const starter = {
+  schemaVersion: 1 as const,
+  companies: catalog.companies.filter((row) => row.seedKey === "company:sony"),
+  regions: catalog.regions.filter((row) => row.seedKey === "region:jp"),
+  platforms: catalog.platforms.filter(
+    (row) => row.seedKey === "platform:sony.playstation",
+  ),
+  models: catalog.models.filter(
+    (row) => row.seedKey === "model:sony.playstation.scph-1000",
+  ),
+};
 const fresh = () => structuredClone(starter);
 const curation = { sources: [], note: "Synthetic test vocabulary." };
 const reference = {
@@ -22,7 +34,7 @@ const reference = {
   externalId: "1",
 };
 
-it("validates the small committed dataset and preserves explicit unknowns without defaults", () => {
+it("preserves the original committed starter and explicit unknowns without defaults", () => {
   expect(starter.companies).toHaveLength(1);
   expect(starter.regions).toHaveLength(1);
   expect(starter.platforms).toHaveLength(1);
@@ -48,6 +60,44 @@ it("validates the small committed dataset and preserves explicit unknowns withou
     manufacturerSeedKey: null,
     regionLock: null,
   });
+});
+it("covers the planned console ecosystems with sourced physical hardware", () => {
+  const requiredPlatforms = [
+    "nintendo.nes",
+    "nintendo.snes",
+    "nintendo.n64",
+    "nintendo.gamecube",
+    "nintendo.wii",
+    "nintendo.switch",
+    "sega.master-system",
+    "sega.mega-drive",
+    "sega.saturn",
+    "sega.dreamcast",
+    "sony.playstation",
+    "sony.playstation-2",
+    "sony.playstation-3",
+    "sony.playstation-4",
+    "sony.playstation-5",
+    "microsoft.xbox",
+    "microsoft.xbox-360",
+    "microsoft.xbox-one",
+    "microsoft.xbox-series",
+  ].map((key) => `platform:${key}`);
+  expect(catalog.platforms.map((row) => row.seedKey)).toEqual(
+    expect.arrayContaining(requiredPlatforms),
+  );
+  for (const key of requiredPlatforms)
+    expect(catalog.models.some((model) => model.platformSeedKey === key)).toBe(
+      true,
+    );
+  for (const row of [
+    ...catalog.companies,
+    ...catalog.platforms,
+    ...catalog.models,
+  ]) {
+    expect(row.provenance.sources.length).toBeGreaterThan(0);
+    expect(row.provenance.note).toBeTruthy();
+  }
 });
 it("accepts an empty valid dataset for authoring without inventing fixtures", () => {
   expect(
@@ -278,13 +328,13 @@ it("rejects unknown format versions, missing groups, excessive record counts and
     }).success,
   ).toBe(false);
 });
-it("keeps starter facts compatible with the existing catalog service input contract", () => {
+it("keeps all committed facts compatible with the existing catalog service input contract", () => {
   const uuid = "11111111-1111-4111-8111-111111111111";
   for (const [kind, records] of [
-    ["company", starter.companies],
-    ["region", starter.regions],
-    ["platform", starter.platforms],
-    ["model", starter.models],
+    ["company", catalog.companies],
+    ["region", catalog.regions],
+    ["platform", catalog.platforms],
+    ["model", catalog.models],
   ] as const)
     for (const record of records) {
       const fields: Record<string, unknown> = {
@@ -328,7 +378,10 @@ it("keeps starter facts compatible with the existing catalog service input contr
       if (kind === "model" && "platformSeedKey" in record)
         Object.assign(fields, {
           platformId: uuid,
-          regionIds: (record.regionSeedKeys ?? []).map(() => uuid),
+          regionIds: (record.regionSeedKeys ?? []).map(
+            (_, index) =>
+              `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+          ),
           identificationStatus: record.identificationStatus,
           specifications: record.specifications
             ? JSON.stringify(record.specifications.data)
@@ -376,7 +429,9 @@ it("checks the fixed files offline, deterministically, without changing inputs o
       },
     );
   const first = run();
-  expect(first).toContain("1 platforms, 1 models. No database changes.");
+  expect(first).toContain(
+    `${catalog.companies.length} companies, ${catalog.regions.length} markets, ${catalog.platforms.length} platforms, ${catalog.models.length} models. No database changes.`,
+  );
   expect(run()).toBe(first);
   expect(await digest()).toEqual(before);
   const invalid = spawnSync(

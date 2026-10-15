@@ -35,6 +35,946 @@
         ],
         "note": "Sony's report identifies PlayStation SCPH-1000 with 1994; the Japanese support list identifies the model for this market. Support end dates are not manufacturing discontinuation dates. Actual manufacturer, locking, dimensions, weight and detailed specifications remain unasserted."
       }
+    },
+    {
+      "seedKey": "model:nintendo.nes.hvc-001",
+      "name": "Family Computer HVC-001",
+      "slug": "nintendo-nes-hvc-001",
+      "platformSeedKey": "platform:nintendo.nes",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HVC-001",
+      "releaseYear": 1983,
+      "regionSeedKeys": ["region:jp"],
+      "widthMm": "150",
+      "heightMm": "60",
+      "depthMm": "220",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/jp/famicom/hardware/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Famicom hardware and specifications",
+            "url": "https://www.nintendo.com/jp/famicom/hardware/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese Famicom hardware; width/height/depth follow the original console dimensions. Approximate weight including both controllers is deliberately not stored as a bare-console weight."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.snes.super-famicom-original",
+      "name": "Super Famicom (original Japanese design)",
+      "slug": "nintendo-snes-super-famicom-original",
+      "platformSeedKey": "platform:nintendo.snes",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 1990,
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.co.jp/n02/shvc/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo original Super Famicom product page",
+            "url": "https://www.nintendo.co.jp/n02/shvc/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The original Japanese physical design is documented by Nintendo. No model number, board revision or overseas cartridge compatibility is inferred; this is an incomplete catalog identity."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.n64.japan-launch",
+      "name": "Nintendo 64 (Japanese launch design)",
+      "slug": "nintendo-n64-japan-launch",
+      "platformSeedKey": "platform:nintendo.n64",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 1996,
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/en-za/Hardware/Nintendo-History/Nintendo-History-625945.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo worldwide history",
+            "url": "https://www.nintendo.com/en-za/Hardware/Nintendo-History/Nintendo-History-625945.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Nintendo explicitly records the Japanese launch. Exact model-label code, colors, board revisions and specifications are not established by this history entry."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.gamecube.dol-001-usa",
+      "name": "Nintendo GameCube DOL-001 (USA)",
+      "slug": "nintendo-gamecube-dol-001-usa",
+      "platformSeedKey": "platform:nintendo.gamecube",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "DOL-001(USA)",
+      "regionSeedKeys": ["region:us"],
+      "description": "USA hardware revision with a Digital AV Out port.",
+      "specifications": {
+        "schemaVersion": 1,
+        "data": {
+          "videoOutputs": ["Analog AV Out", "Digital AV Out"]
+        }
+      },
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://csassets.nintendo.com/noaext/image/private/t_KA_PDF/gcn101_manual_english?_a=DATC1RAAZAA0"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo GameCube instruction booklet, DOL-001/DOL-101 USA",
+            "url": "https://csassets.nintendo.com/noaext/image/private/t_KA_PDF/gcn101_manual_english?_a=DATC1RAAZAA0",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The instruction booklet distinguishes these USA model labels and the Digital AV Out difference. Manual revision/copyright dates do not establish either model's release year."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.gamecube.dol-101-usa",
+      "name": "Nintendo GameCube DOL-101 (USA)",
+      "slug": "nintendo-gamecube-dol-101-usa",
+      "platformSeedKey": "platform:nintendo.gamecube",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "DOL-101(USA)",
+      "regionSeedKeys": ["region:us"],
+      "description": "USA hardware revision without a Digital AV Out port.",
+      "specifications": {
+        "schemaVersion": 1,
+        "data": {
+          "videoOutputs": ["Analog AV Out"]
+        }
+      },
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://csassets.nintendo.com/noaext/image/private/t_KA_PDF/gcn101_manual_english?_a=DATC1RAAZAA0"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo GameCube instruction booklet, DOL-001/DOL-101 USA",
+            "url": "https://csassets.nintendo.com/noaext/image/private/t_KA_PDF/gcn101_manual_english?_a=DATC1RAAZAA0",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The instruction booklet distinguishes these USA model labels and the Digital AV Out difference. Manual revision/copyright dates do not establish either model's release year."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.wii.rvl-001-eur",
+      "name": "Wii RVL-001 (EUR)",
+      "slug": "nintendo-wii-rvl-001-eur",
+      "platformSeedKey": "platform:nintendo.wii",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "RVL-001(EUR)",
+      "regionSeedKeys": ["region:eu"],
+      "description": "European Wii model with Nintendo GameCube controller and memory-card connections.",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/de-de/Support/Wii/Haufig-gestellte-Fragen/Gibt-es-unterschiedliche-Modelle-der-Wii-/Gibt-es-unterschiedliche-Modelle-der-Wii-247072.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Wii RVL-001/RVL-101 European models",
+            "url": "https://www.nintendo.com/de-de/Support/Wii/Haufig-gestellte-Fragen/Gibt-es-unterschiedliche-Modelle-der-Wii-/Gibt-es-unterschiedliche-Modelle-der-Wii-247072.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "European identity is explicit in Nintendo's support page. A North American model-comparison release date is not applied to this European revision."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.wii.rvl-101-eur",
+      "name": "Wii RVL-101 (EUR)",
+      "slug": "nintendo-wii-rvl-101-eur",
+      "platformSeedKey": "platform:nintendo.wii",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "RVL-101(EUR)",
+      "releaseYear": 2011,
+      "regionSeedKeys": ["region:eu"],
+      "description": "European horizontal-design Wii without the GameCube controller and memory-card connections.",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/de-de/Support/Wii/Haufig-gestellte-Fragen/Gibt-es-unterschiedliche-Modelle-der-Wii-/Gibt-es-unterschiedliche-Modelle-der-Wii-247072.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Wii RVL-001/RVL-101 European models",
+            "url": "https://www.nintendo.com/de-de/Support/Wii/Haufig-gestellte-Fragen/Gibt-es-unterschiedliche-Modelle-der-Wii-/Gibt-es-unterschiedliche-Modelle-der-Wii-247072.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Nintendo dates the European revision to autumn 2011. Its missing GameCube ports are a physical distinction, not a second console platform."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.wii.rvl-201",
+      "name": "Wii mini RVL-201",
+      "slug": "nintendo-wii-rvl-201",
+      "platformSeedKey": "platform:nintendo.wii",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "RVL-201",
+      "description": "Wii mini revision without online functionality, SD-card support or GameCube accessory connections.",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/2650/~/what-is-the-difference-between-the-models-of-wii-consoles"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Wii model comparison",
+            "url": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/2650/~/what-is-the-difference-between-the-models-of-wii-consoles",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Nintendo explicitly identifies RVL-201 and these differences. This comparison does not establish exact launch year or complete commercial-market coverage, so neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.switch.hac-001",
+      "name": "Nintendo Switch HAC-001",
+      "slug": "nintendo-switch-hac-001",
+      "platformSeedKey": "platform:nintendo.switch",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HAC-001",
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Switch hardware model identification",
+            "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Nintendo lists HAC-001 separately from the Lite and OLED model codes. This entry does not identify a regional SKU, battery-duration claim or particular board revision; HAC-001(-01) is a separate entry."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.switch.hac-001-01",
+      "name": "Nintendo Switch HAC-001(-01)",
+      "slug": "nintendo-switch-hac-001-01",
+      "platformSeedKey": "platform:nintendo.switch",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HAC-001(-01)",
+      "releaseYear": 2019,
+      "regionSeedKeys": ["region:au"],
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/au/support/product-security/"
+        },
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/jp/hardware/switch/modal/specs/body.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Australia Switch model declarations",
+            "url": "https://www.nintendo.com/au/support/product-security/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "Nintendo Switch HAC-001(-01) specifications and revision context",
+            "url": "https://www.nintendo.com/jp/hardware/switch/modal/specs/body.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Nintendo's Japanese revision note distinguishes the pre-August-2019 design; the Australian declaration explicitly lists this model. Support deadlines are not discontinuation dates; year is revision introduction, not an Australian exact launch date."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.switch.hdh-001",
+      "name": "Nintendo Switch Lite HDH-001",
+      "slug": "nintendo-switch-hdh-001",
+      "platformSeedKey": "platform:nintendo.switch",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HDH-001",
+      "regionSeedKeys": ["region:au"],
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/au/support/product-security/"
+        },
+        {
+          "provider": "nintendo",
+          "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Australia Switch model declarations",
+            "url": "https://www.nintendo.com/au/support/product-security/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "Nintendo Switch hardware model identification",
+            "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The official sources explicitly identify Switch Lite HDH-001 and Australian availability. Launch year and unverified measurements remain unasserted."
+      }
+    },
+    {
+      "seedKey": "model:nintendo.switch.heg-001",
+      "name": "Nintendo Switch OLED HEG-001",
+      "slug": "nintendo-switch-heg-001",
+      "platformSeedKey": "platform:nintendo.switch",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HEG-001",
+      "regionSeedKeys": ["region:au"],
+      "references": [
+        {
+          "provider": "nintendo",
+          "url": "https://www.nintendo.com/au/support/product-security/"
+        },
+        {
+          "provider": "nintendo",
+          "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Nintendo Australia Switch model declarations",
+            "url": "https://www.nintendo.com/au/support/product-security/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "Nintendo Switch hardware model identification",
+            "url": "https://support.nintendo.com/tw/switch/support/modal/outline.html?width=960",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The official sources identify Switch OLED HEG-001 and Australian availability. The source does not establish the initial regional launch date or manufacturing discontinuation."
+      }
+    },
+    {
+      "seedKey": "model:sega.master-system.mk-2000",
+      "name": "Master System MK-2000 (Japan)",
+      "slug": "sega-master-system-mk-2000",
+      "platformSeedKey": "platform:sega.master-system",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "MK-2000",
+      "releaseYear": 1987,
+      "regionSeedKeys": ["region:jp"],
+      "widthMm": "365",
+      "heightMm": "70",
+      "depthMm": "170",
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/mastersystem/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Master System hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/mastersystem/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese hardware and dimensions are explicitly listed by SEGA. The overseas 1986 design lacks some Japanese features and is not merged with this physical model."
+      }
+    },
+    {
+      "seedKey": "model:sega.mega-drive.haa-2500",
+      "name": "Mega Drive HAA-2500 (Japan)",
+      "slug": "sega-mega-drive-haa-2500",
+      "platformSeedKey": "platform:sega.mega-drive",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HAA-2500",
+      "regionSeedKeys": ["region:jp"],
+      "widthMm": "280",
+      "heightMm": "70",
+      "depthMm": "212",
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/megadrive/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Mega Drive hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/megadrive/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "HAA-2500 is SEGA's published product/model designation. Exact unit-label and board variants require further identification; the family launch date is not blindly assigned to this product designation."
+      }
+    },
+    {
+      "seedKey": "model:sega.mega-drive.haa-2502",
+      "name": "Mega Drive 2 HAA-2502 (Japan)",
+      "slug": "sega-mega-drive-haa-2502",
+      "platformSeedKey": "platform:sega.mega-drive",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HAA-2502",
+      "releaseYear": 1993,
+      "regionSeedKeys": ["region:jp"],
+      "widthMm": "220",
+      "heightMm": "59",
+      "depthMm": "212",
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/fb/segahard/md/md2.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Mega Drive 2 hardware specifications",
+            "url": "https://www.sega.jp/fb/segahard/md/md2.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "SEGA explicitly lists this Japanese product designation, its 1993 release and dimensions. Overseas Genesis Model 2 SKUs are not assumed to share this identifier."
+      }
+    },
+    {
+      "seedKey": "model:sega.saturn.hst-3210",
+      "name": "SEGA Saturn HST-3210 (Japan)",
+      "slug": "sega-saturn-hst-3210",
+      "platformSeedKey": "platform:sega.saturn",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HST-3210",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/segasaturn/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Saturn hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/segasaturn/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "SEGA publishes HST-3210 in its Japanese hardware specification table. The ecosystem's 1994 launch is not treated as proof of this specific product designation's release date."
+      }
+    },
+    {
+      "seedKey": "model:sega.dreamcast.hkt-5000",
+      "name": "Dreamcast HKT-5000 (Japan)",
+      "slug": "sega-dreamcast-hkt-5000",
+      "platformSeedKey": "platform:sega.dreamcast",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "HKT-5000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "sega",
+          "url": "https://www.sega.jp/history/hard/dreamcast/index.html"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "SEGA Dreamcast hardware encyclopedia",
+            "url": "https://www.sega.jp/history/hard/dreamcast/index.html",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "HKT-5000 is SEGA's published Japanese product designation, alongside other variants. Retail/product codes and individual console-label or board revisions are not silently treated as interchangeable."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation.scph-100",
+      "name": "PS one SCPH-100 (Japan)",
+      "slug": "sony-playstation-scph-100",
+      "platformSeedKey": "platform:sony.playstation",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "SCPH-100",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        },
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "PlayStation Japan hardware manual model index",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The Japanese manual index places SCPH-100 under PS one; the support list also identifies the code. General PS one family history does not establish every model-code launch date; that date remains unknown here."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-2.scph-10000",
+      "name": "PlayStation 2 SCPH-10000 (Japan)",
+      "slug": "sony-playstation-2-scph-10000",
+      "platformSeedKey": "platform:sony.playstation-2",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "SCPH-10000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model is explicitly listed by Sony. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-2.scph-70000",
+      "name": "PlayStation 2 SCPH-70000 series (Japan)",
+      "slug": "sony-playstation-2-scph-70000",
+      "platformSeedKey": "platform:sony.playstation-2",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "SCPH-70000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model series is explicitly listed by Sony. Suffix, storage, color and subrevision distinctions still require identification. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-3.cech-a00",
+      "name": "PlayStation 3 CECH-A00 (Japan)",
+      "slug": "sony-playstation-3-cech-a00",
+      "platformSeedKey": "platform:sony.playstation-3",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CECH-A00",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model is explicitly listed by Sony. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-3.cech-2000",
+      "name": "PlayStation 3 CECH-2000 series (Japan)",
+      "slug": "sony-playstation-3-cech-2000",
+      "platformSeedKey": "platform:sony.playstation-3",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CECH-2000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model series is explicitly listed by Sony. Suffix, storage, color and subrevision distinctions still require identification. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-4.cuh-1000",
+      "name": "PlayStation 4 CUH-1000 series (Japan)",
+      "slug": "sony-playstation-4-cuh-1000",
+      "platformSeedKey": "platform:sony.playstation-4",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CUH-1000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model series is explicitly listed by Sony. Suffix, storage, color and subrevision distinctions still require identification. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-4.cuh-7000",
+      "name": "PlayStation 4 CUH-7000 series (Japan)",
+      "slug": "sony-playstation-4-cuh-7000",
+      "platformSeedKey": "platform:sony.playstation-4",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CUH-7000",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware identity and repair-support list",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/repairs-no-longer-available/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Japanese model series is explicitly listed by Sony. Suffix, storage, color and subrevision distinctions still require identification. Repair-support end dates are not release or manufacturing-discontinuation dates; neither is asserted."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-5.cfi-1000a",
+      "name": "PlayStation 5 CFI-1000A disc model (Japan)",
+      "slug": "sony-playstation-5-cfi-1000a",
+      "platformSeedKey": "platform:sony.playstation-5",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CFI-1000A",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/"
+        },
+        {
+          "provider": "playstation",
+          "url": "https://manuals.playstation.net/document/pdf/CFI-1000A-1.0_2.pdf"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware manual model index",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "PlayStation Japan CFI-1000A safety guide",
+            "url": "https://manuals.playstation.net/document/pdf/CFI-1000A-1.0_2.pdf",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The Japanese manual index identifies CFI-1000A; its safety guide, printed page 10, specifies the optical disc drive. Model introduction year, regional SKU suffixes, storage specifications and measurements are not inferred from the platform launch."
+      }
+    },
+    {
+      "seedKey": "model:sony.playstation-5.cfi-1000b",
+      "name": "PlayStation 5 CFI-1000B Digital Edition (Japan)",
+      "slug": "sony-playstation-5-cfi-1000b",
+      "platformSeedKey": "platform:sony.playstation-5",
+      "identificationStatus": "INCOMPLETE",
+      "modelNumber": "CFI-1000B",
+      "regionSeedKeys": ["region:jp"],
+      "references": [
+        {
+          "provider": "playstation",
+          "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/"
+        },
+        {
+          "provider": "playstation",
+          "url": "https://manuals.playstation.net/document/pdf/CFI-1000B-1.0_2.pdf"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "PlayStation Japan hardware manual model index",
+            "url": "https://www.playstation.com/ja-jp/support/hardware/manuals/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "PlayStation Japan CFI-1000B safety guide",
+            "url": "https://manuals.playstation.net/document/pdf/CFI-1000B-1.0_2.pdf",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The Japanese manual index identifies CFI-1000B; its safety guide cover explicitly names Digital Edition. Model introduction year, regional SKU suffixes, storage specifications and measurements are not inferred from the platform launch."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox.north-america-launch",
+      "name": "Xbox (North American launch design)",
+      "slug": "microsoft-xbox-north-america-launch",
+      "platformSeedKey": "platform:microsoft.xbox",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2001,
+      "regionSeedKeys": ["region:na"],
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2021/05/13/celebrating-20-years-of-xbox/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox original North American launch history",
+            "url": "https://news.xbox.com/en-us/2021/05/13/celebrating-20-years-of-xbox/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Original North American launch design. Regulatory model numbers and motherboard revisions are not established by the anniversary source and remain unasserted."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-360.original",
+      "name": "Xbox 360 (original launch design)",
+      "slug": "microsoft-xbox-360-original",
+      "platformSeedKey": "platform:microsoft.xbox-360",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2005,
+      "regionSeedKeys": ["region:na"],
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2005/11/22/798/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox 360 North American launch",
+            "url": "https://news.xbox.com/en-us/2005/11/22/798/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "Original launch design, not Xbox 360 S or the later E revision. No motherboard, storage capacity or regulatory model code is fabricated from the launch report."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-360.s-250gb",
+      "name": "Xbox 360 S (250GB launch design)",
+      "slug": "microsoft-xbox-360-s-250gb",
+      "platformSeedKey": "platform:microsoft.xbox-360",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2010,
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.microsoft.com/source/2010/06/14/xbox-360-transforms-the-way-everyone-has-fun/"
+        },
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2011/09/26/xbox-360-transfer-cable/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Microsoft 2010 Xbox 360 250GB redesign announcement",
+            "url": "https://news.microsoft.com/source/2010/06/14/xbox-360-transforms-the-way-everyone-has-fun/",
+            "checkedOn": "2026-10-15"
+          },
+          {
+            "title": "Xbox 360 S official hardware name",
+            "url": "https://news.xbox.com/en-us/2011/09/26/xbox-360-transfer-cable/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The 2010 announcement identifies the 250GB redesign; the transfer-cable article confirms the Xbox 360 S name. Exact regulatory model code and market coverage are not inferred."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-one.original",
+      "name": "Xbox One (original launch design)",
+      "slug": "microsoft-xbox-one-original",
+      "platformSeedKey": "platform:microsoft.xbox-one",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2013,
+      "regionSeedKeys": ["region:us"],
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2013/11/22/xbox-one-launch-blog/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox One 2013 launch markets",
+            "url": "https://news.xbox.com/en-us/2013/11/22/xbox-one-launch-blog/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The 2013 launch explicitly includes the United States. This is a deliberately partial market list, not a claim that the model was US-exclusive or distributed worldwide."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-one.s-2tb",
+      "name": "Xbox One S (2TB launch edition)",
+      "slug": "microsoft-xbox-one-s-2tb",
+      "platformSeedKey": "platform:microsoft.xbox-one",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2016,
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2016/07/18/xbox-one-s-arrives-august-2-4/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox One S 2TB launch announcement",
+            "url": "https://news.xbox.com/en-us/2016/07/18/xbox-one-s-arrives-august-2-4/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "This is the announced 2TB launch configuration, not the later all-digital or every-capacity edition. Regulatory model code, exact market coverage and actual manufacturer remain unknown."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-one.x-launch",
+      "name": "Xbox One X (launch design)",
+      "slug": "microsoft-xbox-one-x-launch",
+      "platformSeedKey": "platform:microsoft.xbox-one",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2017,
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.microsoft.com/source/2017/06/11/microsoft-premieres-xbox-one-x-worlds-powerful-console/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox One X launch announcement",
+            "url": "https://news.microsoft.com/source/2017/06/11/microsoft-premieres-xbox-one-x-worlds-powerful-console/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "The announced Xbox One X is part of the Xbox One platform, distinct from Xbox Series X. Broad launch marketing is not converted into a Worldwide market assertion."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-series.x-launch",
+      "name": "Xbox Series X (2020 launch design)",
+      "slug": "microsoft-xbox-series-x-launch",
+      "platformSeedKey": "platform:microsoft.xbox-series",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2020,
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox Series X and S launch announcement",
+            "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "This identifies the 2020 launch design, not later storage/color/drive revisions. Shared ecosystem membership does not merge the two physical models; unverified model codes and exact market lists remain unknown."
+      }
+    },
+    {
+      "seedKey": "model:microsoft.xbox-series.s-launch",
+      "name": "Xbox Series S (2020 launch design)",
+      "slug": "microsoft-xbox-series-s-launch",
+      "platformSeedKey": "platform:microsoft.xbox-series",
+      "identificationStatus": "INCOMPLETE",
+      "releaseYear": 2020,
+      "references": [
+        {
+          "provider": "xbox",
+          "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/"
+        }
+      ],
+      "provenance": {
+        "sources": [
+          {
+            "title": "Xbox Series X and S launch announcement",
+            "url": "https://news.xbox.com/en-us/2020/09/09/xbox-series-x-and-xbox-series-s-launching-november-10/",
+            "checkedOn": "2026-10-15"
+          }
+        ],
+        "note": "This identifies the 2020 launch design, not later storage/color/drive revisions. Shared ecosystem membership does not merge the two physical models; unverified model codes and exact market lists remain unknown."
+      }
     }
   ]
 }

@@ -1227,6 +1227,8 @@ Xbox Series
 
 Do NOT let Luna change the schema.
 
+Status: **Completed 2026-10-15.** Expanded the existing version-1 files to 4 companies, 5 commercial markets, all 19 listed console platforms and 35 representative physical hardware entries, with official source URLs, check dates and explicit evidence limits. Preserved every Task 8.2 starter key and fact. Regional ecosystem names remain aliases; physical designs and model series remain distinct, incomplete hardware identities without fabricated model codes, manufacturers, locking, measurements or lifecycle dates. Updated the existing checks to validate all committed facts against the catalog input contract and added planned-platform/source coverage. The read-only validator, all 690 unit/component tests, typechecking, lint, formatting, documentation links and whitespace checks pass. No schema, dependency, application behavior, database writer or live catalog data changes; database and browser suites are not applicable to this data-only expansion. Coverage and curation decisions: [prisma/seed-data/CONSOLE_COVERAGE.md](prisma/seed-data/CONSOLE_COVERAGE.md). Next: Task 8.4.
+
 ---
 
 ## TASK 8.4 — Console Creation Flow
