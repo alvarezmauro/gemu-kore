@@ -3,6 +3,7 @@ import {
   requestCollectionSearch,
   requestPaletteSearch,
   requestFilteredSearch,
+  requestCollectionPage,
 } from "./client";
 afterEach(() => vi.unstubAllGlobals());
 const result = {
@@ -146,5 +147,32 @@ it("uses a separate private POST and validates both palette scopes", async () =>
   });
   await expect(requestPaletteSearch("note", signal)).rejects.toThrow(
     /couldn't load/,
+  );
+});
+
+it("posts collection pagination without leaking search text into the URL", async () => {
+  const fetcher = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ...result, offset: 40 }),
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const signal = new AbortController().signal;
+  await requestCollectionPage(
+    "secret serial",
+    signal,
+    { sort: "name-asc" },
+    { offset: 40 },
+  );
+  expect(fetcher).toHaveBeenCalledWith(
+    "/api/collection/private",
+    expect.objectContaining({
+      body: JSON.stringify({
+        q: "secret serial",
+        controls: { sort: "name-asc" },
+        offset: 40,
+      }),
+      signal,
+      cache: "no-store",
+    }),
   );
 });

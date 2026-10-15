@@ -184,10 +184,17 @@ test("uses arrow keys and Enter to navigate, traps focus and supports pointer di
   await page.goto("/app/search");
   await open(page);
   await page.keyboard.press("ArrowDown");
-  await expect(input(page)).toHaveAttribute("aria-activedescendant", /.+/);
+  const destination = dialog(page).getByRole("option", {
+    name: "Browse collection",
+    exact: true,
+  });
+  await expect(input(page)).toHaveAttribute(
+    "aria-activedescendant",
+    (await destination.getAttribute("id"))!,
+  );
   await page.keyboard.press("Enter");
   await expect(dialog(page)).toHaveCount(0);
-  await expect(page).toHaveURL(/\/app\/search$/);
+  await expect(page).toHaveURL(/\/app\/collection$/);
   await open(page);
   await page.keyboard.press("Shift+Tab");
   await expect(

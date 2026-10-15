@@ -54,7 +54,7 @@ Location labels show the full private breadcrumb. Selecting a parent includes di
 
 Every order ends in the physical copy UUID to keep ties deterministic. String ordering uses PostgreSQL's configured collation after case folding and NFC normalization. These are not locale-specific natural-language or numeric-title sorts. Concurrent committed edits can change pages between requests; there is no long-lived snapshot across navigation.
 
-The approved current schema has no rating field, and the domain model assigns ratings to Phase 11. Rating filtering/sorting mentioned in the product specification is explicitly deferred until those fields and rating semantics exist. Unsupported `rating` parameters are rejected. Grid/list switching, pagination controls and saved view preferences remain Task 7.5. The first 20 results and existing `hasMore` guidance remain available; services retain bounded offset/limit support for the next task.
+The approved current schema has no rating field, and the domain model assigns ratings to Phase 11. Rating filtering/sorting mentioned in the product specification is explicitly deferred until those fields and rating semantics exist. Unsupported `rating` parameters are rejected. Task 7.5 now provides [grid/list layouts and saved preferences](COLLECTION_VIEWS.md) on `/app/collection`, plus URL pagination on both collection and full-page search. The service’s existing bounded offset/limit and `hasMore` contract drives those controls.
 
 ## Transport, queries and privacy
 

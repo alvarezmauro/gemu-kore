@@ -7,7 +7,11 @@ import {
 } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { CollectionWorkspace } from "./collection-workspace";
-import { requestCollectionSearch, requestFilteredSearch } from "../client";
+import {
+  requestCollectionSearch,
+  requestFilteredSearch,
+  requestCollectionPage,
+} from "../client";
 import type { FilterOptions } from "../controls";
 import type { SearchResult } from "../contracts";
 const { url } = vi.hoisted(() => ({ url: { query: "" } }));
@@ -17,6 +21,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("../client", () => ({
   requestFilteredSearch: vi.fn(),
   requestCollectionSearch: vi.fn(),
+  requestCollectionPage: vi.fn(),
 }));
 const request = vi.mocked(requestFilteredSearch);
 const result: SearchResult = {
@@ -53,7 +58,9 @@ const options: FilterOptions = {
 };
 beforeEach(() => {
   url.query = "";
+  localStorage.clear();
   request.mockReset().mockResolvedValue(result);
+  vi.mocked(requestCollectionPage).mockReset().mockResolvedValue(result);
   vi.mocked(requestCollectionSearch).mockReset().mockResolvedValue(result);
 });
 it("restores URL filters and browses with empty text without leaking terms into URLs", async () => {
@@ -125,4 +132,76 @@ it("cancels old scope requests and clears results immediately when controls chan
   expect(
     screen.queryByRole("heading", { name: "Chrono Trigger" }),
   ).not.toBeInTheDocument();
+});
+
+it("browses all owned copies on the collection home without requiring private text", async () => {
+  render(<CollectionWorkspace options={options} collectionHome />);
+  await screen.findByRole("list", { name: "Search results" });
+  expect(requestCollectionPage).toHaveBeenCalledWith(
+    "",
+    expect.any(AbortSignal),
+    { sort: "relevance" },
+    { offset: 0 },
+  );
+  expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+});
+it("maps bookmarked pages to bounded offsets and resets the page when private text changes", async () => {
+  url.query = "type=game&page=3";
+  const history = vi.spyOn(window.history, "replaceState");
+  render(<CollectionWorkspace options={options} collectionHome />);
+  await screen.findByRole("list", { name: "Search results" });
+  expect(requestCollectionPage).toHaveBeenCalledWith(
+    "",
+    expect.any(AbortSignal),
+    { type: "game", sort: "relevance" },
+    { offset: 40 },
+  );
+  fireEvent.change(screen.getByLabelText("Search your collection"), {
+    target: { value: "secret serial" },
+  });
+  expect(history).toHaveBeenCalledWith(null, "", "/app/collection?type=game");
+  history.mockRestore();
+});
+it("keeps view switching local without another query and resets paging for a filter change", async () => {
+  url.query = "page=2";
+  const history = vi.spyOn(window.history, "pushState");
+  render(<CollectionWorkspace options={options} collectionHome />);
+  await screen.findByRole("list", { name: "Search results" });
+  fireEvent.click(screen.getByRole("button", { name: "List view" }));
+  expect(screen.getByRole("list", { name: "Search results" })).toHaveAttribute(
+    "data-collection-view",
+    "list",
+  );
+  expect(requestCollectionPage).toHaveBeenCalledTimes(1);
+  expect(history).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText("Item type"), {
+    target: { value: "accessory" },
+  });
+  expect(history).toHaveBeenLastCalledWith(
+    null,
+    "",
+    "/app/collection?type=accessory",
+  );
+  history.mockRestore();
+});
+it("offers recovery for a formerly occupied or out-of-range page without inventing totals", async () => {
+  url.query = "page=251";
+  vi.mocked(requestCollectionPage).mockResolvedValue({
+    ...result,
+    items: [],
+    offset: 5000,
+  });
+  const history = vi.spyOn(window.history, "pushState");
+  render(<CollectionWorkspace options={options} collectionHome />);
+  await screen.findByRole("heading", { name: "No copies on this page" });
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "First page" }));
+  expect(history).toHaveBeenLastCalledWith(null, "", "/app/collection");
+  history.mockRestore();
+});
+it("distinguishes a truly empty unfiltered collection from a filtered miss", async () => {
+  vi.mocked(requestCollectionPage).mockResolvedValue({ ...result, items: [] });
+  render(<CollectionWorkspace options={options} collectionHome />);
+  await screen.findByRole("heading", { name: "No collection items yet" });
 });

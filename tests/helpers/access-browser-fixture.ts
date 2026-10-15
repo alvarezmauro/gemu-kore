@@ -1,4 +1,9 @@
-import { seedSearchData, resetSearchData, seedFilterData } from "./search-data";
+import {
+  seedSearchData,
+  resetSearchData,
+  seedFilterData,
+  seedBrowseData,
+} from "./search-data";
 import { randomUUID } from "node:crypto";
 import { disconnectDatabase, getDatabase } from "../../src/server/db/client";
 
@@ -17,6 +22,8 @@ async function main() {
     let result: unknown = null;
     if (command === "reset-search") {
       await resetSearchData(database);
+    } else if (command === "seed-collection") {
+      result = await seedBrowseData(database);
     } else if (command === "seed-filters") {
       result = await seedFilterData(database);
     } else if (command === "seed-search") {

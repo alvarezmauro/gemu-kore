@@ -4,12 +4,20 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CollectionSearch } from "./collection-search";
-import { requestCollectionSearch, requestFilteredSearch } from "../client";
+import {
+  requestCollectionSearch,
+  requestFilteredSearch,
+  requestCollectionPage,
+} from "../client";
+import {
+  parseBrowseLocation,
+  browseQuery,
+  pageSize,
+} from "@/features/collection/browsing";
 import {
   collectionControls,
   controlsActive,
   controlsQuery,
-  parseControls,
   sortLabels,
   editionTypes,
   type CollectionControls,
@@ -34,38 +42,68 @@ const labels = {
   edition: "Game edition",
   sort: "Sort by",
 };
-export function CollectionWorkspace({ options }: { options: FilterOptions }) {
+export function CollectionWorkspace({
+  options,
+  collectionHome = false,
+}: {
+  options: FilterOptions;
+  collectionHome?: boolean;
+}) {
   const params = useSearchParams();
-  const parsed = parseControls(new URLSearchParams(params.toString()));
-  const controls = parsed.success ? parsed.data : null;
+  const parsed = parseBrowseLocation(new URLSearchParams(params.toString()));
+  const controls = parsed?.controls ?? null;
+  const page = Number(parsed?.page ?? 1);
+  const path = collectionHome ? "/app/collection" : "/app/search";
   const key = String(controls ? controlsQuery(controls) : "invalid");
   const request = useCallback(
-    (q: string, signal: AbortSignal) =>
-      key === ""
-        ? requestCollectionSearch(q, signal)
-        : requestFilteredSearch(
-            q,
-            signal,
-            collectionControls.parse(
-              Object.fromEntries(new URLSearchParams(key)),
-            ),
+    (q: string, signal: AbortSignal) => {
+      const paging = page > 1 ? { offset: (page - 1) * pageSize } : undefined;
+      if (collectionHome)
+        return requestCollectionPage(
+          q,
+          signal,
+          collectionControls.parse(
+            Object.fromEntries(new URLSearchParams(key)),
           ),
-    [key],
+          paging ?? { offset: 0 },
+        );
+      return key === ""
+        ? paging
+          ? requestCollectionSearch(q, signal, paging)
+          : requestCollectionSearch(q, signal)
+        : paging
+          ? requestFilteredSearch(
+              q,
+              signal,
+              collectionControls.parse(
+                Object.fromEntries(new URLSearchParams(key)),
+              ),
+              paging,
+            )
+          : requestFilteredSearch(
+              q,
+              signal,
+              collectionControls.parse(
+                Object.fromEntries(new URLSearchParams(key)),
+              ),
+            );
+    },
+    [key, page, collectionHome],
   );
-  function navigate(next: CollectionControls) {
-    const query = controlsQuery(next);
-    window.history.pushState(
+  function navigate(next: CollectionControls, nextPage = 1, replace = false) {
+    const query = browseQuery(next, nextPage);
+    window.history[replace ? "replaceState" : "pushState"](
       null,
       "",
-      query ? `/app/search?${query}` : "/app/search",
+      query ? `${path}?${query}` : path,
     );
   }
   if (!controls)
     return (
       <section aria-label="Collection filters" className="space-y-4">
         <p role="alert">
-          These filters are invalid or unsupported. Clear them to choose new
-          filters.
+          These filters or page settings are invalid or unsupported. Clear them
+          to choose new filters.
         </p>
         <Button
           variant="outline"
@@ -122,7 +160,11 @@ export function CollectionWorkspace({ options }: { options: FilterOptions }) {
             navigate(collectionControls.parse(next));
           }}
         >
-          {name !== "sort" && <option value="">Any</option>}
+          {name !== "sort" && (
+            <option value="">
+              {name === "type" && collectionHome ? "All items" : "Any"}
+            </option>
+          )}
           {value && !choices[name].some((option) => option.value === value) && (
             <option value={value}>Selected value unavailable</option>
           )}
@@ -231,8 +273,20 @@ export function CollectionWorkspace({ options }: { options: FilterOptions }) {
   return (
     <CollectionSearch
       request={request}
-      mode={{ key, browse: controlsActive(controls) }}
+      mode={{
+        key: `${key}|${page}`,
+        browse: collectionHome || controlsActive(controls),
+      }}
       controls={panel}
+      collectionHome={collectionHome}
+      filtered={Object.entries(controls).some(
+        ([name, value]) => name !== "sort" && value !== undefined,
+      )}
+      page={page}
+      onPageChange={(next) => navigate(controls, next)}
+      onQueryChange={() => {
+        if (page !== 1) navigate(controls, 1, true);
+      }}
     />
   );
 }

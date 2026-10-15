@@ -50,6 +50,7 @@ const groups = [
 ] as const;
 const destinations = [
   { title: "Your collection", href: "/app" },
+  { title: "Browse collection", href: "/app/collection" },
   { title: "Search collection", href: "/app/search" },
   { title: "Manage locations", href: "/app/locations" },
   { title: "Manage defects", href: "/app/defects" },

@@ -26,6 +26,17 @@ export type SearchHit = {
     platform: string | null;
     publisher: string | null;
   };
+  card?: {
+    hasBox: boolean | null;
+    unresolvedDefects: number;
+    producer: string | null;
+    photo: {
+      assetId: string;
+      altText: string | null;
+      width: number;
+      height: number;
+    } | null;
+  };
 };
 export type SearchResult = {
   state: "idle" | "ready";

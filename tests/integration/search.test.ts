@@ -1,5 +1,6 @@
 import {
   searchFilteredCollection,
+  browsePrivateCollection,
   getCollectionFilterOptions,
 } from "@/server/services/search/filtered";
 import * as searchRepository from "@/server/repositories/search";
@@ -19,6 +20,7 @@ import {
   privateSearchRequest,
   privatePaletteRequest,
   privateFilteredRequest,
+  privateCollectionRequest,
 } from "@/server/http/search";
 import { withTransaction } from "@/server/db/transaction";
 import {
@@ -35,6 +37,7 @@ import {
   resetSearchData,
   seedSearchData,
   seedFilterData,
+  seedBrowseData,
 } from "../helpers/search-data";
 const db = getDatabase();
 const secret = "search-integration-secret-longer-than-thirty-two-characters";
@@ -657,6 +660,11 @@ it("measures complete search plans with representative owned graphs and index-ba
       limit: 2,
       offset: 1,
     });
+    const cards = await browsePrivateCollection(context, {
+      q,
+      controls: { type: "game", sort: "year-desc" },
+    });
+    expect(cards.items.every((item) => item.card !== undefined)).toBe(true);
     expect(filtered.state).toBe("ready");
     expect(filtered.items.length).toBeLessThanOrEqual(2);
     await withTransaction(async (tx) => {
@@ -1081,4 +1089,266 @@ it("executes filter persistence with narrow columns and live hierarchical option
       ].sort(),
     );
   });
+});
+
+it("browses collection roots without terms while preserving search idle and privacy behavior", async () => {
+  const { context } = await actor();
+  const d = await seedFilterData(db);
+  const result = await browsePrivateCollection(context, {
+    q: "",
+    controls: {},
+  });
+  expect(result.state).toBe("ready");
+  expect(ids(result)).toEqual(
+    [d.firstId, d.secondId, d.consoleId, d.accessoryId].sort(),
+  );
+  expect(
+    (await searchFilteredCollection(context, { q: "", controls: {} })).state,
+  ).toBe("idle");
+  for (const q of ["c", "%_"])
+    expect(
+      (await browsePrivateCollection(context, { q, controls: {} })).items,
+    ).toEqual([]);
+  expect(
+    (
+      await browsePrivateCollection(context, { q: "ownersecret", controls: {} })
+    ).items.map((item) => item.id),
+  ).toEqual([d.firstId]);
+  const byId = new Map(result.items.map((item) => [item.id, item]));
+  expect(byId.get(d.firstId)?.card).toMatchObject({
+    hasBox: true,
+    unresolvedDefects: 2,
+    photo: null,
+  });
+  expect(byId.get(d.secondId)?.card).toMatchObject({
+    hasBox: false,
+    unresolvedDefects: 0,
+  });
+  expect(byId.get(d.consoleId)?.card?.hasBox).toBeNull();
+  expect(byId.get(d.accessoryId)?.card?.producer).toBe("Hori, Nintendo");
+  const encoded = JSON.stringify(result);
+  for (const secret of [
+    "ownersecret",
+    "repairsecret",
+    "00-ABC-123",
+    "objectKey",
+    "storageNamespace",
+  ])
+    expect(encoded).not.toContain(secret);
+});
+it("pages complete filtered copy sets with stable ties and honest final/empty pages", async () => {
+  const { context } = await actor();
+  await seedBrowseData(db);
+  const pages = [];
+  for (const offset of [0, 20, 40, 60])
+    pages.push(
+      await browsePrivateCollection(context, {
+        q: "",
+        controls: { type: "game", sort: "name-asc" },
+        offset,
+      }),
+    );
+  expect(pages.map((page) => page.items.length)).toEqual([20, 20, 5, 0]);
+  expect(pages.map((page) => page.hasMore)).toEqual([true, true, false, false]);
+  const found = pages.flatMap((page) => page.items.map((item) => item.id));
+  expect(new Set(found).size).toBe(45);
+  expect(found).toEqual([...found].sort());
+  expect(pages[0].items.every((item) => item.type === "GAME")).toBe(true);
+  expect(
+    (
+      await browsePrivateCollection(context, {
+        q: "",
+        controls: {},
+        offset: 5000,
+      })
+    ).items,
+  ).toEqual([]);
+  await expect(
+    browsePrivateCollection(context, { q: "", controls: {}, offset: 5001 }),
+  ).rejects.toThrow();
+});
+it("chooses a private ready primary photo and its thumbnail without exposing storage or another copy's media", async () => {
+  const { context } = await actor();
+  const d = await seedFilterData(db);
+  async function asset(
+    deliveryClass: "DISPLAY" | "ORIGINAL" = "DISPLAY",
+    thumbnail = false,
+    state: "PENDING" | "READY" = "READY",
+  ) {
+    return db.asset.create({
+      data: {
+        kind: "IMAGE",
+        scope: "COLLECTION",
+        deliveryClass,
+        state,
+        mimeType: "image/webp",
+        sizeBytes: 1,
+        sha256: "a".repeat(64),
+        width: 40,
+        height: 80,
+        storageNamespace: "fixture",
+        objectKey: randomUUID(),
+        originalFilename: "private-original-name",
+        ...(thumbnail
+          ? {
+              transformMetadata: {
+                schemaVersion: 1,
+                data: { variant: "thumbnail" },
+              },
+            }
+          : {}),
+      },
+    });
+  }
+  const earlier = await asset();
+  const display = await asset("DISPLAY", false, "PENDING");
+  const original = await asset("ORIGINAL");
+  const thumbnail = await asset("DISPLAY", true, "PENDING");
+  await db.assetDependency.createMany({
+    data: [display, thumbnail].map((a) => ({
+      derivedAssetId: a.id,
+      sourceAssetId: original.id,
+      purpose: "RESIZE" as const,
+    })),
+  });
+  await db.asset.updateMany({
+    where: { id: { in: [display.id, thumbnail.id] } },
+    data: { state: "READY" },
+  });
+  await db.collectionItemMedia.createMany({
+    data: [
+      {
+        collectionItemId: d.firstId,
+        assetId: earlier.id,
+        type: "FRONT",
+        sortOrder: 0,
+      },
+      {
+        collectionItemId: d.firstId,
+        assetId: display.id,
+        type: "BOX",
+        isPrimary: true,
+        sortOrder: 10,
+        altText: "My boxed game",
+      },
+      {
+        collectionItemId: d.firstId,
+        assetId: earlier.id,
+        type: "SERIAL",
+        isPrimary: true,
+        sortOrder: 0,
+      },
+      {
+        collectionItemId: d.secondId,
+        assetId: original.id,
+        type: "PHOTO",
+        isPrimary: true,
+      },
+    ],
+  });
+  const run = () =>
+    browsePrivateCollection(context, { q: "", controls: { type: "game" } });
+  const result = await run();
+  expect(
+    result.items.find((item) => item.id === d.firstId)?.card?.photo,
+  ).toEqual({
+    assetId: thumbnail.id,
+    altText: "My boxed game",
+    width: 40,
+    height: 80,
+  });
+  expect(
+    result.items.find((item) => item.id === d.secondId)?.card?.photo,
+  ).toBeNull();
+  for (const secret of [
+    original.id,
+    display.id,
+    "private-original-name",
+    "objectKey",
+    "publicSafe",
+  ])
+    expect(JSON.stringify(result)).not.toContain(secret);
+  await db.asset.update({
+    where: { id: thumbnail.id },
+    data: { state: "DELETING" },
+  });
+  expect(
+    (await run()).items.find((item) => item.id === d.firstId)?.card?.photo
+      ?.assetId,
+  ).toBe(display.id);
+  await db.collectionItemMedia.deleteMany({
+    where: { collectionItemId: d.firstId, type: "BOX" },
+  });
+  await db.asset.update({
+    where: { id: display.id },
+    data: { state: "DELETING" },
+  });
+  expect(
+    (await run()).items.find((item) => item.id === d.firstId)?.card?.photo
+      ?.assetId,
+  ).toBe(earlier.id);
+});
+it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
+  "authorizes %s collection pages and rejects transport overrides or revoked access",
+  async (role) => {
+    const { headers, context, grant } = await actor(role);
+    await seedFilterData(db);
+    const send = (data: unknown, requestHeaders = headers) =>
+      privateCollectionRequest(
+        new Request("http://localhost:3002/api/collection/private", {
+          method: "POST",
+          headers: requestHeaders,
+          body: JSON.stringify(data),
+        }),
+      );
+    const result = await send({ q: "", controls: {}, offset: 1, limit: 1 });
+    expect(result.status).toBe(200);
+    expect(result.headers.get("cache-control")).toBe("private, no-store");
+    expect((await result.json()).items).toHaveLength(1);
+    for (const data of [
+      { q: "", controls: {}, page: 2 },
+      { q: "", controls: {}, includePrivate: true },
+      { q: "", controls: {}, offset: -1 },
+      { q: "", controls: {}, limit: 51 },
+    ])
+      expect((await send(data)).status).toBe(400);
+    const anonymous = new Headers(headers);
+    anonymous.delete("cookie");
+    expect((await send({ q: "", controls: {} }, anonymous)).status).toBe(401);
+    const outside = new Headers(headers);
+    outside.set("origin", "https://elsewhere.invalid");
+    expect((await send({ q: "", controls: {} }, outside)).status).toBe(403);
+    await db.accessGrant.update({
+      where: { id: grant.id },
+      data: { enabled: false },
+    });
+    expect((await send({ q: "", controls: {} })).status).toBe(403);
+    await expect(
+      browsePrivateCollection(context, { q: "", controls: {} }),
+    ).rejects.toThrow();
+  },
+);
+
+it("bounds interactive query planning without JIT and keeps settings local to the transaction", async () => {
+  await actor();
+  await seedFilterData(db);
+  const baseline = await db.$queryRaw<
+    { jit: string }[]
+  >`SELECT current_setting('jit') jit`;
+  await withTransaction(async (tx) => {
+    await tx.$queryRaw`SELECT set_config('jit_above_cost','0',true)`;
+    await configureSearch(tx);
+    const settings = await tx.$queryRaw<
+      { jit: string; timeout: string }[]
+    >`SELECT current_setting('jit') jit,current_setting('statement_timeout') timeout`;
+    expect(settings[0]).toEqual({ jit: "off", timeout: "2s" });
+    const plans = await tx.$queryRaw<{ "QUERY PLAN": { JIT?: unknown }[] }[]>(
+      Prisma.sql`EXPLAIN(ANALYZE,FORMAT JSON) ${filteredPrivateSearchQuery({ q: "", limit: 1, offset: 1 }, [], { sort: "relevance" })}`,
+    );
+    expect(plans[0]["QUERY PLAN"][0].JIT).toBeUndefined();
+  });
+  const restored = await db.$queryRaw<
+    { jit: string }[]
+  >`SELECT current_setting('jit') jit`;
+  expect(restored).toEqual(baseline);
 });

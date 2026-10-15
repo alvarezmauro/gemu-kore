@@ -1,5 +1,8 @@
 import "server-only";
-import { searchFilteredCollection } from "../services/search/filtered";
+import {
+  searchFilteredCollection,
+  browsePrivateCollection,
+} from "../services/search/filtered";
 import { requirePrivateAccess, PrivateAccessError } from "../auth/access";
 import { PermissionError } from "../auth/permissions";
 import { getAuthEnv } from "../config/env";
@@ -81,6 +84,11 @@ export async function privateFilteredRequest(
   request: Request,
 ): Promise<Response> {
   return handlePrivateSearch(request, searchFilteredCollection);
+}
+export async function privateCollectionRequest(
+  request: Request,
+): Promise<Response> {
+  return handlePrivateSearch(request, browsePrivateCollection);
 }
 async function handlePrivateSearch(
   request: Request,

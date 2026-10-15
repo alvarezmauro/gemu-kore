@@ -30,6 +30,7 @@ export default async function LocationsPage() {
       context="Your collection"
       items={[
         { label: "Your collection", href: "/app", icon: "overview" },
+        { label: "Browse collection", href: "/app/collection", icon: "cards" },
         { label: "Search", href: "/app/search", icon: "search" },
         {
           label: "Locations",

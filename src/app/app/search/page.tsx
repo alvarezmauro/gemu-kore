@@ -29,6 +29,7 @@ export default async function SearchPage() {
       context="Your collection"
       items={[
         { label: "Your collection", href: "/app", icon: "overview" },
+        { label: "Browse collection", href: "/app/collection", icon: "cards" },
         { label: "Search", href: "/app/search", icon: "search", current: true },
         { label: "Locations", href: "/app/locations", icon: "locations" },
         { label: "Defects", href: "/app/defects", icon: "defects" },

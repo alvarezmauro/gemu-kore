@@ -35,6 +35,23 @@ export const searchResult = z
               })
               .strict()
               .optional(),
+            card: z
+              .object({
+                hasBox: z.boolean().nullable(),
+                unresolvedDefects: z.number().int().nonnegative(),
+                producer: z.string().nullable(),
+                photo: z
+                  .object({
+                    assetId: z.uuid(),
+                    altText: z.string().nullable(),
+                    width: z.number().int().positive(),
+                    height: z.number().int().positive(),
+                  })
+                  .strict()
+                  .nullable(),
+              })
+              .strict()
+              .optional(),
           })
           .strict(),
       )

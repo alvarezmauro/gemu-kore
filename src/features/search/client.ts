@@ -6,8 +6,15 @@ import type { SearchResult } from "./contracts";
 export async function requestCollectionSearch(
   q: string,
   signal: AbortSignal,
+  paging?: { offset: number },
 ): Promise<SearchResult> {
-  const data = await requestSearch("/api/search/private", q, signal);
+  const data = await requestSearch(
+    "/api/search/private",
+    q,
+    signal,
+    undefined,
+    paging,
+  );
   const parsed = searchResult.safeParse(data);
   if (!parsed.success)
     throw new Error("We couldn't load these search results. Please try again.");
@@ -27,23 +34,55 @@ export async function requestFilteredSearch(
   q: string,
   signal: AbortSignal,
   controls: CollectionControls,
+  paging?: { offset: number },
 ): Promise<SearchResult> {
-  const data = await requestSearch("/api/search/filtered", q, signal, controls);
+  const data = await requestSearch(
+    "/api/search/filtered",
+    q,
+    signal,
+    controls,
+    paging,
+  );
   const parsed = searchResult.safeParse(data);
   if (!parsed.success)
     throw new Error("We couldn't load these search results. Please try again.");
   return parsed.data;
 }
+export async function requestCollectionPage(
+  q: string,
+  signal: AbortSignal,
+  controls: CollectionControls,
+  paging: { offset: number },
+) {
+  const data = await requestSearch(
+    "/api/collection/private",
+    q,
+    signal,
+    controls,
+    paging,
+  );
+  const parsed = searchResult.safeParse(data);
+  if (!parsed.success)
+    throw new Error(
+      "We couldn't load these collection items. Please try again.",
+    );
+  return parsed.data;
+}
 async function requestSearch(
-  path: "/api/search/private" | "/api/search/palette" | "/api/search/filtered",
+  path:
+    | "/api/search/private"
+    | "/api/search/palette"
+    | "/api/search/filtered"
+    | "/api/collection/private",
   q: string,
   signal: AbortSignal,
   controls?: CollectionControls,
+  paging?: { offset: number },
 ): Promise<unknown> {
   const response = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(controls ? { q, controls } : { q }),
+    body: JSON.stringify({ q, ...(controls ? { controls } : {}), ...paging }),
     cache: "no-store",
     signal,
   }).catch(() => {

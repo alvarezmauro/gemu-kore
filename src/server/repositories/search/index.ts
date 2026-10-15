@@ -17,7 +17,9 @@ import {
   type SearchRow,
 } from "./query";
 export async function configureSearch(tx: TransactionClient) {
-  await tx.$queryRaw`SELECT set_config('statement_timeout','2000',true),set_config('pg_trgm.word_similarity_threshold','0.6',true)`;
+  // These bounded interactive reads cannot amortize LLVM compilation. Generic
+  // plans/stale row estimates can otherwise spend the entire deadline in JIT.
+  await tx.$queryRaw`SELECT set_config('statement_timeout','2000',true),set_config('pg_trgm.word_similarity_threshold','0.6',true),set_config('jit','off',true)`;
 }
 export function parseSearchTerms(q: string, tx: TransactionClient) {
   return tx.$queryRaw<

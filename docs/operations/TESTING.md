@@ -259,3 +259,24 @@ pnpm test:e2e:access tests/access-e2e/filters.spec.ts
 ```
 
 Ratings remain deferred to their approved Phase 11 fields; unsupported rating filters are rejected. Grid/list/pagination UI and persistent view preferences remain Task 7.5. The existing local Docker application requires no dependency refresh or migration for this task. Local `/api/health` returns 200 and anonymous `POST /api/search/filtered` returns 401 with private no-store headers; existing OAuth provider configuration remains unchanged. Authenticated behavior is verified in the disposable production runner. See [FILTERS_AND_SORTING.md](FILTERS_AND_SORTING.md) for contracts and semantics. Next: Task 7.5 — Grid/List Views.
+
+## Task 7.5 collection views verification
+
+Verified on 2026-10-15: **583 unit/component, 400 PostgreSQL integration and 188 desktop/mobile browser cases pass (1,171 distinct checks)**. Lint, TypeScript, formatting, production browser builds, internal documentation links and whitespace checks pass. Task 7.5 adds 25 unit/component, seven PostgreSQL and 20 browser cases. Browser coverage comprises 44 general and 144 authenticated cases: the full authenticated run passed except for the two palette tests expecting the previous destination order, then the final 38 collection/palette cases passed after correcting those expectations and refining compact photo fallbacks and pagination focus. Asset-pipeline/storage suites retain earlier verification and are not included in this task's rerun total.
+
+Unit/component cases cover strict bookmark/page validation and offset bounds, URL/private-text separation, collection-home browsing, page resets, missing observations, duplicate physical copies and exact-copy actions in both layouts, broken-image fallback, local preference restoration, malformed values, same-page/cross-tab storage notification and blocked storage. Switching layouts leaves query membership/order and pagination unchanged and does not issue another collection POST. Existing search/palette cancellation and late-response checks remain passing.
+
+Real PostgreSQL service/transport cases verify empty collection browsing separately from search idle behavior, metadata per owned subtype/copy, 45 copies of one release split into 20/20/5 results with stable UUID ties and no duplicates, final/empty pages and bounded offsets. Card queries prefer ready primary private photos and their actual thumbnail lineage, fall back to ready display images or the next eligible use, exclude originals and serial classifications, and do not return storage keys, original filenames, notes or serial text. All three read roles, strict inputs/origins, anonymous access and revoked grants use actual signed sessions and current server policy. The existing 3,004-copy search corpus additionally runs collection reads with card hydration.
+
+A complete-query diagnostic identified intermittent empty-text browse timeouts caused by JIT: 891 compiled functions consumed about 2,142 ms of a 2,145 ms read. Search configuration now sets `jit=off` only inside its transaction, retaining the two-second statement timeout and existing indexes. A regression forces the cost threshold low, executes the actual filtered SQL plan without JIT and verifies that pooled settings are restored. No global PostgreSQL setting is changed, and no timeout was increased to make checks pass. Temporary diagnostic logging was removed.
+
+Production browser journeys exercise `/app/collection` through the entry page and palette; responsive grid/list layouts; locally saved preference and blocked storage; page navigation, result focus, bookmarks, reload and Back; filter/sort/private-text page resets; invalid and valid-empty URLs; revoked access; a real upload/private-thumbnail GET; serial-preview exclusion; existing full-page search offsets; and long cards at 320px in dark mode with reduced motion. Desktop/mobile screenshots were inspected, including the final compact fallback. The existing access, location, defect, media, filter, search and palette journeys remain passing. All collection/media fixtures stay in disposable PostgreSQL/MinIO, which the runner removes afterward.
+
+To rerun the relevant journeys:
+
+```sh
+pnpm test:integration tests/integration/search.test.ts
+pnpm test:e2e:access tests/access-e2e/collection.spec.ts tests/access-e2e/palette.spec.ts
+```
+
+The local Docker application is healthy at port 3002: `/api/health` returns 200 and anonymous `POST /api/collection/private` returns 401 with private no-store headers. Existing provider configuration is unchanged; authenticated verification uses the isolated production runner, not live OAuth consent. The known nonfailing pg adapter deprecation remains unchanged. No dependency, migration, schema, personal fixture, public collection endpoint or category CRUD is introduced. See [COLLECTION_VIEWS.md](COLLECTION_VIEWS.md). Next: Task 8.1 — Console Catalog.

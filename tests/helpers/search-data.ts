@@ -6,7 +6,7 @@ function isolated() {
 }
 export async function resetSearchData(db: PrismaClient) {
   isolated();
-  await db.$executeRaw`TRUNCATE TABLE location, company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
+  await db.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
   await db.publicSettings.update({
     where: { id: 1 },
     data: {
@@ -310,4 +310,16 @@ export async function seedFilterData(db: PrismaClient) {
     },
   });
   return { ...data, usaId, rootId: root.id, shelfId: shelf.id };
+}
+
+export async function seedBrowseData(db: PrismaClient) {
+  const data = await seedFilterData(db);
+  for (let index = 0; index < 43; index++)
+    await db.collectionItem.create({
+      data: {
+        type: "GAME",
+        ownedGame: { create: { gameReleaseId: data.releaseId } },
+      },
+    });
+  return data;
 }
