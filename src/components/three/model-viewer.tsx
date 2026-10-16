@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   modelPresentation,
+  modelLimits,
+  ModelError,
   type ModelPresentation,
   type ModelPoster as Poster,
   type ModelPresentationResult,
@@ -124,6 +126,10 @@ export function ModelViewer({
         );
         return;
       }
+      if (parsed.data.resource.byteLength > modelLimits.bytes) {
+        setError(new ModelError().message);
+        return;
+      }
       setPresentation(parsed.data);
       requestAnimationFrame(() =>
         container.current?.scrollIntoView({ block: "nearest" }),
@@ -217,6 +223,7 @@ export function ModelViewer({
   return (
     <section
       aria-label="3D preview"
+      aria-busy={busy || Boolean(presentation && !ready)}
       className="min-w-0 space-y-4 rounded-xl bg-card p-4 sm:p-6"
     >
       <h2 className="font-heading text-xl">3D preview</h2>
@@ -228,7 +235,7 @@ export function ModelViewer({
       >
         {!expanded && panel}
         <DialogContent
-          className="h-[calc(100dvh-2rem)] sm:max-w-[min(90vw,70rem)]"
+          className="h-[calc(100dvh-2rem)] content-start sm:max-w-[min(90vw,70rem)]"
           onCloseAutoFocus={(e) => {
             e.preventDefault();
             requestAnimationFrame(() => trigger.current?.focus());

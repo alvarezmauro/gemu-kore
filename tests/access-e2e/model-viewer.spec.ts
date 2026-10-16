@@ -1,93 +1,10 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import {
-  expect,
-  test,
-  type BrowserContext,
-  type Page,
-  type Locator,
-} from "@playwright/test";
-import { signedSessionCookie } from "../helpers/access-session";
+import { expect, test, type Locator } from "@playwright/test";
 import { buildGlb, modelFixture } from "../helpers/model-fixture";
 import { monochromePng } from "../helpers/png-fixtures";
-const exec = promisify(execFile);
+import { fixture, prepareModel, openModel } from "../helpers/model-browser";
 // Keep keyboard focus decoration from changing image comparisons of the same camera.
 const capture = (canvas: Locator) =>
   canvas.screenshot({ style: '[role="img"] { box-shadow: none !important; }' });
-async function fixture(command: string, argument?: string) {
-  const { stdout } = await exec(
-    process.execPath,
-    [
-      "--conditions=react-server",
-      "--import",
-      "tsx",
-      "tests/helpers/access-browser-fixture.ts",
-      command,
-      ...(argument ? [argument] : []),
-    ],
-    { env: process.env, timeout: 10000 },
-  );
-  return JSON.parse(stdout.trim());
-}
-async function signIn(
-  context: BrowserContext,
-  role: "EDITOR" | "VIEWER" = "EDITOR",
-) {
-  const identity = await fixture("sign-in", JSON.stringify({ role }));
-  await context.addCookies([
-    {
-      name: "__Secure-gemukore.session_token",
-      value: signedSessionCookie(
-        identity.token,
-        process.env.BETTER_AUTH_SECRET!,
-      ),
-      url: "https://127.0.0.1:3111",
-      secure: true,
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  ]);
-  return identity;
-}
-async function prepare(
-  page: Page,
-  context: BrowserContext,
-  bytes = modelFixture().bytes,
-) {
-  const identity = await signIn(context);
-  const { modelId } = await fixture("seed-console-creation");
-  const { id } = await fixture("seed-console-copies", modelId);
-  await page.goto(`/app/consoles/${id}`);
-  await page.getByLabel("File purpose").selectOption("CUSTOM_MODEL");
-  await page.getByLabel("Choose override file", { exact: true }).setInputFiles({
-    name: "synthetic-console.glb",
-    mimeType: "model/gltf-binary",
-    buffer: bytes,
-  });
-  await page.getByRole("button", { name: "Upload file", exact: true }).click();
-  const model = page
-    .getByRole("list", { name: "Copy overrides" })
-    .getByRole("listitem")
-    .filter({ hasText: "synthetic-console.glb" });
-  await expect(model).toBeVisible({ timeout: 20000 });
-  await model
-    .getByRole("button", { name: "Use for this copy", exact: true })
-    .click();
-  const viewer = page.getByRole("region", { name: "3D preview", exact: true });
-  await expect(viewer).toBeVisible();
-  const url = (await page
-    .getByRole("link", { name: "Download 3D file", exact: true })
-    .getAttribute("href"))!;
-  return { viewer, url, id, identity };
-}
-async function open(page: Page) {
-  const viewer = page.getByRole("region", { name: "3D preview", exact: true });
-  await viewer.getByRole("button", { name: "View in 3D", exact: true }).click();
-  await expect(viewer.getByRole("status")).toHaveText("3D preview ready", {
-    timeout: 20000,
-  });
-  return viewer;
-}
 test.beforeEach(async () => {
   await fixture("reset-search");
   await fixture("reset");
@@ -102,7 +19,7 @@ test("loads only on activation, renders private GLB and supports orbit/zoom/rese
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  const { viewer, url } = await prepare(page, context);
+  const { viewer, url } = await prepareModel(page, context);
   let transfers = 0;
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === url) transfers++;
@@ -110,7 +27,7 @@ test("loads only on activation, renders private GLB and supports orbit/zoom/rese
   await expect(page.locator("canvas")).toHaveCount(0);
   expect(transfers).toBe(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await open(page);
+  await openModel(page);
   expect(transfers).toBe(1);
   await expect(page.locator("canvas")).toHaveCount(1);
   const canvas = viewer.locator("canvas");
@@ -153,7 +70,7 @@ test("loads only on activation, renders private GLB and supports orbit/zoom/rese
   await expect(
     viewer.getByRole("button", { name: "View in 3D", exact: true }),
   ).toBeFocused();
-  await open(page);
+  await openModel(page);
   expect(transfers).toBe(2);
   expect(errors).toEqual([]);
 });
@@ -161,13 +78,13 @@ test("honors live reduced motion and expands through an accessible dialog when n
   page,
   context,
 }) => {
-  await prepare(page, context);
+  await prepareModel(page, context);
   await page.evaluate(() => {
     Element.prototype.requestFullscreen =
       undefined as unknown as typeof Element.prototype.requestFullscreen;
   });
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const viewer = await open(page);
+  const viewer = await openModel(page);
   await viewer
     .getByRole("button", { name: "Auto rotate", exact: true })
     .click();
@@ -208,7 +125,7 @@ test("retains a download/static fallback for an unsupported model", async ({
     { ...fixtureModel.document, extensionsUsed: ["KHR_materials_clearcoat"] },
     fixtureModel.binary,
   );
-  const { viewer, url } = await prepare(page, context, bytes);
+  const { viewer, url } = await prepareModel(page, context, bytes);
   await viewer.getByRole("button", { name: "View in 3D", exact: true }).click();
   await expect(viewer.getByRole("alert")).toContainText("cannot be previewed", {
     timeout: 20000,
@@ -221,7 +138,7 @@ test("cancels a pending transfer on close, retries privately and rejects a revok
   page,
   context,
 }) => {
-  const { viewer, url, identity } = await prepare(page, context);
+  const { viewer, url, identity } = await prepareModel(page, context);
   let release!: () => void;
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
@@ -243,7 +160,7 @@ test("cancels a pending transfer on close, retries privately and rejects a revok
   release();
   await page.unroute(`**${url}`);
   await expect(page.locator("canvas")).toHaveCount(0);
-  await open(page);
+  await openModel(page);
   await viewer
     .getByRole("button", { name: "Close 3D preview", exact: true })
     .click();
@@ -259,7 +176,7 @@ test("falls back when WebGL cannot create a context without breaking console det
   page,
   context,
 }) => {
-  const { viewer } = await prepare(page, context);
+  const { viewer } = await prepareModel(page, context);
   await page.evaluate(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
@@ -293,9 +210,9 @@ test("supports pointer/touch gestures, responsive resize and native fullscreen o
   page,
   context,
 }, info) => {
-  await prepare(page, context);
+  await prepareModel(page, context);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const viewer = await open(page);
+  const viewer = await openModel(page);
   const stage = viewer.getByRole("img", { name: /^Interactive 3D/ });
   const canvas = viewer.locator("canvas");
   await stage.scrollIntoViewIfNeeded();
@@ -381,8 +298,8 @@ test("releases the stage after graphics context loss and keeps an explicit retry
   page,
   context,
 }) => {
-  await prepare(page, context);
-  const viewer = await open(page);
+  await prepareModel(page, context);
+  const viewer = await openModel(page);
   await viewer.locator("canvas").evaluate((canvas: HTMLCanvasElement) => {
     canvas
       .getContext("webgl2")!
@@ -442,7 +359,7 @@ test("decodes an embedded private texture and closes its ImageBitmap on every se
       },
     ],
   };
-  const { viewer } = await prepare(
+  const { viewer } = await prepareModel(
     page,
     context,
     buildGlb(glbDocument, binary),
@@ -472,7 +389,7 @@ test("decodes an embedded private texture and closes its ImageBitmap on every se
     report();
   });
   for (let count = 1; count <= 2; count++) {
-    await open(page);
+    await openModel(page);
     const counts = () =>
       page.evaluate(() =>
         JSON.parse(document.documentElement.dataset.bitmaps!),

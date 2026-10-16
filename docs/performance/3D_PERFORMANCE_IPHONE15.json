@@ -1,0 +1,379 @@
+{
+  "status": "Partial physical-device calibration. User confirms landscape centering and post-interaction flicker fixes work on the iPhone; other calibration checks remain pending.",
+  "recordedOn": "2026-10-16",
+  "device": {
+    "model": "iPhone 15",
+    "osFromSafariDevicePanel": "iOS 26.6.2",
+    "browserVersionFromUserAgent": "Safari 26.6.1",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1",
+    "renderer": "Apple GPU",
+    "viewportCssPixels": [393, 735],
+    "screenCssPixels": [393, 852],
+    "devicePixelRatio": 3,
+    "reducedMotionAtStart": false,
+    "network": "Local Wi-Fi with USB remote inspection",
+    "powerAndThermalState": "Not yet recorded"
+  },
+  "environment": {
+    "application": "Production Next.js build in disposable local PostgreSQL/MinIO study environment",
+    "data": "Original synthetic fixture and disposable VIEWER account; development collection unchanged",
+    "cache": "First observed activation, cache state not controlled; ten subsequent activations in the same page with runtime already imported and fresh no-store model requests",
+    "instrumentation": "Local probe and native Safari Timelines. Timelines recording enabled screenshots, network, layout, script, rendering frames and CPU; stopped before reopen cycles.",
+    "revision": "Pre-fix build with motion DPR 0.75. Measurements are historical and do not describe the later stable-DPR/landscape fix."
+  },
+  "plain": {
+    "fixture": {
+      "bytes": 744,
+      "triangles": 4,
+      "texturePixels": 0,
+      "sha256": "8dd9b0d908f8fdad6d725899a6080e6300821f4c22f840395e5addec4dd2bd1e"
+    },
+    "beforeActivationContextCount": 0,
+    "firstObservedReadyMs": 1937,
+    "warmReadyMs": [
+      358, 253, 210, 221, 245.99999999988358, 262, 293, 236, 241, 226
+    ],
+    "manualInput": {
+      "durationMs": 10001,
+      "submittedFrames": 546,
+      "submissionIntervalP50Ms": 17,
+      "submissionIntervalP95Ms": 17,
+      "trustedPointerMoves": 573
+    },
+    "drawingPixels": {
+      "resting": 77361,
+      "duringTouchSample": 43440,
+      "afterSettling": 77361
+    },
+    "idle": {
+      "durationMs": 2001,
+      "additionalSubmittedFrames": 0
+    },
+    "repeatedOpen": {
+      "warmSessions": 10,
+      "totalClosedContexts": 11,
+      "allClosedContextsLostAndDetached": true,
+      "activeContextCountPerSession": 1,
+      "liveResourceCountsStable": true,
+      "liveResourceCounts": {
+        "buffers": 30,
+        "textures": 7,
+        "programs": 7,
+        "framebuffers": 5,
+        "renderbuffers": 1
+      }
+    },
+    "nativeTimeline": {
+      "source": "Safari native Timelines export, physical iPhone 15",
+      "recordingDurationSeconds": 55.1121024582535,
+      "recordedFrameCount": 2010,
+      "manualWindow": {
+        "startSeconds": 180.45599020831287,
+        "endSeconds": 190.4560257080011,
+        "selection": "Unique ten-second measurement timer installed inside a native pointerdown handler, ending when that timer fires",
+        "frameCount": 600,
+        "durationP50Ms": 16.564624849706888,
+        "durationP95Ms": 16.95508323609829,
+        "maxDurationMs": 32.52791706472635,
+        "framesOver33_333ms": 0
+      },
+      "caveats": [
+        "Browser rendering frame durations are not GPU execution timings or display presentation measurements.",
+        "Native screen capture, CPU, network and frame instrumentation was enabled.",
+        "Raw exports are ignored, owner-readable only and may contain disposable session credentials; do not publish."
+      ],
+      "initialLongFrame": {
+        "durationMs": 1331.8379167467356
+      }
+    }
+  },
+  "observations": [
+    "Native manual-window frame durations remain below 33.333 ms for all 600 recorded frames; these are browser rendering frames, not GPU execution or display presentation measurements.",
+    "The initial activation includes an approximately 1.332-second native frame, with approximately 1.28 seconds attributed to script in the inspector. This cold-start cost is separate from the settled interaction window.",
+    "The pinned renderer emits a THREE.Clock deprecation warning per mount. A later extended textured reopen run also reaches Safari context-quota warnings and INVALID_OPERATION: loseContext: context already lost. Lost/detached counters alone do not prove native context capacity is reclaimed.",
+    "Graphics context loss and stable live counts do not establish a phone CPU/OS/GPU memory trend."
+  ],
+  "pending": [
+    "Real live reduced-motion check and slow loading/cancellation",
+    "Native retained-memory and context-quota investigation, including instrumentation overhead",
+    "Device power/thermal conditions",
+    "Physical Android Chrome calibration",
+    "Plain fixture explicit auto-rotation sample"
+  ],
+  "shiny": {
+    "fixture": {
+      "bytes": 1455132,
+      "triangles": 65536,
+      "texturePixels": 0,
+      "sha256": "e822f4ec0d92e767a4f3d3bed97ee1379e4f0784ea574993ce3ff1f7476d42bf"
+    },
+    "viewportBeforeActivation": [393, 695],
+    "beforeActivationContextCount": 0,
+    "firstObservedReadyMs": 969,
+    "warmReadyMs": [
+      436.0000000000291, 251, 253, 254, 248, 261, 260, 268.9999999999709, 260,
+      269
+    ],
+    "manualInput": {
+      "durationMs": 10000.000000000015,
+      "submittedFrames": 545,
+      "submissionIntervalP50Ms": 17,
+      "submissionIntervalP95Ms": 18,
+      "trustedPointerMoves": 499
+    },
+    "drawingPixels": {
+      "resting": 77361,
+      "duringTouchSample": 43440,
+      "afterSettling": 77361
+    },
+    "idle": {
+      "durationMs": 2003,
+      "additionalSubmittedFrames": 0
+    },
+    "autoRotation": {
+      "durationMs": 10003,
+      "submittedFrames": 601,
+      "submissionIntervalP50Ms": 17,
+      "submissionIntervalP95Ms": 17,
+      "drawingPixels": 43440,
+      "afterStop": {
+        "settlingMs": 1000,
+        "windowMs": 2001.000000000029,
+        "additionalFrames": 14,
+        "note": "The one-second wait did not exclude all damping; the longer post-stop sequence confirms eventual idle."
+      },
+      "afterLongerSettle": {
+        "settlingMs": 3000,
+        "windowMs": 2004,
+        "additionalFrames": 1,
+        "note": "A residual frame occurred in this short window; the longer post-stop sequence confirms eventual idle."
+      },
+      "postStopSequence": {
+        "windowMs": 2000,
+        "additionalFrames": [47, 7, 0, 0, 0],
+        "note": "Damping draws cease within the first four seconds; the final six seconds contain no model draws."
+      }
+    },
+    "repeatedOpen": {
+      "warmSessions": 10,
+      "totalClosedContexts": 11,
+      "allClosedContextsLostAndDetached": true,
+      "activeContextCountPerSession": 1,
+      "liveResourceCountsStable": true,
+      "liveResourceCounts": {
+        "buffers": 32,
+        "textures": 7,
+        "programs": 8,
+        "framebuffers": 5,
+        "renderbuffers": 1
+      }
+    },
+    "nativeTimeline": {
+      "source": "Safari native Timelines export, physical iPhone 15",
+      "recordingDurationSeconds": 107.47418975038454,
+      "recordedFrameCount": 3019,
+      "manualWindow": {
+        "startSeconds": 642.706746708136,
+        "endSeconds": 652.7068476248533,
+        "selection": "Unique ten-second measurement timer installed inside a native pointerdown handler, ending when that timer fires",
+        "frameCount": 596,
+        "durationP50Ms": 16.64266688749194,
+        "durationP95Ms": 17.750291619449854,
+        "maxDurationMs": 22.956000175327063,
+        "framesOver33_333ms": 0
+      },
+      "caveats": [
+        "Browser rendering frame durations are not GPU execution timings or display presentation measurements.",
+        "Native screen capture, CPU, network and frame instrumentation was enabled.",
+        "Raw exports are ignored, owner-readable only and may contain disposable session credentials; do not publish."
+      ]
+    },
+    "postStopChecksFinalCleanup": {
+      "totalClosedContexts": 13,
+      "allClosedContextsLostAndDetached": true
+    }
+  },
+  "textured": {
+    "fixture": {
+      "bytes": 1543320,
+      "triangles": 65536,
+      "texturePixels": 4194304,
+      "sha256": "2423548dd59ab5275df94eef02e76e91e9da8efd94eb24f7a8892de49fe026f3"
+    },
+    "viewportBeforeActivation": [393, 695],
+    "beforeActivationContextCount": 0,
+    "firstObservedReadyMs": 1257,
+    "manualInput": {
+      "durationMs": 10000,
+      "submittedFrames": 553,
+      "submissionIntervalP50Ms": 17,
+      "submissionIntervalP95Ms": 17,
+      "trustedPointerMoves": 538
+    },
+    "drawingPixels": {
+      "resting": 77361,
+      "duringTouchSample": 43440,
+      "afterSettling": 77361
+    },
+    "bitmapsBeforeClose": {
+      "created": 1,
+      "closed": 0,
+      "supported": true
+    },
+    "nativeTimeline": {
+      "source": "Safari native Timelines export, physical iPhone 15",
+      "recordingDurationSeconds": 321.76289866678417,
+      "recordedFrameCount": 2679,
+      "manualWindow": {
+        "startSeconds": 1398.844739207998,
+        "endSeconds": 1408.8447448746301,
+        "selection": "Unique ten-second measurement timer installed inside a native pointerdown handler, ending when that timer fires",
+        "frameCount": 600,
+        "durationP50Ms": 16.512291505932808,
+        "durationP95Ms": 17.121791373938322,
+        "maxDurationMs": 22.246291395276785,
+        "framesOver33_333ms": 0
+      },
+      "caveats": [
+        "Browser rendering frame durations are not GPU execution timings or display presentation measurements.",
+        "Native screen capture, CPU, network and frame instrumentation was enabled.",
+        "Raw exports are ignored, owner-readable only and may contain disposable session credentials; do not publish."
+      ]
+    },
+    "warmReadyMs": [498, 322, 326, 322, 332, 335, 423, 327, 343, 333],
+    "idle": {
+      "durationMs": 2001.9999999999418,
+      "additionalSubmittedFrames": 0
+    },
+    "autoRotation": {
+      "durationMs": 10001.000000000058,
+      "submittedFrames": 601,
+      "submissionIntervalP50Ms": 17,
+      "submissionIntervalP95Ms": 17,
+      "drawingPixels": 43440,
+      "afterStop": {
+        "settlingMs": 4000,
+        "windowMs": 2002,
+        "additionalFrames": 0
+      }
+    },
+    "repeatedOpen": {
+      "warmSessions": 10,
+      "totalClosedContexts": 11,
+      "allClosedContextsLostAndDetached": true,
+      "activeContextCountPerSession": 1,
+      "liveResourceCountsStable": true,
+      "liveResourceCounts": {
+        "buffers": 32,
+        "textures": 8,
+        "programs": 7,
+        "framebuffers": 5,
+        "renderbuffers": 1
+      }
+    },
+    "bitmapLifetimeAfterRepeat": {
+      "created": 11,
+      "closed": 11,
+      "supported": true,
+      "method": "Test-only wrapper around native createImageBitmap and each returned bitmap.close, installed before activation. Counters retain no bitmap objects or model data."
+    },
+    "nativeMemory": {
+      "method": "Native Safari Memory timeline with Collect garbage requested through Inspector before and after another ten reopens; model closed at both ends. Memory instrumentation configured without screenshots. Raw export remains ignored and owner-readable.",
+      "sampleCount": 225,
+      "recordingDurationSeconds": 113.01419141655788,
+      "firstSample": {
+        "t": 3600.26746404171,
+        "categories": {
+          "javascript": 39692400,
+          "jit": 10977280,
+          "images": 0,
+          "layers": 0,
+          "page": 81680272,
+          "other": 16678912
+        },
+        "total": 149028864
+      },
+      "lastSample": {
+        "t": 3713.1325318333693,
+        "categories": {
+          "javascript": 28328271,
+          "jit": 7077888,
+          "images": 0,
+          "layers": 0,
+          "page": 115752625,
+          "other": 22462464
+        },
+        "total": 173621248
+      },
+      "totalBytesDelta": 24592384,
+      "all22ClosedContextsLostAndDetached": true,
+      "bitmapLifetime": {
+        "created": 22,
+        "closed": 22
+      },
+      "result": "Inconclusive native-memory trend: JavaScript category decreases, but Page and total categories increase. Do not claim the phone memory acceptance check passed; distinguish allocator/browser capacity from retained application objects with a longer plateau/allocation study.",
+      "categoryRanges": {
+        "javascript": {
+          "min": 24177576,
+          "max": 82929252
+        },
+        "jit": {
+          "min": 1196032,
+          "max": 10977280
+        },
+        "images": {
+          "min": 0,
+          "max": 16777216
+        },
+        "layers": {
+          "min": 0,
+          "max": 0
+        },
+        "page": {
+          "min": 56170667,
+          "max": 130364868
+        },
+        "other": {
+          "min": 16678912,
+          "max": 56344576
+        }
+      },
+      "contextQuotaWarnings": "During the second textured reopen batch, Safari reports too many active WebGL contexts and already-lost context errors despite previous contexts being recorded as lost/detached. Cause not isolated; no native-memory pass."
+    },
+    "realVisibilityChecks": {
+      "offscreen": {
+        "windowMs": 2000,
+        "additionalFrames": 0,
+        "autoStoppedOnReturn": true
+      },
+      "backgroundReturnAutoStopped": true,
+      "note": "Multiple real hidden/visible events observed; one boundary records one additional submitted frame. This is separate from simulated browser coverage."
+    }
+  },
+  "subjectiveFeedback": {
+    "question": "Did any of the three models stutter? Is the iPhone charging, is Low Power Mode on or off, and does it feel noticeably warm?",
+    "answer": "nope, everything looks fine",
+    "interpretation": "Initial feedback reports no perceived stuttering. Superseded for overall visual correctness by the later landscape clipping and flicker report. Charging, Low Power Mode and thermal state were not separately confirmed."
+  },
+  "reportedRegressions": {
+    "userReport": "in sideway full screen the model isn't centred. also, after I move it for a while and stop, the model starts flickering fir a few minutes and then stops flickering",
+    "screenshot": "IMG_0622.PNG supplied by user; textured model visibly clipped at the lower edge of the landscape stage",
+    "observedLandscapeViewportCssPixels": [734, 393],
+    "expandedMode": "Dialog fallback; device events show fullscreen false, dialog true",
+    "laterPortraitLayout": {
+      "viewport": [393, 695],
+      "stage": [303, 227.25],
+      "canvas": [303, 228.140625],
+      "drawingBuffer": [303, 228]
+    },
+    "response": "Bind the Canvas wrapper to the actual clamped stage using absolute positioning; keep DPR stable during orbit instead of changing it between motion and rest. User confirms the subsequent physical iPhone retest works.",
+    "physicalRetest": {
+      "recordedOn": "2026-10-16",
+      "userAnswer": "now is working fine",
+      "requestedChecks": "Textured model in landscape expanded preview; move the model and stop, checking centering and whether flicker returns.",
+      "result": "User-confirmed visual pass for the two reported defects.",
+      "build": "Fresh isolated production session with the absolute Canvas layout, top-aligned expanded dialog and stable DPR.",
+      "limits": "Subjective confirmation only; no new frame, memory, thermal or timing measurements were supplied. Does not resolve the earlier extended-session memory/context-quota observations."
+    }
+  }
+}

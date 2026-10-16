@@ -21,6 +21,7 @@ import {
 import { drawingDpr } from "@/lib/three/camera";
 import { fitModelCamera, installStudio } from "./model-stage";
 import { parseModel } from "./model-resources";
+import { ModelLoading } from "./model-loading";
 type Loaded = Awaited<ReturnType<typeof parseModel>>;
 type Command = "left" | "right" | "up" | "down" | "in" | "out" | "reset";
 type Controller = { run: (command: Command) => void };
@@ -45,6 +46,7 @@ function Scene({
   onError: (message: string) => void;
 }) {
   const { camera, size, gl, scene, invalidate, setDpr } = useThree();
+  const actualDpr = useThree((state) => state.viewport.dpr);
   const orbit = useRef<Controls>(null),
     fitted = useRef(false),
     first = useRef(false),
@@ -68,17 +70,19 @@ function Scene({
   );
   useEffect(() => {
     fit(false);
-    setDpr(
-      drawingDpr(
-        size.width,
-        size.height,
-        Math.min(
-          gl.capabilities.maxTextureSize,
-          gl.getContext().getParameter(gl.getContext().MAX_RENDERBUFFER_SIZE),
-        ),
+  }, [fit]);
+  useEffect(() => {
+    const wanted = drawingDpr(
+      size.width,
+      size.height,
+      Math.min(
+        gl.capabilities.maxTextureSize,
+        gl.getContext().getParameter(gl.getContext().MAX_RENDERBUFFER_SIZE),
       ),
     );
-  }, [fit, gl, setDpr, size.width, size.height]);
+    // The pinned Canvas can reapply its DPR prop during scroll/size configuration.
+    if (actualDpr !== wanted) setDpr(wanted);
+  }, [actualDpr, gl, setDpr, size.width, size.height]);
   useEffect(() => {
     controllerRef.current = {
       run: (command) => {
@@ -171,7 +175,8 @@ export default function ModelViewerRuntime({
   descriptionId: string;
 }) {
   const [model, setModel] = useState<Loaded | null>(null),
-    [message, setMessage] = useState("Downloading model…"),
+    [phase, setPhase] = useState<"download" | "prepare" | "start">("download"),
+    [percent, setPercent] = useState(0),
     [ready, setReady] = useState(false);
   const [visible, setVisible] = useState(true),
     [auto, setAuto] = useState(false),
@@ -194,13 +199,12 @@ export default function ModelViewerRuntime({
         const bytes = await fetchModel(
           presentation,
           abort.signal,
-          (received, total) =>
-            setMessage(
-              received === total
-                ? "Preparing 3D model…"
-                : `Downloading model… ${Math.round((received / total) * 100)}%`,
-            ),
+          (received, total) => setPercent(Math.floor((received / total) * 100)),
         );
+        setPhase("prepare");
+        // Let loading feedback and Close paint before synchronous inspection begins.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        abort.signal.throwIfAborted();
         const signal = AbortSignal.any([
           abort.signal,
           AbortSignal.timeout(10_000),
@@ -211,6 +215,7 @@ export default function ModelViewerRuntime({
           return;
         }
         loaded.current = true;
+        setPhase("start");
         setModel(decoded);
       } catch (error) {
         if (!abort.signal.aborted)
@@ -273,6 +278,7 @@ export default function ModelViewerRuntime({
     document.addEventListener("visibilitychange", update);
     document.addEventListener("fullscreenchange", full);
     media.addEventListener("change", preference);
+    update();
     return () => {
       observer?.disconnect();
       document.removeEventListener("visibilitychange", update);
@@ -305,6 +311,7 @@ export default function ModelViewerRuntime({
     <div className="min-w-0 space-y-4">
       <div
         ref={viewport}
+        data-model-stage
         tabIndex={ready ? 0 : -1}
         role="img"
         aria-label={`Interactive 3D model: ${presentation.title}`}
@@ -331,6 +338,7 @@ export default function ModelViewerRuntime({
         {model && (
           <Canvas
             dpr={1}
+            style={{ position: "absolute", inset: 0 }}
             frameloop={
               visible ? (auto && motion ? "always" : "demand") : "never"
             }
@@ -351,9 +359,13 @@ export default function ModelViewerRuntime({
           </Canvas>
         )}
       </div>
-      <p role="status" className="text-sm text-muted-foreground">
-        {ready ? (visible ? "3D preview ready" : "3D preview paused") : message}
-      </p>
+      {ready ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {visible ? "3D preview ready" : "3D preview paused"}
+        </p>
+      ) : (
+        <ModelLoading phase={phase} percent={percent} />
+      )}
       {ready && (
         <>
           <p className="text-sm text-muted-foreground">

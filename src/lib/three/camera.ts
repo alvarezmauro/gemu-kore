@@ -1,4 +1,4 @@
-import type { ModelSettings } from "./contracts";
+import { modelLimits, type ModelSettings } from "./contracts";
 export function cameraFit(
   radius: number,
   aspect: number,
@@ -27,7 +27,7 @@ export function drawingDpr(
 ) {
   return Math.min(
     1,
-    Math.sqrt(2_000_000 / Math.max(1, width * height)),
+    Math.sqrt(modelLimits.canvasPixels / Math.max(1, width * height)),
     hardwareLimit / Math.max(1, width, height),
   );
 }

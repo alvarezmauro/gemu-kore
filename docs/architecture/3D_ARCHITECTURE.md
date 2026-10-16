@@ -2,7 +2,7 @@
 
 Task: **9.1 — 3D Architecture**  
 Date: **2026-10-15**  
-Status: **Design complete.** Implementation follow-up: Task 9.2 adds the private viewer described in [ModelViewer operations](../operations/MODEL_VIEWER.md); Task 9.3 retains physical-device performance calibration. The evidence and design-task scope below record the state inspected on 2026-10-15.
+Status: **Design complete.** Implementation follow-up: Task 9.2 adds the private viewer described in [ModelViewer operations](../operations/MODEL_VIEWER.md); Task 9.3 records [automated performance evidence](../performance/3D_PERFORMANCE.md) and retains the pending physical-device calibration. The evidence and design-task scope below record the state inspected on 2026-10-15.
 
 ## 1. Decision and scope
 

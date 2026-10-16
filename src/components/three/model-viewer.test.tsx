@@ -132,3 +132,26 @@ it("rejects an unexpected descriptor before loading a renderer and handles a mis
   expect(screen.queryByRole("button")).not.toBeInTheDocument();
   expect(screen.getByText(/No 3D model is available/)).toBeInTheDocument();
 });
+it("refuses an over-budget descriptor before importing a renderer or requesting model bytes", async () => {
+  const load = vi.fn().mockResolvedValue({
+    status: "success",
+    data: {
+      ...data,
+      resource: { ...data.resource, byteLength: 9 * 1024 * 1024 },
+    },
+  });
+  render(<ModelViewer title="Console" source="Catalog" load={load} />);
+  fireEvent.click(screen.getByText("View in 3D"));
+  expect(screen.getByRole("region", { name: "3D preview" })).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "cannot be previewed",
+  );
+  expect(screen.queryByTestId("model-canvas")).not.toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "3D preview" })).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+});

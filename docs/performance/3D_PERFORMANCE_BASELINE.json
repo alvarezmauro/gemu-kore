@@ -1,0 +1,1923 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-16T11:55:02.435Z",
+  "source": {
+    "baseCommit": "9226c6fff454cf811b0d93ca979a7ebb48b7657c",
+    "includesUncommittedTaskChanges": true
+  },
+  "environment": "Instrumented automated Chromium on the test host. Mobile project emulates a viewport and user agent; these are not physical-phone GPU measurements.",
+  "physicalDevices": {
+    "iosSafari": "pending",
+    "androidChrome": "pending"
+  },
+  "reports": [
+    {
+      "case": "benchmark-plain.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36",
+        "model": {
+          "bytes": 744,
+          "triangles": 4,
+          "pixels": 0
+        },
+        "sessions": [
+          {
+            "readyMs": 1067,
+            "cadence": {
+              "durationMs": 702.6000000238419,
+              "frames": 42,
+              "intervalP50Ms": 16.700000000000045,
+              "intervalP95Ms": 16.800000000000182
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 45,
+              "draws": 85,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 738.7000000476837,
+            "cadence": {
+              "durationMs": 703.6000000238419,
+              "frames": 42,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 16.700000000000273
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 45,
+              "draws": 85,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11257532,
+            "backingBytes": 2511485
+          },
+          {
+            "usedBytes": 11694436,
+            "backingBytes": 2511490
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 48,
+              "draws": 88,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 29,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 48,
+              "draws": 88,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 29,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "benchmark-shiny.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36",
+        "model": {
+          "bytes": 1455132,
+          "triangles": 65536,
+          "pixels": 0
+        },
+        "sessions": [
+          {
+            "readyMs": 1226.5999999642372,
+            "cadence": {
+              "durationMs": 889.5,
+              "frames": 21,
+              "intervalP50Ms": 49.99999999999977,
+              "intervalP95Ms": 50.100000000000136
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 29,
+              "draws": 98,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 888.1000000238419,
+            "cadence": {
+              "durationMs": 879.3000000119209,
+              "frames": 21,
+              "intervalP50Ms": 49.899999999999636,
+              "intervalP95Ms": 50.100000000000364
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 29,
+              "draws": 98,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11303508,
+            "backingBytes": 3965612
+          },
+          {
+            "usedBytes": 11717540,
+            "backingBytes": 3965617
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 41,
+              "draws": 122,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 8,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 41,
+              "draws": 122,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 8,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "benchmark-textured.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36",
+        "model": {
+          "bytes": 1543320,
+          "triangles": 65536,
+          "pixels": 4194304
+        },
+        "sessions": [
+          {
+            "readyMs": 1208.199999988079,
+            "cadence": {
+              "durationMs": 796.9000000357628,
+              "frames": 37,
+              "intervalP50Ms": 16.700000000000045,
+              "intervalP95Ms": 33.40000000000009
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 864,
+            "cadence": {
+              "durationMs": 801.8999999761581,
+              "frames": 37,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 33.399999999999636
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 810.3000000119209,
+            "cadence": {
+              "durationMs": 799.3999999761581,
+              "frames": 37,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 33.400000000000546
+            },
+            "active": {
+              "id": 3,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 811.6999999880791,
+            "cadence": {
+              "durationMs": 805.3000000119209,
+              "frames": 37,
+              "intervalP50Ms": 16.700000000000728,
+              "intervalP95Ms": 33.400000000001455
+            },
+            "active": {
+              "id": 4,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 820,
+            "cadence": {
+              "durationMs": 798.6999999880791,
+              "frames": 37,
+              "intervalP50Ms": 16.700000000000728,
+              "intervalP95Ms": 33.399999999999636
+            },
+            "active": {
+              "id": 5,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11377256,
+            "backingBytes": 3965497
+          },
+          {
+            "usedBytes": 11818628,
+            "backingBytes": 3965502
+          },
+          {
+            "usedBytes": 12063588,
+            "backingBytes": 3965502
+          },
+          {
+            "usedBytes": 12255536,
+            "backingBytes": 3965502
+          },
+          {
+            "usedBytes": 12544244,
+            "backingBytes": 3965502
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 58,
+              "draws": 98,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 3,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 4,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 5,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "deferred-bundle.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "chromium",
+        "chunks": [
+          {
+            "path": "/_next/static/chunks/2m2k56s44kihu.js",
+            "rawBytes": 995505,
+            "gzipBytes": 265829
+          }
+        ],
+        "totals": {
+          "rawBytes": 995505,
+          "gzipBytes": 265829
+        },
+        "limits": {
+          "rawBytes": 1310720,
+          "gzipBytes": 327680
+        },
+        "inactiveRendererRequests": 0,
+        "gridContexts": 0
+      }
+    },
+    {
+      "case": "drawing-buffer.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "pixels": 1998984,
+        "width": 1788,
+        "cssWidth": 4000
+      }
+    },
+    {
+      "case": "idle-rendering.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "chromium",
+        "idleFrames": 0,
+        "offscreenFrames": 0,
+        "reducedMotionIdleFrames": 0,
+        "snapshot": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 102,
+              "draws": 142,
+              "pixels": 393984,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "late-decoder.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "closedLateBitmaps": 1,
+        "resurrectedContexts": 0,
+        "explicitRetry": true
+      }
+    },
+    {
+      "case": "loading-states.json",
+      "project": "chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "boundedProgress": true,
+        "cancelDuringTransfer": true,
+        "modelBytes": 131820,
+        "throttleBytesPerSecond": 65536
+      }
+    },
+    {
+      "case": "benchmark-plain.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "mobile-chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Mobile Safari/537.36",
+        "model": {
+          "bytes": 744,
+          "triangles": 4,
+          "pixels": 0
+        },
+        "sessions": [
+          {
+            "readyMs": 1080.800000011921,
+            "cadence": {
+              "durationMs": 703.8999999761581,
+              "frames": 42,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 16.799999999999955
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 45,
+              "draws": 85,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 741.6999999880791,
+            "cadence": {
+              "durationMs": 703.6999999880791,
+              "frames": 42,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 16.799999999999727
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 45,
+              "draws": 85,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11175164,
+            "backingBytes": 2510524
+          },
+          {
+            "usedBytes": 11551336,
+            "backingBytes": 2510529
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 29,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 48,
+              "draws": 88,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 29,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "benchmark-shiny.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "mobile-chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Mobile Safari/537.36",
+        "model": {
+          "bytes": 1455132,
+          "triangles": 65536,
+          "pixels": 0
+        },
+        "sessions": [
+          {
+            "readyMs": 1247.3999999761581,
+            "cadence": {
+              "durationMs": 910.8999999761581,
+              "frames": 21,
+              "intervalP50Ms": 49.90000000000009,
+              "intervalP95Ms": 50.09999999999991
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 29,
+              "draws": 98,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 941.5999999642372,
+            "cadence": {
+              "durationMs": 889.5,
+              "frames": 21,
+              "intervalP50Ms": 50,
+              "intervalP95Ms": 50.099999999999454
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 29,
+              "draws": 98,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11226740,
+            "backingBytes": 3964577
+          },
+          {
+            "usedBytes": 11581900,
+            "backingBytes": 3964582
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 41,
+              "draws": 122,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 8,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 41,
+              "draws": 122,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 8,
+                  "deleted": 8,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "benchmark-textured.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "mobile-chromium",
+        "environment": "Automated Chromium on the test host; mobile viewport is emulation, not a phone GPU",
+        "userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Mobile Safari/537.36",
+        "model": {
+          "bytes": 1543320,
+          "triangles": 65536,
+          "pixels": 4194304
+        },
+        "sessions": [
+          {
+            "readyMs": 1191.800000011921,
+            "cadence": {
+              "durationMs": 798.1000000238419,
+              "frames": 37,
+              "intervalP50Ms": 16.700000000000045,
+              "intervalP95Ms": 33.40000000000009
+            },
+            "active": {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 824.6000000238419,
+            "cadence": {
+              "durationMs": 800,
+              "frames": 37,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 33.40000000000009
+            },
+            "active": {
+              "id": 2,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 818.8000000119209,
+            "cadence": {
+              "durationMs": 791.1000000238419,
+              "frames": 37,
+              "intervalP50Ms": 16.699999999999818,
+              "intervalP95Ms": 33.399999999999636
+            },
+            "active": {
+              "id": 3,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 815.3999999761581,
+            "cadence": {
+              "durationMs": 803.1000000238419,
+              "frames": 37,
+              "intervalP50Ms": 16.700000000000728,
+              "intervalP95Ms": 33.399999999999636
+            },
+            "active": {
+              "id": 4,
+              "lost": false,
+              "connected": true,
+              "frames": 47,
+              "draws": 87,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          },
+          {
+            "readyMs": 814.6999999880791,
+            "cadence": {
+              "durationMs": 805.3999999761581,
+              "frames": 38,
+              "intervalP50Ms": 16.700000000000728,
+              "intervalP95Ms": 33.399999999999636
+            },
+            "active": {
+              "id": 5,
+              "lost": false,
+              "connected": true,
+              "frames": 48,
+              "draws": 88,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 0,
+                  "live": 32
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 0,
+                  "live": 8
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          }
+        ],
+        "heapsAfterForcedGc": [
+          {
+            "usedBytes": 11261604,
+            "backingBytes": 3964606
+          },
+          {
+            "usedBytes": 11619832,
+            "backingBytes": 3964611
+          },
+          {
+            "usedBytes": 11945528,
+            "backingBytes": 3964611
+          },
+          {
+            "usedBytes": 12160760,
+            "backingBytes": 3964611
+          },
+          {
+            "usedBytes": 12459624,
+            "backingBytes": 3964611
+          }
+        ],
+        "afterClose": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 2,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 3,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 4,
+              "lost": true,
+              "connected": false,
+              "frames": 59,
+              "draws": 99,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            },
+            {
+              "id": 5,
+              "lost": true,
+              "connected": false,
+              "frames": 60,
+              "draws": 100,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 32,
+                  "deleted": 31,
+                  "live": 0
+                },
+                "textures": {
+                  "created": 8,
+                  "deleted": 3,
+                  "live": 0
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 7,
+                  "live": 0
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 2,
+                  "live": 0
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 1,
+                  "live": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "deferred-bundle.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "mobile-chromium",
+        "chunks": [
+          {
+            "path": "/_next/static/chunks/2m2k56s44kihu.js",
+            "rawBytes": 995505,
+            "gzipBytes": 265829
+          }
+        ],
+        "totals": {
+          "rawBytes": 995505,
+          "gzipBytes": 265829
+        },
+        "limits": {
+          "rawBytes": 1310720,
+          "gzipBytes": 327680
+        },
+        "inactiveRendererRequests": 0,
+        "gridContexts": 0
+      }
+    },
+    {
+      "case": "drawing-buffer.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "pixels": 1998984,
+        "width": 1788,
+        "cssWidth": 4000
+      }
+    },
+    {
+      "case": "idle-rendering.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "project": "mobile-chromium",
+        "idleFrames": 0,
+        "offscreenFrames": 0,
+        "reducedMotionIdleFrames": 0,
+        "snapshot": {
+          "contexts": [
+            {
+              "id": 1,
+              "lost": false,
+              "connected": true,
+              "frames": 102,
+              "draws": 142,
+              "pixels": 86700,
+              "resources": {
+                "buffers": {
+                  "created": 30,
+                  "deleted": 0,
+                  "live": 30
+                },
+                "textures": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "programs": {
+                  "created": 7,
+                  "deleted": 0,
+                  "live": 7
+                },
+                "framebuffers": {
+                  "created": 5,
+                  "deleted": 0,
+                  "live": 5
+                },
+                "renderbuffers": {
+                  "created": 1,
+                  "deleted": 0,
+                  "live": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "late-decoder.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "closedLateBitmaps": 1,
+        "resurrectedContexts": 0,
+        "explicitRetry": true
+      }
+    },
+    {
+      "case": "loading-states.json",
+      "project": "mobile-chromium",
+      "host": {
+        "platform": "darwin",
+        "architecture": "arm64",
+        "node": "v24.20.0"
+      },
+      "evidence": {
+        "boundedProgress": true,
+        "cancelDuringTransfer": true,
+        "modelBytes": 131820,
+        "throttleBytesPerSecond": 65536
+      }
+    }
+  ]
+}
