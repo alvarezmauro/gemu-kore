@@ -120,6 +120,16 @@ function CopyCard({ item, view }: { item: SearchHit; view: CollectionView }) {
           </p>
         )}
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
+          {item.type === "CONSOLE" && (
+            <Button asChild>
+              <Link
+                href={`/app/consoles/${item.id}`}
+                aria-label={`View console ${item.title}, copy ${item.id.slice(0, 8)}`}
+              >
+                View console
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link
               href={`/app/media?itemId=${item.id}`}

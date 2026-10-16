@@ -415,6 +415,9 @@ export function ConsoleWizard({
           {!busy && (
             <div className="flex flex-wrap gap-3">
               <Button asChild>
+                <Link href={`/app/consoles/${savedId}`}>View console</Link>
+              </Button>
+              <Button asChild>
                 <Link href="/app/collection">Browse collection</Link>
               </Button>
               <Button asChild variant="outline">

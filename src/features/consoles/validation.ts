@@ -59,3 +59,43 @@ export const consoleOverride = z
     type: z.enum(["CUSTOM_LOGO", "CUSTOM_MODEL"]),
   })
   .strict();
+const copyScope = {
+  id: z.uuid(),
+  expectedRevision: z.number().int().min(1).max(2147483646),
+};
+export const consoleUpdate = consolePhysical
+  .omit({ defects: true })
+  .extend({
+    operation: z.literal("update"),
+    ...copyScope,
+    platformId: z.uuid(),
+    platformRevision: z.number().int().min(1).max(2147483646),
+    modelId: z.uuid(),
+    modelRevision: z.number().int().min(1).max(2147483646),
+  })
+  .strict();
+export const consoleMutation = z.discriminatedUnion("operation", [
+  consoleUpdate,
+  z.object({ operation: z.literal("delete"), ...copyScope }).strict(),
+  z
+    .object({
+      operation: z.literal("override"),
+      ...copyScope,
+      type: z.enum(["CUSTOM_LOGO", "CUSTOM_MODEL"]),
+      useId: z.uuid().nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      operation: z.literal("removeOverride"),
+      ...copyScope,
+      useId: z.uuid(),
+    })
+    .strict(),
+]);
+export const consoleDetailInput = z
+  .object({
+    id: z.uuid(),
+    overridePage: z.number().int().min(1).max(1000).default(1),
+  })
+  .strict();

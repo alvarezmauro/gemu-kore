@@ -15,7 +15,7 @@ const images = {
   orderBy: { id: "asc" as const },
   take: 7,
 };
-const platformSelect = {
+export const platformSelect = {
   id: true,
   name: true,
   revision: true,
@@ -25,7 +25,7 @@ const platformSelect = {
   originalReleaseYear: true,
   assets: images,
 } as const;
-const modelSelect = {
+export const modelSelect = {
   id: true,
   name: true,
   revision: true,

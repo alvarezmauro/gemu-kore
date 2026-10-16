@@ -223,6 +223,14 @@ function PaletteSession({ close }: { close: () => void }) {
               </CommandItem>
               {selected.scope === "copy" && (
                 <>
+                  {selected.item.type === "CONSOLE" && (
+                    <CommandItem
+                      value="console"
+                      onSelect={() => go(`/app/consoles/${selected.item.id}`)}
+                    >
+                      View console
+                    </CommandItem>
+                  )}
                   <CommandItem
                     value="photos"
                     onSelect={() => go(`/app/media?itemId=${selected.item.id}`)}

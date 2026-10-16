@@ -100,11 +100,31 @@ async function main() {
         modelId: model.id,
         shelfId: shelf.id,
       };
+    } else if (command === "seed-console-copies") {
+      const modelId = argument;
+      const copies = [];
+      for (const serialNumber of ["COPY-ONE", "COPY-TWO"]) {
+        copies.push(
+          await database.collectionItem.create({
+            data: {
+              type: "CONSOLE",
+              serialNumber,
+              notes: "Childhood copy",
+              hasBox: true,
+              ownedConsole: { create: { consoleModelId: modelId } },
+              defects: { create: { title: "Yellowing", severity: "COSMETIC" } },
+            },
+            select: { id: true },
+          }),
+        );
+      }
+      result = { id: copies[0].id, siblingId: copies[1].id };
     } else if (command === "console-creation-state") {
       result = await database.collectionItem.findMany({
         select: {
           id: true,
           serialNumber: true,
+          revision: true,
           notes: true,
           observedMarkings: true,
           hasBox: true,
@@ -114,6 +134,7 @@ async function main() {
           defects: { select: { title: true, severity: true } },
           media: {
             select: {
+              id: true,
               type: true,
               isPrimary: true,
               publicApproved: true,

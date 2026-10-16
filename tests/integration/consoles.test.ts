@@ -77,7 +77,7 @@ async function hardware() {
   return { platform, model, input };
 }
 async function reset() {
-  await db.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, collection_item CASCADE`;
+  await db.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, collection_item, accessory CASCADE`;
   await db.accessGrant.deleteMany();
   await db.user.deleteMany();
 }
@@ -403,4 +403,615 @@ it("rejects an override belonging to another copy and files without a completed 
       type: "CUSTOM_LOGO",
     }),
   ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+});
+
+// Existing-copy management uses the same aggregate revision as defects/media.
+import {
+  getOwnedConsole,
+  mutateOwnedConsole,
+} from "@/server/services/collection/console-management";
+import * as management from "@/server/repositories/collection/console-management";
+import { mutateDefect } from "@/server/services/collection/defects";
+async function existing() {
+  const who = await actor();
+  const hw = await hardware();
+  const id = await createConsole(who.context, hw.input);
+  const { defects: _defects, ...fields } = hw.input;
+  void _defects;
+  return {
+    ...who,
+    ...hw,
+    id,
+    request: { ...fields, operation: "update", expectedRevision: 1 },
+  };
+}
+it("reads a copy for viewers without edit choices, exposes bounded DTOs and keeps canonical/private information separate", async () => {
+  const { id, model, platform } = await existing();
+  await db.consolePlatform.update({
+    where: { id: platform.id },
+    data: { description: "Shared description", history: "Shared history" },
+  });
+  await db.consoleModel.update({
+    where: { id: model.id },
+    data: {
+      widthMm: 10,
+      specifications: { schemaVersion: 1, data: { cpu: "MIPS" } },
+    },
+  });
+  await db.collectionItem.update({
+    where: { id },
+    data: { notes: "Private copy", serialNumber: "00009" },
+  });
+  const viewer = await actor("VIEWER");
+  const data = await getOwnedConsole(viewer.context, { id });
+  expect(data).toMatchObject({
+    canManage: false,
+    locations: [],
+    detail: {
+      id,
+      fields: { notes: "Private copy", serialNumber: "00009" },
+      description: "Shared description",
+      history: "Shared history",
+      model: { name: model.name, markets: ["Japan"] },
+      photos: [],
+      overrides: [],
+    },
+  });
+  expect(data.detail.facts).toEqual(
+    expect.arrayContaining([
+      { label: "Width (mm)", value: "10" },
+      { label: "cpu", value: "MIPS" },
+    ]),
+  );
+  expect(JSON.stringify(data)).not.toMatch(
+    /storageNamespace|objectKey|sha256|createdById|seedKey/,
+  );
+});
+it("edits another editor's copy atomically without changing canonical facts, defects, media or a sibling copy", async () => {
+  const { id, input, model, request, context } = await existing();
+  const sibling = await createConsole(context, { ...input, id: randomUUID() });
+  const defect = await db.defect.create({
+    data: { collectionItemId: id, title: "Scratch", severity: "COSMETIC" },
+  });
+  const use = await override(id);
+  const location = await db.location.create({
+    data: { name: "Shelf", normalizedName: "shelf" },
+  });
+  const before = await db.consoleModel.findUniqueOrThrow({
+    where: { id: model.id },
+  });
+  const editor = await actor();
+  await mutateOwnedConsole(editor.context, {
+    ...request,
+    serialNumber: " 01234 ",
+    notes: "Updated",
+    hasBox: "no",
+    locationId: location.id,
+  });
+  expect(
+    await db.collectionItem.findUniqueOrThrow({
+      where: { id },
+      include: { defects: true, media: true },
+    }),
+  ).toMatchObject({
+    revision: 2,
+    updatedById: editor.user.id,
+    serialNumber: "01234",
+    hasBox: false,
+    locationId: location.id,
+    defects: [{ id: defect.id }],
+    media: [{ id: use.id }],
+  });
+  expect(
+    await db.consoleModel.findUniqueOrThrow({ where: { id: model.id } }),
+  ).toEqual(before);
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id: sibling } }),
+  ).toMatchObject({ revision: 1, notes: null });
+});
+it("preserves publication/revision on no-op; a meaningful change unpublishes the copy", async () => {
+  const { id, request, context, user } = await existing();
+  await db.collectionItem.update({
+    where: { id },
+    data: {
+      publicationStatus: "PUBLISHED",
+      publishedAt: new Date(),
+      publishedById: user.id,
+    },
+  });
+  await mutateOwnedConsole(context, request);
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+  ).toMatchObject({ revision: 1, publicationStatus: "PUBLISHED" });
+  await mutateOwnedConsole(context, { ...request, notes: "Changed" });
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+  ).toMatchObject({
+    revision: 2,
+    publicationStatus: "PRIVATE",
+    publishedAt: null,
+    publishedById: null,
+  });
+});
+it("rejects concurrent and stale edits without overwriting the winning copy", async () => {
+  const { id, request, context } = await existing();
+  const outcomes = await Promise.allSettled([
+    mutateOwnedConsole(context, { ...request, notes: "First" }),
+    mutateOwnedConsole(context, { ...request, notes: "Second" }),
+  ]);
+  expect(outcomes.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  expect(outcomes.find((r) => r.status === "rejected")).toMatchObject({
+    reason: { code: "COPY_STALE" },
+  });
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+  ).toMatchObject({ revision: 2 });
+  await expect(
+    mutateOwnedConsole(context, {
+      operation: "delete",
+      id,
+      expectedRevision: 1,
+    }),
+  ).rejects.toMatchObject({ code: "COPY_STALE" });
+});
+it("can retain an archived identity and re-identify only to a current matching model", async () => {
+  const { id, request, context, model, platform } = await existing();
+  await db.consoleModel.update({
+    where: { id: model.id },
+    data: { archivedAt: new Date() },
+  });
+  await db.consolePlatform.update({
+    where: { id: platform.id },
+    data: { archivedAt: new Date() },
+  });
+  await mutateOwnedConsole(context, { ...request, notes: "Retained" });
+  expect((await getOwnedConsole(context, { id })).detail).toMatchObject({
+    model: { archived: true },
+    platform: { archived: true },
+  });
+  const replacement = await hardware();
+  await mutateOwnedConsole(context, {
+    ...request,
+    expectedRevision: 2,
+    platformId: replacement.platform.id,
+    modelId: replacement.model.id,
+  });
+  expect(
+    await db.ownedConsole.findUniqueOrThrow({
+      where: { collectionItemId: id },
+    }),
+  ).toMatchObject({ consoleModelId: replacement.model.id });
+  await expect(
+    mutateOwnedConsole(context, { ...request, expectedRevision: 3 }),
+  ).rejects.toMatchObject({ code: "STALE" });
+});
+it("rejects stale catalog revisions, mismatched identity, missing locations and injected canonical/public fields", async () => {
+  const { context, request, model } = await existing();
+  for (const patch of [
+    { platformRevision: 2 },
+    { modelRevision: 2 },
+    { platformId: randomUUID() },
+    { modelId: randomUUID() },
+  ])
+    await expect(
+      mutateOwnedConsole(context, { ...request, ...patch }),
+    ).rejects.toMatchObject({ code: "STALE" });
+  await expect(
+    mutateOwnedConsole(context, { ...request, locationId: randomUUID() }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  for (const key of [
+    "publicationStatus",
+    "manufacturerId",
+    "regionId",
+    "defects",
+    "createdById",
+  ])
+    await expect(
+      mutateOwnedConsole(context, { ...request, [key]: "injected" }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await db.consoleModel.update({
+    where: { id: model.id },
+    data: { revision: 2 },
+  });
+  await expect(mutateOwnedConsole(context, request)).rejects.toMatchObject({
+    code: "STALE",
+  });
+});
+it("denies all viewer mutations and rechecks changed grants after waiting for the copy lock", async () => {
+  const { id, request, context, grant } = await existing();
+  const viewer = await actor("VIEWER");
+  for (const input of [
+    request,
+    { operation: "delete", id, expectedRevision: 1 },
+    {
+      operation: "override",
+      id,
+      expectedRevision: 1,
+      type: "CUSTOM_LOGO",
+      useId: null,
+    },
+    {
+      operation: "removeOverride",
+      id,
+      expectedRevision: 1,
+      useId: randomUUID(),
+    },
+  ])
+    await expect(
+      mutateOwnedConsole(viewer.context, input),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  const lock = catalog.lockCatalogWrites;
+  vi.spyOn(catalog, "lockCatalogWrites").mockImplementation(async (tx) => {
+    await lock(tx);
+    await db.accessGrant.update({
+      where: { id: grant.id },
+      data: { role: "VIEWER" },
+    });
+  });
+  await expect(mutateOwnedConsole(context, request)).rejects.toMatchObject({
+    code: "FORBIDDEN",
+  });
+});
+it("rejects missing or non-console copies without disclosing another item type", async () => {
+  const { id, context, request } = await existing();
+  const accessory = await db.accessory.create({
+    data: { name: "Controller", slug: randomUUID() },
+  });
+  const variant = await db.accessoryVariant.create({
+    data: {
+      name: "Controller variant",
+      slug: randomUUID(),
+      accessoryId: accessory.id,
+    },
+  });
+  const other = await db.collectionItem.create({
+    data: {
+      type: "ACCESSORY",
+      ownedAccessory: { create: { accessoryVariantId: variant.id } },
+    },
+  });
+  for (const invalid of [randomUUID(), "bad-id", other.id]) {
+    await expect(
+      getOwnedConsole(context, { id: invalid }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  }
+  await mutateOwnedConsole(context, {
+    operation: "delete",
+    id,
+    expectedRevision: 1,
+  });
+  await expect(mutateOwnedConsole(context, request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+});
+it.each(["IMAGE", "MODEL_3D"] as const)(
+  "replaces and clears %s overrides privately, preserves stored files, and falls back to catalog assets",
+  async (kind) => {
+    const { id, context, platform, model, user } = await existing();
+    const first = await override(id, kind),
+      second = await override(id, kind);
+    const assetId = first.assetId;
+    const catalogUse = await db.catalogAsset.create({
+      data: {
+        consolePlatformId: platform.id,
+        assetId: (await catalogFile(kind)).id,
+        role: kind === "IMAGE" ? "LOGO" : "MODEL_3D",
+        isPrimary: true,
+      },
+    });
+    const mutation = {
+      operation: "override",
+      id,
+      expectedRevision: 1,
+      type: first.type,
+      useId: first.id,
+    };
+    await mutateOwnedConsole(context, mutation);
+    if (kind === "IMAGE") {
+      await db.asset.update({
+        where: { id: first.assetId },
+        data: {
+          publicSafe: true,
+          rightsStatus: "APPROVED",
+          reviewedAt: new Date(),
+          reviewedById: user.id,
+        },
+      });
+      await db.collectionItemMedia.update({
+        where: { id: first.id },
+        data: { publicDisplayAssetId: first.assetId },
+      });
+      await db.collectionItemMedia.update({
+        where: { id: first.id },
+        data: {
+          publicApproved: true,
+          approvedById: user.id,
+          approvedAt: new Date(),
+        },
+      });
+    }
+    await mutateOwnedConsole(context, {
+      ...mutation,
+      expectedRevision: 2,
+      useId: second.id,
+    });
+    expect(
+      await db.collectionItemMedia.findUniqueOrThrow({
+        where: { id: first.id },
+      }),
+    ).toMatchObject({
+      isPrimary: false,
+      publicApproved: false,
+      approvedById: null,
+      approvedAt: null,
+    });
+    let result = await getOwnedConsole(context, { id });
+    expect(
+      kind === "IMAGE"
+        ? result.detail.logo?.source
+        : result.detail.modelFile?.source,
+    ).toMatch(/copy's custom/);
+    await mutateOwnedConsole(context, {
+      ...mutation,
+      expectedRevision: 3,
+      useId: null,
+    });
+    result = await getOwnedConsole(context, { id });
+    expect(
+      kind === "IMAGE"
+        ? result.detail.logo?.source
+        : result.detail.modelFile?.source,
+    ).toMatch(/Inherited platform/);
+    await db.catalogAsset.create({
+      data: {
+        consoleModelId: model.id,
+        assetId: (await catalogFile(kind)).id,
+        role: kind === "IMAGE" ? "LOGO" : "MODEL_3D",
+        isPrimary: true,
+      },
+    });
+    result = await getOwnedConsole(context, { id });
+    expect(
+      kind === "IMAGE"
+        ? result.detail.logo?.source
+        : result.detail.modelFile?.source,
+    ).toMatch(/Catalog model/);
+    await mutateOwnedConsole(context, {
+      operation: "removeOverride",
+      id,
+      expectedRevision: 4,
+      useId: first.id,
+    });
+    expect(
+      await db.asset.findUnique({ where: { id: assetId } }),
+    ).not.toBeNull();
+    expect(
+      await db.catalogAsset.findUnique({ where: { id: catalogUse.id } }),
+    ).not.toBeNull();
+  },
+);
+it("rejects foreign overrides and ordinary photos, and advances no revision when clearing an absent override", async () => {
+  const { id, request, context, input } = await existing();
+  const sibling = await createConsole(context, { ...input, id: randomUUID() });
+  const foreign = await override(sibling);
+  await mutateOwnedConsole(context, {
+    operation: "override",
+    id,
+    expectedRevision: 1,
+    type: "CUSTOM_LOGO",
+    useId: null,
+  });
+  for (const operation of ["override", "removeOverride"])
+    await expect(
+      mutateOwnedConsole(context, {
+        operation,
+        id,
+        expectedRevision: 1,
+        ...(operation === "override" ? { type: "CUSTOM_LOGO" } : {}),
+        useId: foreign.id,
+      }),
+    ).rejects.toMatchObject({
+      code: operation === "override" ? "INVALID_INPUT" : "NOT_FOUND",
+    });
+  const photo = await override(id);
+  await db.collectionItemMedia.update({
+    where: { id: photo.id },
+    data: { type: "PHOTO" },
+  });
+  await expect(
+    mutateOwnedConsole(context, {
+      operation: "removeOverride",
+      id,
+      expectedRevision: 1,
+      useId: photo.id,
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await mutateOwnedConsole(context, {
+    ...request,
+    notes: "Revision remained 1",
+  });
+});
+it("paginates saved overrides but always includes current primary selections", async () => {
+  const { id, context } = await existing();
+  const primary = await override(id);
+  for (let i = 0; i < 26; i++) await override(id);
+  await mutateOwnedConsole(context, {
+    operation: "override",
+    id,
+    expectedRevision: 1,
+    type: "CUSTOM_LOGO",
+    useId: primary.id,
+  });
+  const first = await getOwnedConsole(context, { id });
+  expect(first.detail.overrides).toHaveLength(25);
+  expect(first.detail.moreOverrides).toBe(true);
+  expect(first.detail.primaryOverrides).toMatchObject([{ id: primary.id }]);
+  const second = await getOwnedConsole(context, { id, overridePage: 2 });
+  expect(second.detail.overrides).toHaveLength(2);
+  expect(second.detail.moreOverrides).toBe(false);
+  await expect(
+    getOwnedConsole(context, { id, overridePage: 1001 }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+});
+it("deletes only the selected root, subtype, defects and media links, preserving assets/catalog/siblings", async () => {
+  const { id, input, context, model } = await existing();
+  const sibling = await createConsole(context, { ...input, id: randomUUID() });
+  const use = await override(id);
+  await db.collectionItemMedia.create({
+    data: {
+      collectionItemId: sibling,
+      assetId: use.assetId,
+      type: "CUSTOM_LOGO",
+    },
+  });
+  await db.catalogAsset.create({
+    data: {
+      consoleModelId: model.id,
+      assetId: (await catalogFile()).id,
+      role: "LOGO",
+    },
+  });
+  await db.defect.create({
+    data: { collectionItemId: id, title: "Scratch", severity: "COSMETIC" },
+  });
+  await mutateOwnedConsole(context, {
+    operation: "delete",
+    id,
+    expectedRevision: 1,
+  });
+  expect(await db.collectionItem.findUnique({ where: { id } })).toBeNull();
+  expect(
+    await db.ownedConsole.findUnique({ where: { collectionItemId: id } }),
+  ).toBeNull();
+  expect(await db.defect.count({ where: { collectionItemId: id } })).toBe(0);
+  expect(
+    await db.collectionItemMedia.count({ where: { collectionItemId: id } }),
+  ).toBe(0);
+  expect(
+    await db.collectionItemMedia.count({
+      where: { collectionItemId: sibling },
+    }),
+  ).toBe(1);
+  expect(await db.asset.count()).toBe(2);
+  expect(await db.catalogAsset.count()).toBe(1);
+  expect(await db.consoleModel.count()).toBe(1);
+});
+it("rolls back a failed update and a failed cascading delete", async () => {
+  const { id, request, context } = await existing();
+  const update = management.updateConsole;
+  vi.spyOn(management, "updateConsole").mockImplementation(async (...args) => {
+    await update(...args);
+    throw new Error("persistence failed");
+  });
+  await expect(
+    mutateOwnedConsole(context, { ...request, notes: "Must rollback" }),
+  ).rejects.toMatchObject({ code: "UNAVAILABLE" });
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+  ).toMatchObject({ revision: 1, notes: null });
+  const use = await override(id);
+  const remove = management.deleteConsole;
+  vi.spyOn(management, "deleteConsole").mockImplementation(async (...args) => {
+    await remove(...args);
+    throw new Error("persistence failed");
+  });
+  await expect(
+    mutateOwnedConsole(context, {
+      operation: "delete",
+      id,
+      expectedRevision: 1,
+    }),
+  ).rejects.toMatchObject({ code: "UNAVAILABLE" });
+  expect(
+    await db.collectionItemMedia.findUnique({ where: { id: use.id } }),
+  ).not.toBeNull();
+  expect(
+    await db.ownedConsole.findUnique({ where: { collectionItemId: id } }),
+  ).not.toBeNull();
+});
+
+async function catalogFile(kind: "IMAGE" | "MODEL_3D" = "IMAGE") {
+  return db.asset.create({
+    data: {
+      kind,
+      scope: "CATALOG",
+      state: "READY",
+      deliveryClass: kind === "IMAGE" ? "DISPLAY" : "ORIGINAL",
+      mimeType: kind === "IMAGE" ? "image/webp" : "model/gltf-binary",
+      sizeBytes: 1,
+      sha256: "b".repeat(64),
+      ...(kind === "IMAGE" ? { width: 20, height: 20 } : {}),
+      storageNamespace: "fixture",
+      objectKey: randomUUID(),
+    },
+  });
+}
+it("rejects an open edit after a defect changes the shared aggregate revision", async () => {
+  const { id, context, request } = await existing();
+  await mutateDefect(context, {
+    operation: "create",
+    collectionItemId: id,
+    expectedRevision: 1,
+    title: "New issue",
+    severity: "MINOR",
+  });
+  await expect(
+    mutateOwnedConsole(context, { ...request, notes: "Stale edit" }),
+  ).rejects.toMatchObject({ code: "COPY_STALE" });
+  expect(await db.defect.count({ where: { collectionItemId: id } })).toBe(1);
+});
+it("names logo derivatives from their original file without exposing source provenance records", async () => {
+  const { id, context } = await existing();
+  const original = await db.asset.create({
+    data: {
+      kind: "IMAGE",
+      scope: "COLLECTION",
+      state: "READY",
+      mimeType: "image/png",
+      sizeBytes: 1,
+      width: 20,
+      height: 20,
+      sha256: "c".repeat(64),
+      originalFilename: "my-console-logo.png",
+      storageNamespace: "fixture",
+      objectKey: randomUUID(),
+    },
+  });
+  const display = await db.asset.create({
+    data: {
+      kind: "IMAGE",
+      scope: "COLLECTION",
+      state: "PENDING",
+      deliveryClass: "DISPLAY",
+      mimeType: "image/webp",
+      sizeBytes: 1,
+      width: 20,
+      height: 20,
+      sha256: "d".repeat(64),
+      storageNamespace: "fixture",
+      objectKey: randomUUID(),
+    },
+  });
+  await db.assetDependency.create({
+    data: {
+      derivedAssetId: display.id,
+      sourceAssetId: original.id,
+      purpose: "RESIZE",
+    },
+  });
+  await db.asset.update({
+    where: { id: display.id },
+    data: { state: "READY" },
+  });
+  const use = await db.collectionItemMedia.create({
+    data: { collectionItemId: id, assetId: display.id, type: "CUSTOM_LOGO" },
+  });
+  const data = await getOwnedConsole(context, { id });
+  expect(data.detail.overrides).toMatchObject([
+    { id: use.id, name: "my-console-logo.png" },
+  ]);
+  expect(JSON.stringify(data)).not.toContain(original.id);
+  expect(JSON.stringify(data)).not.toMatch(
+    /sourceAsset|objectKey|storageNamespace/,
+  );
 });

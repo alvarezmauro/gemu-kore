@@ -25,12 +25,20 @@ import { getLocations } from "@/server/services/locations";
 export class ConsoleError extends Error {
   constructor(
     public readonly code:
-      "INVALID_INPUT" | "STALE" | "CONFLICT" | "UNAVAILABLE",
+      | "INVALID_INPUT"
+      | "STALE"
+      | "CONFLICT"
+      | "UNAVAILABLE"
+      | "NOT_FOUND"
+      | "COPY_STALE",
     message?: string,
   ) {
     super(
       message ??
         {
+          NOT_FOUND: "This console copy no longer exists.",
+          COPY_STALE:
+            "This copy changed while you were editing. Your entries are still here. Close this form and refresh to review the latest copy before trying again.",
           INVALID_INPUT: "Check your console details and try again.",
           STALE:
             "The selected console or model changed. Go back, use Find matches to refresh the console and model choices, then select them again. Your physical details are still here.",
@@ -55,7 +63,7 @@ function logo(assets: { role: string; assetId: string }[]) {
   const asset = assets.find((a) => a.role === "LOGO");
   return asset ? `/api/media/private/${asset.assetId}` : null;
 }
-function platform(
+export function platform(
   row: NonNullable<Awaited<ReturnType<typeof repository.consolePlatform>>>,
 ): ConsolePlatformOption {
   return {
@@ -68,7 +76,7 @@ function platform(
     logoUrl: logo(row.assets),
   };
 }
-function model(
+export function model(
   row: NonNullable<Awaited<ReturnType<typeof repository.consoleModel>>>,
 ): ConsoleModelOption {
   const image = ["PREVIEW", "COVER", "GALLERY"]

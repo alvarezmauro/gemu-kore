@@ -34,3 +34,55 @@ export const consoleSteps = [
   "Overrides",
   "Review",
 ] as const;
+export type ConsoleCopyFields = {
+  serialNumber: string;
+  observedMarkings: string;
+  hasBox: "unknown" | "yes" | "no";
+  locationId: string;
+  notes: string;
+};
+export type ConsoleImage = {
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption: string | null;
+};
+export type ConsoleOverrideEntry = {
+  id: string;
+  type: "CUSTOM_LOGO" | "CUSTOM_MODEL";
+  name: string;
+  primary: boolean;
+  url: string;
+  width: number;
+  height: number;
+};
+export type ConsoleDetail = {
+  id: string;
+  revision: number;
+  publicationStatus: "PRIVATE" | "PUBLISHED";
+  fields: ConsoleCopyFields;
+  location: string | null;
+  platform: ConsolePlatformOption & { archived: boolean };
+  model: ConsoleModelOption & { archived: boolean };
+  description: string | null;
+  history: string | null;
+  facts: { label: string; value: string }[];
+  photos: ConsoleImage[];
+  catalogImages: ConsoleImage[];
+  defects: {
+    id: string;
+    title: string;
+    description: string | null;
+    severity: string;
+    status: string;
+    repairNote: string | null;
+  }[];
+  defectCount: number;
+  overrides: ConsoleOverrideEntry[];
+  primaryOverrides: ConsoleOverrideEntry[];
+  overridePage: number;
+  moreOverrides: boolean;
+  logo: { url: string; source: string } | null;
+  modelFile: { url: string; source: string } | null;
+};

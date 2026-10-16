@@ -10,6 +10,7 @@ import {
   findConsoleModels,
   activateNewConsoleOverride,
 } from "@/server/services/collection/consoles";
+import { mutateOwnedConsole } from "@/server/services/collection/console-management";
 import type {
   ConsoleResult,
   ConsoleChoices,
@@ -23,11 +24,33 @@ function failure(error: unknown): { status: "error"; message: string } {
       error instanceof ConsoleError
         ? error.message
         : error instanceof PermissionError
-          ? "Your account cannot add consoles right now."
+          ? "Your account cannot change consoles right now."
           : error instanceof PrivateAccessError && error.code !== "UNAVAILABLE"
             ? "Your access changed. Sign in again before continuing."
             : "We couldn't confirm the result. Keep this page open and try again.",
   };
+}
+export async function changeOwnedConsole(
+  input: unknown,
+): Promise<ConsoleResult<null>> {
+  try {
+    await mutateOwnedConsole(
+      await requirePrivateAccess(await headers()),
+      input,
+    );
+  } catch (error) {
+    return failure(error);
+  }
+  revalidatePath("/app/consoles/[id]", "page");
+  for (const path of [
+    "/app/collection",
+    "/app/search",
+    "/app/media",
+    "/app/defects",
+    "/app/locations",
+  ])
+    revalidatePath(path);
+  return { status: "success", data: null };
 }
 export async function selectConsoleOverride(
   input: unknown,
