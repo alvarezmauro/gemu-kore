@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "recordedAt": "2026-10-16T16:38:54.602Z",
+  "recordedAt": "2026-10-16T17:43:32.612Z",
   "source": {
-    "baseCommit": "9226c6fff454cf811b0d93ca979a7ebb48b7657c",
+    "baseCommit": "8430c14917b3352d35c244e1f83453a57f01fc79",
     "includesUncommittedTaskChanges": true
   },
   "environment": "Instrumented automated Chromium on the test host. Mobile project emulates a viewport and user agent; these are not physical-phone GPU measurements.",
   "physicalDevices": {
-    "iosSafari": "partial physical calibration; see 3D_PERFORMANCE_IPHONE15.json for measurements and user-confirmed visual retest",
-    "androidChrome": "pending"
+    "iosSafari": "iPhone observations recorded; native-memory stability remains inconclusive. See 3D_PERFORMANCE_IPHONE15.json.",
+    "androidChrome": "physical testing waived by owner 2026-10-16; compatibility assumed, not verified"
   },
   "reports": [
     {
@@ -30,9 +30,9 @@
         },
         "sessions": [
           {
-            "readyMs": 1078.3999999761581,
+            "readyMs": 1138.7000000476837,
             "cadence": {
-              "durationMs": 704.5,
+              "durationMs": 703.1999999880791,
               "frames": 42,
               "intervalP50Ms": 16.699999999999818,
               "intervalP95Ms": 16.700000000000273
@@ -48,23 +48,23 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -75,12 +75,12 @@
             }
           },
           {
-            "readyMs": 779.6000000238419,
+            "readyMs": 796.3000000119209,
             "cadence": {
-              "durationMs": 702.0999999642372,
+              "durationMs": 703.5,
               "frames": 42,
               "intervalP50Ms": 16.699999999999818,
-              "intervalP95Ms": 16.699999999999818
+              "intervalP95Ms": 16.700000000000728
             },
             "active": {
               "id": 2,
@@ -93,23 +93,23 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -122,12 +122,12 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11258044,
-            "backingBytes": 2511739
+            "usedBytes": 11282784,
+            "backingBytes": 2511771
           },
           {
-            "usedBytes": 11694108,
-            "backingBytes": 2511744
+            "usedBytes": 11717460,
+            "backingBytes": 2511776
           }
         ],
         "quality": {
@@ -141,13 +141,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 68,
-              "draws": 108,
+              "frames": 69,
+              "draws": 109,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 29,
+                  "deleted": 30,
                   "live": 0
                 },
                 "textures": {
@@ -183,7 +183,7 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 29,
+                  "deleted": 30,
                   "live": 0
                 },
                 "textures": {
@@ -231,11 +231,11 @@
         },
         "sessions": [
           {
-            "readyMs": 1287.199999988079,
+            "readyMs": 1335.6000000238419,
             "cadence": {
-              "durationMs": 883.5999999642372,
+              "durationMs": 910.5,
               "frames": 21,
-              "intervalP50Ms": 49.90000000000009,
+              "intervalP50Ms": 50,
               "intervalP95Ms": 50.09999999999991
             },
             "active": {
@@ -249,23 +249,23 @@
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 6,
+                  "live": 2
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -276,9 +276,9 @@
             }
           },
           {
-            "readyMs": 947.5,
+            "readyMs": 1018.6000000238419,
             "cadence": {
-              "durationMs": 887.2999999523163,
+              "durationMs": 906.5999999642372,
               "frames": 21,
               "intervalP50Ms": 50,
               "intervalP95Ms": 50.100000000000364
@@ -294,23 +294,23 @@
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 6,
+                  "live": 2
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -323,12 +323,12 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11325708,
-            "backingBytes": 3965792
+            "usedBytes": 11343716,
+            "backingBytes": 3965861
           },
           {
-            "usedBytes": 11732596,
-            "backingBytes": 3965797
+            "usedBytes": 11744288,
+            "backingBytes": 3965866
           }
         ],
         "quality": {
@@ -348,7 +348,7 @@
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -384,7 +384,7 @@
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -432,11 +432,11 @@
         },
         "sessions": [
           {
-            "readyMs": 1246.0999999642372,
+            "readyMs": 1275.6000000238419,
             "cadence": {
-              "durationMs": 796.8000000119209,
+              "durationMs": 812.9000000357628,
               "frames": 36,
-              "intervalP50Ms": 16.699999999999818,
+              "intervalP50Ms": 16.700000000000273,
               "intervalP95Ms": 33.40000000000009
             },
             "active": {
@@ -444,29 +444,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 63,
-              "draws": 103,
+              "frames": 62,
+              "draws": 102,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -477,41 +477,41 @@
             }
           },
           {
-            "readyMs": 875.6999999880791,
+            "readyMs": 905.2000000476837,
             "cadence": {
-              "durationMs": 798.3000000119209,
+              "durationMs": 806.5,
               "frames": 36,
-              "intervalP50Ms": 16.699999999999818,
-              "intervalP95Ms": 33.399999999999636
+              "intervalP50Ms": 16.700000000000728,
+              "intervalP95Ms": 33.400000000000546
             },
             "active": {
               "id": 2,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 63,
-              "draws": 103,
+              "frames": 62,
+              "draws": 102,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -522,41 +522,41 @@
             }
           },
           {
-            "readyMs": 882.6999999880791,
+            "readyMs": 922.1000000238419,
             "cadence": {
-              "durationMs": 793.6000000238419,
+              "durationMs": 805.1999999880791,
               "frames": 36,
               "intervalP50Ms": 16.700000000000728,
-              "intervalP95Ms": 33.400000000000546
+              "intervalP95Ms": 33.30000000000018
             },
             "active": {
               "id": 3,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 63,
-              "draws": 103,
+              "frames": 62,
+              "draws": 102,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -567,41 +567,41 @@
             }
           },
           {
-            "readyMs": 977.3000000119209,
+            "readyMs": 936.3000000119209,
             "cadence": {
-              "durationMs": 797.6999999880791,
+              "durationMs": 811.8999999761581,
               "frames": 36,
               "intervalP50Ms": 16.700000000000728,
-              "intervalP95Ms": 33.400000000001455
+              "intervalP95Ms": 33.399999999999636
             },
             "active": {
               "id": 4,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 63,
-              "draws": 103,
+              "frames": 62,
+              "draws": 102,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -612,10 +612,10 @@
             }
           },
           {
-            "readyMs": 845.9000000357628,
+            "readyMs": 895.3000000119209,
             "cadence": {
-              "durationMs": 810,
-              "frames": 37,
+              "durationMs": 804.8999999761581,
+              "frames": 36,
               "intervalP50Ms": 16.700000000000728,
               "intervalP95Ms": 33.399999999999636
             },
@@ -624,29 +624,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 64,
-              "draws": 104,
+              "frames": 62,
+              "draws": 102,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -659,24 +659,24 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11347780,
-            "backingBytes": 3965710
+            "usedBytes": 11365460,
+            "backingBytes": 3965824
           },
           {
-            "usedBytes": 11767736,
-            "backingBytes": 3965715
+            "usedBytes": 11777552,
+            "backingBytes": 3965829
           },
           {
-            "usedBytes": 12060740,
-            "backingBytes": 3965715
+            "usedBytes": 12068928,
+            "backingBytes": 3965829
           },
           {
-            "usedBytes": 12261356,
-            "backingBytes": 3965715
+            "usedBytes": 12267348,
+            "backingBytes": 3965829
           },
           {
-            "usedBytes": 12576392,
-            "backingBytes": 3965715
+            "usedBytes": 12574844,
+            "backingBytes": 3965829
           }
         ],
         "quality": {
@@ -690,13 +690,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 75,
-              "draws": 115,
+              "frames": 74,
+              "draws": 114,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -726,13 +726,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 75,
-              "draws": 115,
+              "frames": 74,
+              "draws": 114,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -762,13 +762,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 75,
-              "draws": 115,
+              "frames": 74,
+              "draws": 114,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -798,13 +798,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 75,
-              "draws": 115,
+              "frames": 74,
+              "draws": 114,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -834,13 +834,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 76,
-              "draws": 116,
+              "frames": 74,
+              "draws": 114,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -881,14 +881,14 @@
         "project": "chromium",
         "chunks": [
           {
-            "path": "/_next/static/chunks/1-__h68jhbixb.js",
-            "rawBytes": 995607,
-            "gzipBytes": 265878
+            "path": "/_next/static/chunks/0zj8k4y_gn0h0.js",
+            "rawBytes": 995680,
+            "gzipBytes": 265900
           }
         ],
         "totals": {
-          "rawBytes": 995607,
-          "gzipBytes": 265878
+          "rawBytes": 995680,
+          "gzipBytes": 265900
         },
         "limits": {
           "rawBytes": 1310720,
@@ -932,29 +932,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 101,
-              "draws": 141,
+              "frames": 102,
+              "draws": 142,
               "pixels": 393984,
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1021,9 +1021,9 @@
         },
         "expandedLandscape": {
           "widthDifference": 0,
-          "heightDifference": 0,
+          "heightDifference": -0.015625,
           "centerXDifference": 0,
-          "centerYDifference": 0,
+          "centerYDifference": -0.0078125,
           "stage": {
             "width": 602.59375,
             "height": 235.796875
@@ -1082,12 +1082,12 @@
         },
         "sessions": [
           {
-            "readyMs": 1088.6000000238419,
+            "readyMs": 1162.699999988079,
             "cadence": {
-              "durationMs": 703.0999999642372,
+              "durationMs": 703.3999999761581,
               "frames": 42,
               "intervalP50Ms": 16.699999999999818,
-              "intervalP95Ms": 16.700000000000273
+              "intervalP95Ms": 16.799999999999727
             },
             "active": {
               "id": 1,
@@ -1100,23 +1100,23 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1127,9 +1127,9 @@
             }
           },
           {
-            "readyMs": 770,
+            "readyMs": 771.3999999761581,
             "cadence": {
-              "durationMs": 702.6999999880791,
+              "durationMs": 704.1999999880791,
               "frames": 42,
               "intervalP50Ms": 16.699999999999818,
               "intervalP95Ms": 16.700000000000728
@@ -1145,23 +1145,23 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1174,12 +1174,12 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11153280,
-            "backingBytes": 2510778
+            "usedBytes": 11202256,
+            "backingBytes": 2510740
           },
           {
-            "usedBytes": 11513584,
-            "backingBytes": 2510783
+            "usedBytes": 11578960,
+            "backingBytes": 2510745
           }
         ],
         "quality": {
@@ -1199,7 +1199,7 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 29,
+                  "deleted": 30,
                   "live": 0
                 },
                 "textures": {
@@ -1235,7 +1235,7 @@
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 29,
+                  "deleted": 30,
                   "live": 0
                 },
                 "textures": {
@@ -1283,41 +1283,41 @@
         },
         "sessions": [
           {
-            "readyMs": 1298.199999988079,
+            "readyMs": 1307.6000000238419,
             "cadence": {
-              "durationMs": 899.8000000119209,
-              "frames": 22,
-              "intervalP50Ms": 33.40000000000009,
-              "intervalP95Ms": 50.100000000000364
+              "durationMs": 907.1999999880791,
+              "frames": 21,
+              "intervalP50Ms": 49.90000000000009,
+              "intervalP95Ms": 50.09999999999991
             },
             "active": {
               "id": 1,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 40,
-              "draws": 120,
+              "frames": 39,
+              "draws": 118,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 6,
+                  "live": 2
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1328,41 +1328,41 @@
             }
           },
           {
-            "readyMs": 949.6999999880791,
+            "readyMs": 974.4000000357628,
             "cadence": {
-              "durationMs": 899.3999999761581,
-              "frames": 22,
-              "intervalP50Ms": 33.400000000000546,
-              "intervalP95Ms": 50.099999999999454
+              "durationMs": 905.5999999642372,
+              "frames": 21,
+              "intervalP50Ms": 49.899999999999636,
+              "intervalP95Ms": 50.100000000000364
             },
             "active": {
               "id": 2,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 40,
-              "draws": 120,
+              "frames": 39,
+              "draws": 118,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 6,
+                  "live": 2
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1375,12 +1375,12 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11264496,
-            "backingBytes": 3964905
+            "usedBytes": 11255616,
+            "backingBytes": 3964993
           },
           {
-            "usedBytes": 11618424,
-            "backingBytes": 3964910
+            "usedBytes": 11602852,
+            "backingBytes": 3964998
           }
         ],
         "quality": {
@@ -1394,13 +1394,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 52,
-              "draws": 144,
+              "frames": 51,
+              "draws": 142,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1430,13 +1430,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 52,
-              "draws": 144,
+              "frames": 51,
+              "draws": 142,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1484,41 +1484,41 @@
         },
         "sessions": [
           {
-            "readyMs": 1209.7000000476837,
+            "readyMs": 1254,
             "cadence": {
-              "durationMs": 800.1999999880791,
-              "frames": 39,
+              "durationMs": 798,
+              "frames": 37,
               "intervalP50Ms": 16.700000000000273,
-              "intervalP95Ms": 33.40000000000009
+              "intervalP95Ms": 33.399999999999636
             },
             "active": {
               "id": 1,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 69,
-              "draws": 109,
+              "frames": 63,
+              "draws": 103,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1529,41 +1529,41 @@
             }
           },
           {
-            "readyMs": 846.7000000476837,
+            "readyMs": 920,
             "cadence": {
-              "durationMs": 785.6000000238419,
-              "frames": 38,
+              "durationMs": 801.1999999880791,
+              "frames": 37,
               "intervalP50Ms": 16.699999999999818,
-              "intervalP95Ms": 33.399999999999636
+              "intervalP95Ms": 33.400000000000546
             },
             "active": {
               "id": 2,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 68,
-              "draws": 108,
+              "frames": 64,
+              "draws": 104,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1574,10 +1574,10 @@
             }
           },
           {
-            "readyMs": 877.5,
+            "readyMs": 1027.3999999761581,
             "cadence": {
-              "durationMs": 802.0999999642372,
-              "frames": 39,
+              "durationMs": 789,
+              "frames": 37,
               "intervalP50Ms": 16.699999999999818,
               "intervalP95Ms": 33.399999999999636
             },
@@ -1586,29 +1586,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 68,
-              "draws": 108,
+              "frames": 64,
+              "draws": 104,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1619,41 +1619,41 @@
             }
           },
           {
-            "readyMs": 863.3000000119209,
+            "readyMs": 896.5,
             "cadence": {
-              "durationMs": 804.5,
-              "frames": 39,
+              "durationMs": 806.3000000119209,
+              "frames": 38,
               "intervalP50Ms": 16.700000000000728,
-              "intervalP95Ms": 33.30000000000109
+              "intervalP95Ms": 33.399999999999636
             },
             "active": {
               "id": 4,
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 69,
-              "draws": 109,
+              "frames": 65,
+              "draws": 105,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1664,10 +1664,10 @@
             }
           },
           {
-            "readyMs": 876.1000000238419,
+            "readyMs": 912.4000000357628,
             "cadence": {
-              "durationMs": 797.8000000119209,
-              "frames": 39,
+              "durationMs": 791.4000000357628,
+              "frames": 37,
               "intervalP50Ms": 16.700000000000728,
               "intervalP95Ms": 33.399999999999636
             },
@@ -1676,29 +1676,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 69,
-              "draws": 109,
+              "frames": 64,
+              "draws": 104,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 0,
-                  "live": 32
+                  "deleted": 28,
+                  "live": 4
                 },
                 "textures": {
                   "created": 8,
-                  "deleted": 0,
-                  "live": 8
+                  "deleted": 1,
+                  "live": 7
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,
@@ -1711,24 +1711,24 @@
         ],
         "heapsAfterForcedGc": [
           {
-            "usedBytes": 11278076,
-            "backingBytes": 3964897
+            "usedBytes": 11293636,
+            "backingBytes": 3964974
           },
           {
-            "usedBytes": 11637556,
-            "backingBytes": 3964902
+            "usedBytes": 11645436,
+            "backingBytes": 3964979
           },
           {
-            "usedBytes": 11967812,
-            "backingBytes": 3964902
+            "usedBytes": 11986796,
+            "backingBytes": 3964979
           },
           {
-            "usedBytes": 12182056,
-            "backingBytes": 3964902
+            "usedBytes": 12199948,
+            "backingBytes": 3964979
           },
           {
-            "usedBytes": 12496268,
-            "backingBytes": 3964902
+            "usedBytes": 12514432,
+            "backingBytes": 3964979
           }
         ],
         "quality": {
@@ -1742,13 +1742,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 81,
-              "draws": 121,
+              "frames": 75,
+              "draws": 115,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1778,13 +1778,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 80,
-              "draws": 120,
+              "frames": 76,
+              "draws": 116,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1814,13 +1814,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 80,
-              "draws": 120,
+              "frames": 76,
+              "draws": 116,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1850,13 +1850,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 81,
-              "draws": 121,
+              "frames": 77,
+              "draws": 117,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1886,13 +1886,13 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": true,
               "connected": false,
-              "frames": 81,
-              "draws": 121,
+              "frames": 76,
+              "draws": 116,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 32,
-                  "deleted": 31,
+                  "deleted": 32,
                   "live": 0
                 },
                 "textures": {
@@ -1933,14 +1933,14 @@
         "project": "mobile-chromium",
         "chunks": [
           {
-            "path": "/_next/static/chunks/1-__h68jhbixb.js",
-            "rawBytes": 995607,
-            "gzipBytes": 265878
+            "path": "/_next/static/chunks/0zj8k4y_gn0h0.js",
+            "rawBytes": 995680,
+            "gzipBytes": 265900
           }
         ],
         "totals": {
-          "rawBytes": 995607,
-          "gzipBytes": 265878
+          "rawBytes": 995680,
+          "gzipBytes": 265900
         },
         "limits": {
           "rawBytes": 1310720,
@@ -1984,29 +1984,29 @@
               "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
               "lost": false,
               "connected": true,
-              "frames": 102,
-              "draws": 142,
+              "frames": 101,
+              "draws": 141,
               "pixels": 86700,
               "resources": {
                 "buffers": {
                   "created": 30,
-                  "deleted": 0,
-                  "live": 30
+                  "deleted": 28,
+                  "live": 2
                 },
                 "textures": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 1,
+                  "live": 6
                 },
                 "programs": {
                   "created": 7,
-                  "deleted": 0,
-                  "live": 7
+                  "deleted": 6,
+                  "live": 1
                 },
                 "framebuffers": {
                   "created": 5,
-                  "deleted": 0,
-                  "live": 5
+                  "deleted": 1,
+                  "live": 4
                 },
                 "renderbuffers": {
                   "created": 1,

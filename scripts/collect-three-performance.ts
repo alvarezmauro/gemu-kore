@@ -57,8 +57,9 @@ async function main() {
           "Instrumented automated Chromium on the test host. Mobile project emulates a viewport and user agent; these are not physical-phone GPU measurements.",
         physicalDevices: {
           iosSafari:
-            "partial physical calibration; see 3D_PERFORMANCE_IPHONE15.json for measurements and user-confirmed visual retest",
-          androidChrome: "pending",
+            "iPhone observations recorded; native-memory stability remains inconclusive. See 3D_PERFORMANCE_IPHONE15.json.",
+          androidChrome:
+            "physical testing waived by owner 2026-10-16; compatibility assumed, not verified",
         },
         reports: reports.sort((a, b) =>
           `${a.project}/${a.case}`.localeCompare(`${b.project}/${b.case}`),

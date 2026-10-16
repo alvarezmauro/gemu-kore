@@ -1,4 +1,5 @@
 import {
+  InstancedMesh,
   PMREMGenerator,
   PerspectiveCamera,
   Scene,
@@ -67,11 +68,20 @@ export function installStudio(gl: WebGLRenderer, scene: Scene) {
     scene.environment = target.texture;
   } catch {
     /* The scene's basic lights remain usable without reflections. */
-  }
-  return () => {
-    if (scene.environment === target?.texture) scene.environment = null;
-    target?.dispose();
+  } finally {
+    // Only the baked target is needed during viewing. RoomEnvironment.dispose()
+    // releases shared geometry/materials but omits its instanced mesh buffers.
+    room.traverse((object) => {
+      if (object instanceof InstancedMesh) object.dispose();
+    });
     room.dispose();
     generator.dispose();
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    if (scene.environment === target?.texture) scene.environment = null;
+    target?.dispose();
   };
 }

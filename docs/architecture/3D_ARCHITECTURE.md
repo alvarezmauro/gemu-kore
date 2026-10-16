@@ -2,7 +2,7 @@
 
 Task: **9.1 — 3D Architecture**  
 Date: **2026-10-15**  
-Status: **Design complete.** Implementation follow-up: Task 9.2 adds the private viewer described in [ModelViewer operations](../operations/MODEL_VIEWER.md); Task 9.3 records [automated performance evidence](../performance/3D_PERFORMANCE.md) and retains the pending physical-device calibration. The evidence and design-task scope below record the state inspected on 2026-10-15.
+Status: **Design complete.** Implementation follow-up: Task 9.2 adds the private viewer described in [ModelViewer operations](../operations/MODEL_VIEWER.md); Task 9.3 records [automated performance evidence](../performance/3D_PERFORMANCE.md) and physical iPhone observations, with an explicit native-memory limitation and owner-waived Android testing. The evidence and design-task scope below record the state inspected on 2026-10-15.
 
 ## 1. Decision and scope
 
@@ -168,6 +168,8 @@ For templated viewers, every delivered base geometry and separate texture must q
 Future generated model/package thumbnails are Asset derivatives with fixed RENDER_INPUT dependencies on all contributing geometry/artwork plus versioned renderer/settings provenance. They need their own content approval and input-rights checks. Source originals need not become public-safe merely to allow an independently sanitized/reviewed output. Generation is explicit later work; it does not justify a worker service or automatic public thumbnail pipeline now.
 
 ## 9. Mobile and performance profile
+
+**Task 9.3 scope update — 2026-10-16:** the project owner explicitly waived physical Android testing and accepted iOS behavior as the working compatibility assumption. Finish calibration using the available iPhone; record Android as untested, not as a measured pass. This supersedes the dual-device completion gate below, while preserving common conservative limits and static/error fallbacks.
 
 Use a conservative **interactive-v1** admission profile, initially common to phones and desktop. These are proposed engineering limits, **not measured performance claims** or changes to upload acceptance. An over-budget file remains stored and privately downloadable, while the viewer shows a clear static alternative. Do not alter bytes, silently downsample/re-export the original, or loosen a limit based solely on desktop hardware.
 

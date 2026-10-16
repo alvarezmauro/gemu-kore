@@ -241,6 +241,10 @@ for (const kind of ["plain", "shiny", "textured"] as const)
         active = state.contexts.filter((c) => c.connected && !c.lost);
       expect(active).toHaveLength(1);
       expect(active[0].pixels).toBeLessThanOrEqual(2_000_000);
+      // Bake inputs must be released while the finished reflection stays visible.
+      expect(active[0].resources.buffers.deleted).toBeGreaterThan(0);
+      expect(active[0].resources.textures.deleted).toBeGreaterThan(0);
+      expect(active[0].resources.framebuffers.deleted).toBeGreaterThan(0);
       expect(cadence!.frames).toBeGreaterThan(1);
       allocations.push(
         Object.fromEntries(

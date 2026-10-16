@@ -1,5 +1,5 @@
 {
-  "status": "Partial physical-device calibration. User confirms landscape centering and post-interaction flicker fixes work on the iPhone; other calibration checks remain pending.",
+  "status": "Physical iPhone evidence recorded, including user-confirmed visual fixes, motion/idle/cancel checks and repeated-session observations. Native-memory retention remains inconclusive/limited; Android testing waived by owner.",
   "recordedOn": "2026-10-16",
   "device": {
     "model": "iPhone 15",
@@ -85,6 +85,20 @@
       "initialLongFrame": {
         "durationMs": 1331.8379167467356
       }
+    },
+    "stableDprAutoFollowUp": {
+      "method": "Physical iPhone, stable-DPR build before immediate reflection-bake cleanup; scripted normal Auto rotate button.",
+      "autoRotation": {
+        "durationMs": 10006,
+        "submittedFrames": 601,
+        "intervalP50Ms": 17,
+        "intervalP95Ms": 17
+      },
+      "settledIdle": {
+        "settleMs": 6000,
+        "windowMs": 3000,
+        "additionalFrames": 0
+      }
     }
   },
   "observations": [
@@ -92,13 +106,6 @@
     "The initial activation includes an approximately 1.332-second native frame, with approximately 1.28 seconds attributed to script in the inspector. This cold-start cost is separate from the settled interaction window.",
     "The pinned renderer emits a THREE.Clock deprecation warning per mount. A later extended textured reopen run also reaches Safari context-quota warnings and INVALID_OPERATION: loseContext: context already lost. Lost/detached counters alone do not prove native context capacity is reclaimed.",
     "Graphics context loss and stable live counts do not establish a phone CPU/OS/GPU memory trend."
-  ],
-  "pending": [
-    "Real live reduced-motion check and slow loading/cancellation",
-    "Native retained-memory and context-quota investigation, including instrumentation overhead",
-    "Device power/thermal conditions",
-    "Physical Android Chrome calibration",
-    "Plain fixture explicit auto-rotation sample"
   ],
   "shiny": {
     "fixture": {
@@ -338,7 +345,21 @@
           "max": 56344576
         }
       },
-      "contextQuotaWarnings": "During the second textured reopen batch, Safari reports too many active WebGL contexts and already-lost context errors despite previous contexts being recorded as lost/detached. Cause not isolated; no native-memory pass."
+      "contextQuotaWarnings": "During the second textured reopen batch, Safari reports too many active WebGL contexts and already-lost context errors despite previous contexts being recorded as lost/detached. Cause not isolated; no native-memory pass.",
+      "followUpAnalysis": {
+        "method": "Reanalyze the already captured numeric Safari Memory samples; no new device measurement.",
+        "final30Seconds": {
+          "sampleCount": 60,
+          "totalMinBytes": 173571072,
+          "totalMaxBytes": 174898176,
+          "firstToLastBytesDelta": -1261568
+        },
+        "interpretation": "The final idle window levels off slightly downward; it does not prove earlier Page growth was reclaimed or establish long-term retention.",
+        "relatedBrowserReport": {
+          "url": "https://bugs.webkit.org/show_bug.cgi?id=218305",
+          "finding": "WebKit reports the same too-many-contexts/already-lost warnings in a plain WebGL reproduction; a 2026 comment reports continued reproduction on iOS 26.3. Supporting evidence only, not proof that all observed native-memory growth is browser-owned."
+        }
+      }
     },
     "realVisibilityChecks": {
       "offscreen": {
@@ -375,5 +396,197 @@
       "build": "Fresh isolated production session with the absolute Canvas layout, top-aligned expanded dialog and stable DPR.",
       "limits": "Subjective confirmation only; no new frame, memory, thermal or timing measurements were supplied. Does not resolve the earlier extended-session memory/context-quota observations."
     }
+  },
+  "androidDecision": {
+    "date": "2026-10-16",
+    "userInstruction": "continue with 9.3 and let's asume that if it works in ios it will work in android",
+    "status": "Physical testing waived by project owner; compatibility assumed, unverified.",
+    "completionGate": false
+  },
+  "plainWebglControl": {
+    "date": "2026-10-16",
+    "device": "Same physical iPhone 15, Safari remote inspector",
+    "method": "Create 24 unattached canvas WebGL2 contexts, request WEBGL_lose_context on each, yield 50 ms between contexts. No GemuKore Canvas or diagnostic probe active. Request native Inspector Collect garbage afterward. Keep only WeakRefs to contexts.",
+    "created": 24,
+    "contextLossEvents": 24,
+    "applicationCanvasCount": 0,
+    "probeLoaded": false,
+    "observedWarnings": [
+      "There are too many active WebGL contexts on this page, the oldest context will be lost.",
+      "WebGL: INVALID_OPERATION: loseContext: context already lost"
+    ],
+    "weakContextsReachableAfterRequestedGc": 0,
+    "interpretation": "The warning pair reproduces independently of GemuKore viewer/loader/probe and all control contexts become unreachable after requested GC. This supports the documented WebKit context-accounting limitation; it does not by itself establish application memory behavior."
+  },
+  "stableDprFollowUp": {
+    "date": "2026-10-16",
+    "software": "Stable DPR and corrected landscape Canvas layout; before immediate reflection-bake cleanup optimization.",
+    "fixture": "textured synthetic study",
+    "method": "Two batches of ten scripted open/close sessions on the actual iPhone; native Memory timeline active; garbage collection requested at batch boundaries. WeakRefs retained only for diagnostics.",
+    "sessions": 20,
+    "allContextsLostAndDetached": true,
+    "bitmapCreated": 20,
+    "bitmapClosed": 20,
+    "drawingPixels": 77040,
+    "resourcesStable": true,
+    "liveResources": {
+      "buffers": 32,
+      "textures": 8,
+      "programs": 7,
+      "framebuffers": 5,
+      "renderbuffers": 1
+    },
+    "autoRotation": {
+      "durationMs": 10006,
+      "frames": 601,
+      "intervalP50Ms": 17,
+      "intervalP95Ms": 17
+    },
+    "idle": {
+      "settleMs": 6000,
+      "windowMs": 3000,
+      "additionalFrames": 0
+    },
+    "weakContextWrappersReachableAfterRequestedGc": 20,
+    "weakCanvasWrappersReachableAfterRequestedGc": 1,
+    "nativeMemory": {
+      "durationSeconds": 238.34453300014138,
+      "samples": 473,
+      "first": {
+        "t": 317.35093641653657,
+        "categories": {
+          "javascript": 27746129,
+          "jit": 2801664,
+          "images": 0,
+          "layers": 0,
+          "page": 36167855,
+          "other": 3211264
+        },
+        "total": 69926912
+      },
+      "last": {
+        "t": 555.4606079584919,
+        "categories": {
+          "javascript": 27913967,
+          "jit": 8634368,
+          "images": 0,
+          "layers": 0,
+          "page": 102617361,
+          "other": 22102016
+        },
+        "total": 161267712
+      },
+      "final30Seconds": {
+        "samples": 60,
+        "totalMinBytes": 161251328,
+        "totalMaxBytes": 162922496,
+        "firstToLastDeltaBytes": -1654784
+      },
+      "result": "Native Page/total grows during the batch and settles downward afterward. Application graphics disposal is observed, but native retention remains an explicit Safari limitation/inconclusive check, not a native-memory pass."
+    }
+  },
+  "viewerWithoutProbe": {
+    "method": "Fresh page, no graphics probe or bitmap wrapper. Twenty scripted normal viewer sessions, followed by another twenty. Native context-loss listeners and WeakRefs only.",
+    "sessions": 40,
+    "contextLossEvents": 40,
+    "connectedCanvasCountAfterClose": 0,
+    "contextQuotaWarningsStillOccur": true,
+    "first20ActivationToReadyMs": [
+      808, 317, 322, 408, 411, 376, 318, 339, 355, 334, 326, 348, 344, 331, 323,
+      315, 476, 347, 318, 325
+    ],
+    "second20ActivationToReadyMs": [
+      690, 348, 332, 346, 435, 519, 345, 364, 311, 383, 367, 355, 384, 391, 333,
+      352, 351, 363, 306, 359
+    ],
+    "afterRequestedGc": {
+      "contextWrappersReachable": 40,
+      "canvasWrappersReachable": 21
+    },
+    "diagnosticExperiments": "Clearing console history, reconnecting Inspector and zeroing already-detached canvases did not eliminate the wrapper retention. No such workaround was added to application code.",
+    "nativeMemory": {
+      "durationSeconds": 107.87768641673028,
+      "samples": 214,
+      "first": {
+        "t": 95.87459262507036,
+        "categories": {
+          "javascript": 24586302,
+          "jit": 1703936,
+          "images": 0,
+          "layers": 0,
+          "page": 51156930,
+          "other": 22052864
+        },
+        "total": 99500032
+      },
+      "last": {
+        "t": 203.30542529188097,
+        "categories": {
+          "javascript": 29269124,
+          "jit": 8273920,
+          "images": 0,
+          "layers": 0,
+          "page": 106242940,
+          "other": 22151168
+        },
+        "total": 165937152
+      },
+      "final30Seconds": {
+        "samples": 60,
+        "totalMinBytes": 165904384,
+        "totalMaxBytes": 167968768,
+        "firstToLastDeltaBytes": -2031616
+      },
+      "result": "Native Page/total grows during the batch and settles downward afterward. Application graphics disposal is observed, but native retention remains an explicit Safari limitation/inconclusive check, not a native-memory pass."
+    }
+  },
+  "liveReducedMotionFollowUp": {
+    "method": "Safari Inspector page-scoped Reduce motion override on the physical iPhone; this is not a change to the iOS system preference.",
+    "prefersReducedMotionMatched": true,
+    "rotationStopped": true,
+    "rotationButtonDisabled": true,
+    "manualRotateFrames": 1,
+    "subsequentIdleWindowMs": 2000,
+    "subsequentIdleFrames": 0,
+    "restoredSystemPreference": true,
+    "afterRestoring": {
+      "prefersReducedMotion": false,
+      "autoStillStopped": true,
+      "autoEnabled": true
+    }
+  },
+  "loadingCancelFollowUp": {
+    "method": "Real private fetch on the iPhone, with a test-only Response stream delivering buffered 64-byte chunks every 250 ms. This is controlled client delivery, not a physical-network throughput benchmark. Original fetch restored before retry.",
+    "progress": 8,
+    "progressMax": 100,
+    "abortObserved": true,
+    "noCanvasAfterCancel": true,
+    "noProgressAfterCancel": true,
+    "freshRetryReady": true,
+    "harnessNote": "First attempt queried View in 3D before React committed the preceding Close. Repeated with UI settling; successful result recorded. The setup error is not an application failure."
+  },
+  "followUps": [
+    "Native Safari retention remains inconclusive despite observed resource disposal and reproduction of context-quota warnings in plain WebGL; do not claim a native-memory pass.",
+    "Power/Low Power Mode/thermal conditions unspecified; no thermal or full-budget device guarantee.",
+    "Final immediate reflection-bake resource cleanup is verified separately by software regression tests; physical numbers above precede that final optimization."
+  ],
+  "finalCleanupSoftwareVerification": {
+    "date": "2026-10-16",
+    "scope": "Immediate reflection-bake cleanup, including the pinned room InstancedMesh buffers; baked reflection remains until close. Physical measurements above precede this final optimization.",
+    "environment": "Production Chromium/SwiftShader, desktop and mobile viewport emulation; not a phone measurement.",
+    "unitComponentTests": 752,
+    "focusedBrowserTests": 48,
+    "bakeBuffersExplicitlyReleasedBeforeInteraction": 28,
+    "liveBuffers": {
+      "plain": 2,
+      "shiny": 4,
+      "textured": 4
+    },
+    "previousLiveBuffers": {
+      "plain": 30,
+      "shiny": 32,
+      "textured": 32
+    },
+    "resourceLifetimeSuccessAndFailureCovered": true
   }
 }
