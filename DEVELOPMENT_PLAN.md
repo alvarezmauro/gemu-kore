@@ -1312,6 +1312,8 @@ Design reusable R3F architecture for:
 
 Do not implement everything yet.
 
+Status: **Completed 2026-10-15.** Documented [docs/architecture/3D_ARCHITECTURE.md](docs/architecture/3D_ARCHITECTURE.md), grounded in the current GLB validation, private streaming, console model resolution and accepted component/template domain. Defines one optional R3F/Drei viewer, a server-selected presentation contract, explicit activation and lazy client runtime, per-session loading/resource cleanup without a shared private model cache, static fallbacks, camera/lighting conventions, keyboard/touch/fullscreen/reduced-motion behavior and mobile rendering limits separate from upload acceptance. Packaging and physical-media templates keep separate domain identities and explicit revisioned artwork slots/bindings while sharing the viewer stage. Public 3D requires independently approved DISPLAY geometry/textures and context-scoped current-policy delivery; existing ORIGINAL GLBs remain private. Numerical budgets are provisional engineering choices, with physical-phone calibration explicitly required in Task 9.3 rather than claimed as measured. Reviewed against official Next.js, R3F, Drei, Three.js and Khronos documentation. Verified documentation formatting, referenced repository paths/local links and diff whitespace; runtime suites are not applicable to documentation-only changes. No application code, schema/migration, dependency, asset/data mutation, viewer implementation or benchmark. Next: Task 9.2.
+
 ---
 
 ## TASK 9.2 — ModelViewer
