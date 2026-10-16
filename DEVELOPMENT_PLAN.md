@@ -1347,6 +1347,8 @@ Features:
 - responsive rendering
 - image fallback
 
+Status: **Completed 2026-10-16.** Implemented the shared private `<ModelViewer />` with pinned Three.js/R3F/Drei dependencies, a lazy client runtime and a compact host on existing console pages. Added fresh server-authorized presentation reads, shared copy → model → platform selection, bounded private GLB transfer/preflight, fitted camera/studio lighting, orbit/zoom/touch/keyboard controls, reset, native fullscreen/dialog fallback, optional rotation, live reduced motion, static fallback, cancellation and session-owned resource cleanup. Embedded textures and repeated ImageBitmap disposal are exercised in the real browser. Documented [ModelViewer operations](docs/operations/MODEL_VIEWER.md). Verified lint, typecheck, formatting, production builds, 749 unit/component tests, 447 PostgreSQL tests and 240 desktop/mobile browser checks (194 full private regressions, two additional texture cases and 44 general UI checks). Stabilized an existing upload-recovery component test by waiting for its button to become enabled. Refreshed the local Docker app dependencies and checked health/private redirection. No schema, catalog/collection data, public delivery, template renderer or Phase 10 hero redesign changes. Physical-phone budget calibration remains Task 9.3. Next: Task 9.3.
+
 ---
 
 ## TASK 9.3 — 3D Performance

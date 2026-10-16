@@ -1,0 +1,22 @@
+import { expect, it } from "vitest";
+import { PerspectiveCamera, Vector3 } from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { modelSettings } from "@/lib/three/contracts";
+import { fitModelCamera } from "./model-stage";
+it("reset clears pending drag damping and restores the fitted camera without a continuing drift", () => {
+  const camera = new PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.set(3, 2, 4);
+  const controls = new OrbitControls(camera);
+  const settings = modelSettings.parse({ preset: "console" });
+  fitModelCamera(camera, controls, 1, 1, settings, true);
+  const initial = camera.position.clone();
+  controls.enableDamping = true;
+  controls.rotateLeft(0.4);
+  controls.update();
+  expect(camera.position.distanceTo(initial)).toBeGreaterThan(0.01);
+  fitModelCamera(camera, controls, 1, 1, settings, true);
+  for (let frame = 0; frame < 10; frame++) controls.update();
+  expect(camera.position.distanceTo(initial)).toBeLessThan(1e-8);
+  expect(controls.target.distanceTo(new Vector3())).toBe(0);
+  expect(controls.enableDamping).toBe(true);
+});

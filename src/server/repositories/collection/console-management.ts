@@ -10,6 +10,8 @@ const assetSelect = {
   width: true,
   height: true,
   originalFilename: true,
+  mimeType: true,
+  sizeBytes: true,
 } as const;
 const useSelect = {
   id: true,
@@ -120,7 +122,12 @@ export function consoleCatalogModel(
       role: "MODEL_3D",
       asset: { state: "READY", kind: "MODEL_3D" },
     },
-    select: { consoleModelId: true, assetId: true },
+    select: {
+      id: true,
+      consoleModelId: true,
+      assetId: true,
+      asset: { select: assetSelect },
+    },
     orderBy: [
       { consoleModelId: { sort: "asc", nulls: "last" } },
       { id: "asc" },
@@ -200,4 +207,64 @@ export async function setConsoleOverride(
 }
 export function removeConsoleOverride(id: string, tx: TransactionClient) {
   return tx.collectionItemMedia.delete({ where: { id }, select: { id: true } });
+}
+
+export function consoleViewerIdentity(id: string, tx: TransactionClient) {
+  return tx.collectionItem.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      type: true,
+      revision: true,
+      ownedConsole: {
+        select: {
+          consoleModel: {
+            select: {
+              id: true,
+              name: true,
+              platform: { select: { id: true, name: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+export async function consoleViewerPoster(
+  id: string,
+  modelId: string,
+  platformId: string,
+  tx: TransactionClient,
+) {
+  const asset = {
+    state: "READY" as const,
+    kind: "IMAGE" as const,
+    deliveryClass: "DISPLAY" as const,
+  };
+  const select = {
+    altText: true,
+    asset: { select: { id: true, width: true, height: true } },
+  };
+  const own = await tx.collectionItemMedia.findFirst({
+    where: { collectionItemId: id, type: { in: ["PHOTO", "FRONT"] }, asset },
+    select,
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  });
+  return (
+    own ??
+    tx.catalogAsset.findFirst({
+      where: {
+        OR: [{ consoleModelId: modelId }, { consolePlatformId: platformId }],
+        role: { in: ["PREVIEW", "COVER"] },
+        asset,
+      },
+      select,
+      orderBy: [
+        { consoleModelId: { sort: "asc", nulls: "last" } },
+        { isPrimary: "desc" },
+        { sortOrder: "asc" },
+        { id: "asc" },
+      ],
+    })
+  );
 }

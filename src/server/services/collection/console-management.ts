@@ -1,4 +1,5 @@
 import "server-only";
+import { consoleModelFile } from "./console-presentation";
 import type { PrivateAccessContext } from "@/server/auth/access";
 import { PrivateAccessError } from "@/server/auth/access";
 import { PermissionError, requirePermission } from "@/server/auth/permissions";
@@ -141,9 +142,6 @@ export async function getOwnedConsole(
             u.asset.kind === "IMAGE" &&
             u.asset.deliveryClass === "DISPLAY",
         );
-        const customModel = primary.find(
-          (u) => u.type === "CUSTOM_MODEL" && u.asset.kind === "MODEL_3D",
-        );
         const modelDto = modelOption(model),
           platformDto = platformOption(platform);
         const facts: { label: string; value: string }[] = [
@@ -175,6 +173,7 @@ export async function getOwnedConsole(
               value: specification(value),
             })),
           );
+        const selectedModel = consoleModelFile(primary, modelFile);
         const detail: ConsoleDetail = {
           id,
           revision: item.revision,
@@ -215,19 +214,9 @@ export async function getOwnedConsole(
                     source: "Inherited platform logo",
                   }
                 : null,
-          modelFile: customModel
-            ? {
-                url: `/api/media/private/${customModel.asset.id}`,
-                source: "Your copy's custom 3D file",
-              }
-            : modelFile
-              ? {
-                  url: `/api/media/private/${modelFile.assetId}`,
-                  source: modelFile.consoleModelId
-                    ? "Catalog model 3D file"
-                    : "Inherited platform 3D file",
-                }
-              : null,
+          modelFile: selectedModel
+            ? { url: selectedModel.url, source: selectedModel.source }
+            : null,
         };
         const canManage = canPerform(current.role, "collection.manage");
         return { detail, canManage, locations: canManage ? locations : [] };

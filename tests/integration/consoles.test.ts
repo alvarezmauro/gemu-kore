@@ -329,6 +329,7 @@ it("rolls back root, subtype and defects if persistence fails after insertion", 
 async function override(
   collectionItemId: string,
   kind: "IMAGE" | "MODEL_3D" = "IMAGE",
+  sizeBytes = 1,
 ) {
   const asset = await db.asset.create({
     data: {
@@ -337,7 +338,7 @@ async function override(
       state: "READY",
       deliveryClass: kind === "IMAGE" ? "DISPLAY" : "ORIGINAL",
       mimeType: kind === "IMAGE" ? "image/webp" : "model/gltf-binary",
-      sizeBytes: 1,
+      sizeBytes,
       sha256: "a".repeat(64),
       ...(kind === "IMAGE" ? { width: 20, height: 20 } : {}),
       storageNamespace: "fixture",
@@ -1014,4 +1015,156 @@ it("names logo derivatives from their original file without exposing source prov
   expect(JSON.stringify(data)).not.toMatch(
     /sourceAsset|objectKey|storageNamespace/,
   );
+});
+
+// Presentation queries must reauthorize independently of the page that offered the button.
+import { getConsoleModelPresentation } from "@/server/services/collection/console-presentation";
+it("resolves private viewer resources copy → model → platform without exposing provenance or changing revisions", async () => {
+  const { id, context, platform, model } = await existing();
+  const viewer = await actor("VIEWER");
+  const platformFile = await catalogFile("MODEL_3D");
+  await db.catalogAsset.create({
+    data: {
+      consolePlatformId: platform.id,
+      assetId: platformFile.id,
+      role: "MODEL_3D",
+      isPrimary: true,
+    },
+  });
+  const query = () =>
+    getConsoleModelPresentation(viewer.context, { id, expectedRevision: 1 });
+  expect(await query()).toMatchObject({
+    source: "Inherited platform 3D file",
+    resource: { id: platformFile.id },
+  });
+  const modelFile = await catalogFile("MODEL_3D");
+  await db.catalogAsset.create({
+    data: {
+      consoleModelId: model.id,
+      assetId: modelFile.id,
+      role: "MODEL_3D",
+      isPrimary: true,
+    },
+  });
+  expect(await query()).toMatchObject({
+    source: "Catalog model 3D file",
+    resource: { id: modelFile.id },
+  });
+  const own = await override(id, "MODEL_3D", 9 * 1024 * 1024);
+  await db.collectionItemMedia.update({
+    where: { id: own.id },
+    data: { isPrimary: true },
+  });
+  // An archived identity is still the identity of this existing copy.
+  await db.consoleModel.update({
+    where: { id: model.id },
+    data: { archivedAt: new Date() },
+  });
+  const result = await query();
+  expect(result).toMatchObject({
+    source: "Your copy's custom 3D file",
+    resource: { id: own.assetId, url: `/api/media/private/${own.assetId}` },
+    poster: null,
+  });
+  expect(JSON.stringify(result)).not.toMatch(
+    /objectKey|storageNamespace|sha256|serialNumber|notes|originalFilename|createdBy/,
+  );
+  expect((await getOwnedConsole(context, { id })).detail.modelFile?.url).toBe(
+    result.resource.url,
+  );
+  expect(
+    await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+  ).toMatchObject({ revision: 1 });
+  // Unsupported interactive size is not a reason to silently replace the selected original.
+  expect((await query()).resource).toMatchObject({
+    id: own.assetId,
+    byteLength: 9 * 1024 * 1024,
+  });
+});
+it("rejects stale/deleted/missing presentations and rechecks revoked private access", async () => {
+  const { id, context, grant } = await existing();
+  const own = await override(id, "MODEL_3D");
+  await db.collectionItemMedia.update({
+    where: { id: own.id },
+    data: { isPrimary: true },
+  });
+  for (const input of [
+    { id, expectedRevision: 2 },
+    { id: randomUUID(), expectedRevision: 1 },
+    { id, expectedRevision: 1, resource: "injected" },
+  ])
+    await expect(
+      getConsoleModelPresentation(context, input),
+    ).rejects.toMatchObject({
+      code:
+        "expectedRevision" in input && input.expectedRevision === 2
+          ? "COPY_STALE"
+          : "resource" in input
+            ? "INVALID_INPUT"
+            : "NOT_FOUND",
+    });
+  await db.accessGrant.update({
+    where: { id: grant.id },
+    data: { enabled: false },
+  });
+  await expect(
+    getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).rejects.toThrow();
+  await db.accessGrant.update({
+    where: { id: grant.id },
+    data: { enabled: true },
+  });
+  await db.collectionItem.delete({ where: { id } });
+  await expect(
+    getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+});
+it("keeps unready models out of presentations and excludes serial photos from the fallback", async () => {
+  const { id, context, model } = await existing();
+  await expect(
+    getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  const own = await override(id, "MODEL_3D");
+  await db.collectionItemMedia.update({
+    where: { id: own.id },
+    data: { isPrimary: true },
+  });
+  const serial = await override(id);
+  await db.collectionItemMedia.update({
+    where: { id: serial.id },
+    data: { type: "SERIAL" },
+  });
+  const poster = await catalogFile();
+  await db.catalogAsset.create({
+    data: {
+      consoleModelId: model.id,
+      assetId: poster.id,
+      role: "PREVIEW",
+      altText: "Shared preview",
+    },
+  });
+  expect(
+    await getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).toMatchObject({
+    poster: { url: `/api/media/private/${poster.id}`, alt: "Shared preview" },
+  });
+  await db.collectionItemMedia.update({
+    where: { id: serial.id },
+    data: { type: "FRONT", altText: "Front of my copy" },
+  });
+  expect(
+    await getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).toMatchObject({
+    poster: {
+      url: `/api/media/private/${serial.assetId}`,
+      alt: "Front of my copy",
+    },
+  });
+  await db.collectionItemMedia.update({
+    where: { id: own.id },
+    data: { isPrimary: false },
+  });
+  await expect(
+    getConsoleModelPresentation(context, { id, expectedRevision: 1 }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });

@@ -10,6 +10,8 @@ import {
   findConsoleModels,
   activateNewConsoleOverride,
 } from "@/server/services/collection/consoles";
+import { getConsoleModelPresentation } from "@/server/services/collection/console-presentation";
+import type { ModelPresentationResult } from "@/lib/three/contracts";
 import { mutateOwnedConsole } from "@/server/services/collection/console-management";
 import type {
   ConsoleResult,
@@ -114,4 +116,28 @@ export async function saveConsole(
   revalidatePath("/app/defects");
   revalidatePath("/app/locations");
   return { status: "success", data: { id } };
+}
+
+export async function loadConsoleModelView(
+  input: unknown,
+): Promise<ModelPresentationResult> {
+  try {
+    return {
+      status: "success",
+      data: await getConsoleModelPresentation(
+        await requirePrivateAccess(await headers()),
+        input,
+      ),
+    };
+  } catch (error) {
+    return error instanceof ConsoleError ||
+      error instanceof PermissionError ||
+      error instanceof PrivateAccessError
+      ? failure(error)
+      : {
+          status: "error",
+          message:
+            "We couldn't load this console preview. Refresh before trying again.",
+        };
+  }
 }

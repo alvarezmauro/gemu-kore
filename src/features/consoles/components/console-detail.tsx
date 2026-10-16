@@ -13,6 +13,7 @@ import type {
   ConsoleLocation,
   ConsoleImage as ImageEntry,
 } from "../contracts";
+import { ConsoleModelViewer } from "./console-model-viewer";
 import { ConsoleControls } from "./console-controls";
 import { ConsoleImage } from "./console-image";
 import { ConsoleOverrides } from "./console-overrides";
@@ -154,6 +155,25 @@ export function ConsoleDetail({
           />
         </section>
       </div>
+      {d.modelFile && (
+        <ConsoleModelViewer
+          key={`${d.id}:${d.revision}`}
+          id={d.id}
+          revision={d.revision}
+          title={`${d.platform.name} · ${d.model.name}`}
+          source={d.modelFile.source}
+          poster={
+            d.model.imageUrl
+              ? {
+                  url: d.model.imageUrl,
+                  alt: `${d.model.name} catalog preview`,
+                  width: 480,
+                  height: 320,
+                }
+              : (d.catalogImages[0] ?? null)
+          }
+        />
+      )}
       <section
         className="min-w-0 space-y-5 rounded-xl bg-card p-4 sm:p-6"
         aria-labelledby="console-catalog-title"

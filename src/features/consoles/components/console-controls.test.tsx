@@ -182,7 +182,9 @@ it("checks a known uncertain upload without resending the original file", async 
     target: { files: [new File(["image"], "logo.png", { type: "image/png" })] },
   });
   fireEvent.click(screen.getByRole("button", { name: "Upload file" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Check upload" }));
+  const check = await screen.findByRole("button", { name: "Check upload" });
+  await waitFor(() => expect(check).toBeEnabled());
+  fireEvent.click(check);
   await waitFor(() =>
     expect(checkCollectionUpload).toHaveBeenCalledWith("upload-id"),
   );
