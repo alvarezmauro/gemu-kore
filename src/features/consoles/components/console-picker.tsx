@@ -9,15 +9,10 @@ import {
   CommandList,
   CommandItem,
 } from "@/components/ui/command";
-import type {
-  ConsoleChoices,
-  ConsoleModelOption,
-  ConsolePlatformOption,
-  ConsoleResult,
-} from "../contracts";
+import type { ConsoleChoices, ConsoleResult } from "../contracts";
 
 export function ConsolePicker<
-  T extends ConsolePlatformOption | ConsoleModelOption,
+  T extends { id: string; name: string; logoUrl?: string | null },
 >({
   label,
   choices,
@@ -25,6 +20,7 @@ export function ConsolePicker<
   search,
   choose,
   detail,
+  optionName,
 }: {
   label: string;
   choices: ConsoleChoices<T>;
@@ -35,6 +31,7 @@ export function ConsolePicker<
   ) => Promise<ConsoleResult<ConsoleChoices<T>>>;
   choose: (item: T) => void;
   detail: (item: T) => string;
+  optionName?: (item: T) => string;
 }) {
   const [results, setResults] = useState(choices);
   const [query, setQuery] = useState("");
@@ -96,7 +93,7 @@ export function ConsolePicker<
               value={item.id}
               disabled={busy}
               onSelect={() => choose(item)}
-              aria-label={`Select ${item.name}`}
+              aria-label={`Select ${optionName ? optionName(item) : item.name}`}
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-stone">
                 {item.logoUrl ? (

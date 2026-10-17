@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CatalogPicker } from "@/features/catalog/components/catalog-picker";
-import type { ReferenceInput } from "@/features/catalog/contracts";
+import type {
+  CatalogOption,
+  ReferenceInput,
+} from "@/features/catalog/contracts";
 import type { GameCatalogRecord } from "../contracts";
 import {
   emptyGame,
@@ -42,9 +45,13 @@ const label = (v: string) => v.toLowerCase().replaceAll("_", " ");
 export function GameCatalogEditor({
   kind,
   record,
+  creation,
+  onCreated,
 }: {
   kind: GameKind;
   record: GameCatalogRecord | null;
+  creation?: { game: CatalogOption; platform: CatalogOption };
+  onCreated?: (id: string) => void;
 }) {
   const router = useRouter();
   const [game, setGame] = useState<GameDraft>(() => {
@@ -58,7 +65,15 @@ export function GameCatalogEditor({
     };
   });
   const [release, setRelease] = useState<ReleaseDraft>(() => {
-    const initial = record?.kind === "release" ? record.fields : emptyRelease;
+    const initial =
+      record?.kind === "release"
+        ? record.fields
+        : {
+            ...emptyRelease,
+            ...(creation
+              ? { gameId: creation.game.id, platformId: creation.platform.id }
+              : {}),
+          };
     return {
       ...initial,
       markets: initial.markets.map((row, i) => ({
@@ -82,7 +97,12 @@ export function GameCatalogEditor({
     })),
   );
   const [options, setOptions] = useState(
-    record?.options ?? { company: [], region: [], game: [], platform: [] },
+    record?.options ?? {
+      company: [],
+      region: [],
+      game: creation ? [creation.game] : [],
+      platform: creation ? [creation.platform] : [],
+    },
   );
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -181,6 +201,7 @@ export function GameCatalogEditor({
         archive,
       );
       if (result.status === "error") setError(result.message);
+      else if (onCreated) onCreated(result.id);
       else {
         router.push(`/app/catalog/games?kind=${kind}&id=${result.id}&saved=1`);
         router.refresh();
@@ -311,11 +332,19 @@ export function GameCatalogEditor({
             </>
           ) : (
             <>
-              {picker("game", "Game", release.gameId, (v) =>
-                editRelease("gameId", v),
-              )}
-              {picker("platform", "Platform", release.platformId, (v) =>
-                editRelease("platformId", v),
+              {creation ? (
+                <p className="text-sm">
+                  {creation.game.name} · {creation.platform.name}
+                </p>
+              ) : (
+                <>
+                  {picker("game", "Game", release.gameId, (v) =>
+                    editRelease("gameId", v),
+                  )}
+                  {picker("platform", "Platform", release.platformId, (v) =>
+                    editRelease("platformId", v),
+                  )}
+                </>
               )}
               {field("Slug", release.slug, (v) => editRelease("slug", v))}
               {field("Edition name", release.editionName, (v) =>
@@ -757,11 +786,13 @@ export function GameCatalogEditor({
           {record.archived ? "Restore record" : "Archive record"}
         </Button>
       )}
-      <Button variant="outline" asChild>
-        <Link href={`/app/catalog/games?kind=${kind}`}>
-          Back to game catalog
-        </Link>
-      </Button>
+      {!onCreated && (
+        <Button variant="outline" asChild>
+          <Link href={`/app/catalog/games?kind=${kind}`}>
+            Back to game catalog
+          </Link>
+        </Button>
+      )}
     </section>
   );
 }

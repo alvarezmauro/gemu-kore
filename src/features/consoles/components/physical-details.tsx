@@ -13,11 +13,13 @@ export function PhysicalDetails({
   change,
   locations,
   showDefects = true,
+  identity = "model",
 }: {
   data: ConsolePhysicalDraft;
   change: (value: ConsolePhysicalDraft) => void;
   locations: ConsoleLocation[];
   showDefects?: boolean;
+  identity?: "model" | "release";
 }) {
   return (
     <div className="space-y-6">
@@ -76,7 +78,7 @@ export function PhysicalDetails({
       <FormField
         id="console-markings"
         label="Observed markings or identification uncertainty"
-        hint="Record what is printed on your copy. These observations do not change its catalog model or commercial markets."
+        hint={`Record what is printed on your copy. These observations do not change its catalog ${identity} or commercial markets.}`}
       >
         <Textarea
           id="console-markings"

@@ -1,31 +1,10 @@
 import { z } from "zod";
-import { defectSeverities } from "@/features/defects/contracts";
+import {
+  copyPhysical as consolePhysical,
+  newCopyDefect as newConsoleDefect,
+} from "@/features/collection/copy-validation";
+export { consolePhysical, newConsoleDefect };
 
-const note = (limit: number) =>
-  z
-    .string()
-    .trim()
-    .max(limit)
-    .transform((value) => value || null);
-export const newConsoleDefect = z
-  .object({
-    title: z.string().trim().min(1, "Give each defect a title.").max(200),
-    description: note(4000),
-    severity: z.enum(defectSeverities),
-  })
-  .strict();
-export const consolePhysical = z
-  .object({
-    serialNumber: note(200),
-    observedMarkings: note(4000),
-    hasBox: z
-      .enum(["unknown", "yes", "no"])
-      .transform((v) => (v === "unknown" ? null : v === "yes")),
-    locationId: z.union([z.uuid(), z.literal("")]).transform((v) => v || null),
-    notes: note(16000),
-    defects: z.array(newConsoleDefect).max(20),
-  })
-  .strict();
 export const consoleCreate = consolePhysical
   .extend({
     id: z.uuid(),

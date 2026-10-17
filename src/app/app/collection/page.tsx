@@ -52,9 +52,14 @@ export default async function CollectionPage() {
           description="Browse your consoles, games and accessories. Each physical copy has its own place here."
           action={
             result.canAddConsole ? (
-              <Button asChild>
-                <Link href="/app/consoles/new">Add console</Link>
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild>
+                  <Link href="/app/consoles/new">Add console</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/app/games/new">Add game</Link>
+                </Button>
+              </div>
             ) : undefined
           }
         />

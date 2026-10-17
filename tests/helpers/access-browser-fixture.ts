@@ -20,8 +20,77 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-catalog") {
+    if (command === "reset-game-creation") {
+      await database.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, game, accessory CASCADE`;
+    } else if (command === "reset-catalog") {
       await database.$executeRaw`TRUNCATE TABLE company, region, console_platform, game, accessory CASCADE`;
+    } else if (command === "seed-game-creation") {
+      const platform = await database.consolePlatform.create({
+        data: { name: "SNES", slug: "snes" },
+      });
+      const game = await database.game.create({
+        data: {
+          name: "Chrono Trigger",
+          slug: "chrono-trigger",
+          aliases: ["クロノ"],
+        },
+      });
+      const region = await database.region.create({
+        data: { name: "North America", code: "NA", slug: "north-america" },
+      });
+      const release = await database.gameRelease.create({
+        data: {
+          gameId: game.id,
+          platformId: platform.id,
+          slug: "chrono-snes-na",
+          editionName: "Standard Edition",
+          regions: {
+            create: { regionId: region.id, releaseYear: 1995, releaseMonth: 8 },
+          },
+          includedItems: {
+            create: { name: "Manual", kind: "MANUAL", quantity: 1 },
+          },
+        },
+      });
+      await database.gameRelease.create({
+        data: {
+          gameId: game.id,
+          platformId: platform.id,
+          slug: "chrono-snes-unknown",
+          editionName: "Deluxe Edition",
+          editionType: "DELUXE",
+        },
+      });
+      const location = await database.location.create({
+        data: { name: "Game shelf", normalizedName: "game shelf" },
+      });
+      result = {
+        platformId: platform.id,
+        gameId: game.id,
+        releaseId: release.id,
+        regionId: region.id,
+        locationId: location.id,
+      };
+    } else if (command === "revise-game-release") {
+      await database.gameRelease.update({
+        where: { id: argument! },
+        data: { revision: { increment: 1 } },
+      });
+    } else if (command === "game-creation-state") {
+      result = await database.collectionItem.findMany({
+        where: { type: "GAME" },
+        select: {
+          id: true,
+          publicationStatus: true,
+          serialNumber: true,
+          notes: true,
+          hasBox: true,
+          locationId: true,
+          ownedGame: { select: { gameReleaseId: true } },
+          defects: { select: { title: true, severity: true } },
+          media: { select: { id: true, publicApproved: true, type: true } },
+        },
+      });
     } else if (command === "seed-game-catalog") {
       const platform = await database.consolePlatform.create({
         data: { name: "SNES", slug: "snes" },
