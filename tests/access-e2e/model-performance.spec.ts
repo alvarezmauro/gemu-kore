@@ -32,7 +32,7 @@ async function attach(info: TestInfo, name: string, value: unknown) {
   );
   await info.attach(name, { path, contentType: "application/json" });
 }
-async function settle(page: Page) {
+async function settle(page: Page, timeout = 8000) {
   // Controls damping must reach rest; compare two windows instead of assuming one draw.
   await expect
     .poll(
@@ -41,7 +41,7 @@ async function settle(page: Page) {
         await page.waitForTimeout(500);
         return frames(await snapshot(page)) - before;
       },
-      { timeout: 8000 },
+      { timeout },
     )
     .toBe(0);
 }
@@ -408,13 +408,14 @@ test("keeps a stable drawing buffer during orbit and after damping settles", asy
   page,
   context,
 }, info) => {
-  test.setTimeout(60000);
+  test.setTimeout(90000);
   await prepareModel(page, context, modelBenchmark("textured").bytes);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const viewer = await openModel(page),
     stage = viewer.getByRole("img", { name: /^Interactive 3D/ });
   await stage.scrollIntoViewIfNeeded();
-  await settle(page);
+  // Software WebGL needs more wall time to finish the same orbit damping.
+  await settle(page, 20000);
   await viewer.locator("canvas").evaluate((canvas: HTMLCanvasElement) => {
     canvas.dataset.bufferWrites = "0";
     for (const dimension of ["width", "height"] as const) {
@@ -448,7 +449,8 @@ test("keeps a stable drawing buffer during orbit and after damping settles", asy
     { steps: 30 },
   );
   await page.mouse.up();
-  await settle(page);
+  // Software WebGL needs more wall time to finish the same orbit damping.
+  await settle(page, 20000);
   await viewer
     .getByRole("button", { name: "Auto rotate", exact: true })
     .click();
@@ -456,7 +458,8 @@ test("keeps a stable drawing buffer during orbit and after damping settles", asy
   await viewer
     .getByRole("button", { name: "Stop auto rotate", exact: true })
     .click();
-  await settle(page);
+  // Software WebGL needs more wall time to finish the same orbit damping.
+  await settle(page, 20000);
   const before = frames(await snapshot(page));
   await page.waitForTimeout(4000);
   const idleFrames = frames(await snapshot(page)) - before;
@@ -511,7 +514,7 @@ test("shows bounded download progress and cancels a slow private transfer", asyn
   await expect(progress).toHaveCount(0);
   await expect(viewer).toHaveAttribute("aria-busy", "false");
   await expect(
-    page.getByRole("heading", { name: "My copy", exact: true }),
+    page.getByRole("heading", { name: "My Console", exact: true }),
   ).toBeVisible();
   await session.detach();
   await attach(info, "loading-states.json", {

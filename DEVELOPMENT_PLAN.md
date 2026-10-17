@@ -1406,6 +1406,8 @@ Technical Specifications
 Gallery
 ```
 
+Status: **Completed 2026-10-17.** Reorganized the private console detail page into a responsive media/identity hero with the existing on-demand 3D viewer, selected logo, platform/model identity, separately labeled manufacturers, generation and release years. Added section navigation and distinct My Console, Console Information, Technical Specifications and Gallery sections, keeping canonical markets separate from observed markings and catalog imagery separate from personal photos. Preserved copy editing/deletion, defects, media management, private authorization and unknown/empty/error fallbacks. Fixed stale-edit error focus to run after rendering and after the pending fieldset is enabled, with component/browser coverage. Verified lint, typecheck, formatting, production browser builds, 752 unit/component cases, 32 console PostgreSQL cases and all 48 focused console/viewer/performance browser scenarios across the full run and corrective reruns; inspected desktop, active-viewer and 320px dark/reduced-motion screenshots. The stable-buffer stress test allows slower software WebGL damping to settle while retaining zero idle draws and zero resolution writes. No dependency, schema/migration, public endpoint or Task 10.2 animation polish added. Details: [Console detail operations](docs/operations/CONSOLE_DETAIL.md). Next: Task 10.2.
+
 ---
 
 ## TASK 10.2 — Magic UI Polish

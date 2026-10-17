@@ -123,6 +123,7 @@ it("keeps an open draft and its original copy/catalog revisions after a page ref
     ),
   );
   expect(await screen.findByRole("alert")).toHaveTextContent("copy changed");
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveFocus());
   expect(screen.getByLabelText("Private notes")).toHaveValue("Keep draft");
   expect(
     screen.queryByRole("button", { name: "Add defect" }),

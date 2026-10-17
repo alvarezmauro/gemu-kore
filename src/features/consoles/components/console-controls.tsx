@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,9 +52,11 @@ export function ConsoleControls({
   const [busy, startTransition] = useTransition();
   const pending = useRef(false);
   const alert = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error && !busy) alert.current?.focus();
+  }, [error, busy]);
   function showError(message: string) {
     setError(message);
-    requestAnimationFrame(() => alert.current?.focus());
   }
   function task(run: () => Promise<void>) {
     if (pending.current) return;

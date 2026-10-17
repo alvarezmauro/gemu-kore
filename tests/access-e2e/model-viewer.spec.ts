@@ -200,7 +200,7 @@ test("falls back when WebGL cannot create a context without breaking console det
   );
   await expect(page.locator("canvas")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "My copy", exact: true }),
+    page.getByRole("heading", { name: "My Console", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Download 3D file", exact: true }),

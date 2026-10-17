@@ -90,19 +90,74 @@ export function ConsoleDetail({
           locations={locations}
         />
       )}
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_2fr]">
-        <section
-          className="min-w-0 space-y-3 rounded-xl bg-card p-4 sm:p-6"
-          aria-label="Console identity preview"
-        >
+      <section
+        aria-label="Console identity preview"
+        className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
+      >
+        <div className="min-w-0">
+          {d.modelFile ? (
+            <ConsoleModelViewer
+              key={`${d.id}:${d.revision}`}
+              id={d.id}
+              revision={d.revision}
+              title={`${d.platform.name} · ${d.model.name}`}
+              source={d.modelFile.source}
+              poster={
+                d.model.imageUrl
+                  ? {
+                      url: d.model.imageUrl,
+                      alt: `${d.model.name} catalog preview`,
+                      width: 480,
+                      height: 320,
+                    }
+                  : (d.catalogImages[0] ?? null)
+              }
+            />
+          ) : d.model.imageUrl || d.catalogImages[0] ? (
+            <ConsoleImage
+              url={d.model.imageUrl ?? d.catalogImages[0].url}
+              alt={`${d.model.name} catalog preview`}
+            />
+          ) : (
+            <div className="flex aspect-[3/2] items-center justify-center rounded-xl bg-stone p-6 text-center text-muted-foreground">
+              No console preview available
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 space-y-6 rounded-xl bg-card p-4 sm:p-6">
           {d.logo ? (
-            <>
+            <div className="max-w-48">
               <ConsoleImage url={d.logo.url} alt={`${d.platform.name} logo`} />
-              <p className="text-sm text-muted-foreground">{d.logo.source}</p>
-            </>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {d.logo.source}
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">No logo available</p>
           )}
+          <div className="[overflow-wrap:anywhere]">
+            <p className="text-sm text-muted-foreground">Console platform</p>
+            <p className="mt-1 font-heading text-2xl">{d.platform.name}</p>
+            <p className="mt-2 text-body">{d.model.name}</p>
+          </div>
+          <Facts
+            entries={[
+              {
+                label: "Platform manufacturer",
+                value: d.platform.manufacturer,
+              },
+              { label: "Model manufacturer", value: d.model.manufacturer },
+              { label: "Generation", value: d.platform.generation?.toString() },
+              {
+                label: "Platform release year",
+                value: d.platform.releaseYear?.toString(),
+              },
+              {
+                label: "Model release year",
+                value: d.model.releaseYear?.toString(),
+              },
+            ]}
+          />
           {d.modelFile ? (
             <>
               <a
@@ -121,13 +176,37 @@ export function ConsoleDetail({
               No 3D file available
             </p>
           )}
-        </section>
+        </div>
+      </section>
+      <nav
+        aria-label="Console page sections"
+        className="flex flex-wrap gap-x-6 gap-y-2"
+      >
+        {[
+          ["my-console-title", "My Console"],
+          ["console-catalog-title", "Console Information"],
+          ["console-specifications-title", "Technical Specifications"],
+          ["console-gallery-title", "Gallery"],
+        ].map(([id, name]) => (
+          <a
+            key={id}
+            href={`#${id}`}
+            className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+          >
+            {name}
+          </a>
+        ))}
+      </nav>
+      <div className="min-w-0">
         <section
           className="min-w-0 space-y-5 rounded-xl bg-card p-4 sm:p-6"
           aria-labelledby="my-console-title"
         >
-          <h2 id="my-console-title" className="font-heading text-xl">
-            My copy
+          <h2
+            id="my-console-title"
+            className="scroll-mt-6 font-heading text-xl"
+          >
+            My Console
           </h2>
           <Facts
             entries={[
@@ -144,6 +223,10 @@ export function ConsoleDetail({
               },
               { label: "Location", value: d.location ?? "Unassigned" },
               {
+                label: "Canonical commercial markets",
+                value: d.model.markets.join(", "),
+              },
+              {
                 label: "Observed markings or identification uncertainty",
                 value: d.fields.observedMarkings || "Not recorded",
               },
@@ -155,44 +238,25 @@ export function ConsoleDetail({
           />
         </section>
       </div>
-      {d.modelFile && (
-        <ConsoleModelViewer
-          key={`${d.id}:${d.revision}`}
-          id={d.id}
-          revision={d.revision}
-          title={`${d.platform.name} · ${d.model.name}`}
-          source={d.modelFile.source}
-          poster={
-            d.model.imageUrl
-              ? {
-                  url: d.model.imageUrl,
-                  alt: `${d.model.name} catalog preview`,
-                  width: 480,
-                  height: 320,
-                }
-              : (d.catalogImages[0] ?? null)
-          }
-        />
-      )}
       <section
         className="min-w-0 space-y-5 rounded-xl bg-card p-4 sm:p-6"
         aria-labelledby="console-catalog-title"
       >
-        <h2 id="console-catalog-title" className="font-heading text-xl">
-          Catalog identity
+        <h2
+          id="console-catalog-title"
+          className="scroll-mt-6 font-heading text-xl"
+        >
+          Console Information
         </h2>
         <p className="text-sm text-muted-foreground">
           Shared facts for this model. Physical observations and private notes
-          belong to My copy.
+          belong to My Console.
         </p>
         <Facts
           entries={[
             { label: "Console platform", value: d.platform.name },
             { label: "Hardware model", value: d.model.name },
-            { label: "Platform manufacturer", value: d.platform.manufacturer },
-            { label: "Model manufacturer", value: d.model.manufacturer },
             { label: "Model number", value: d.model.modelNumber },
-            { label: "Generation", value: d.platform.generation?.toString() },
             {
               label: "Platform release year",
               value: d.platform.releaseYear?.toString(),
@@ -201,9 +265,7 @@ export function ConsoleDetail({
               label: "Model release year",
               value: d.model.releaseYear?.toString(),
             },
-            { label: "Commercial markets", value: d.model.markets.join(", ") },
             { label: "Region locking", value: d.model.regionLock },
-            ...d.facts,
           ]}
         />
         {d.model.description && (
@@ -224,39 +286,73 @@ export function ConsoleDetail({
             </p>
           </div>
         )}
-        <h3 className="font-medium">Catalog images</h3>
-        <Gallery
-          images={d.catalogImages}
-          empty="No catalog images available."
-        />
       </section>
       <section
-        className="space-y-5 rounded-xl bg-card p-4 sm:p-6"
-        aria-labelledby="console-photos-title"
+        className="min-w-0 space-y-5 rounded-xl bg-card p-4 sm:p-6"
+        aria-labelledby="console-specifications-title"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="console-photos-title" className="font-heading text-xl">
-            Copy photos
-          </h2>
-          <Button variant="outline" asChild>
-            <Link href={`/app/media?itemId=${d.id}`}>
-              {canManage ? "Manage copy photos" : "View all copy photos"}
-            </Link>
-          </Button>
-        </div>
-        <Gallery images={d.photos} empty="No copy photos recorded." />
-        {d.photos.length === 12 && (
+        <h2
+          id="console-specifications-title"
+          className="scroll-mt-6 font-heading text-xl"
+        >
+          Technical Specifications
+        </h2>
+        {d.facts.length ? (
+          <Facts entries={d.facts} />
+        ) : (
           <p className="text-sm text-muted-foreground">
-            Showing the first 12 photos. Open Photos to see all files.
+            No technical specifications recorded for this model.
           </p>
         )}
+      </section>
+      <section
+        className="min-w-0 space-y-6 rounded-xl bg-card p-4 sm:p-6"
+        aria-labelledby="console-gallery-title"
+      >
+        <h2
+          id="console-gallery-title"
+          className="scroll-mt-6 font-heading text-xl"
+        >
+          Gallery
+        </h2>
+        <div className="space-y-4">
+          <h3 className="font-medium">Catalog images</h3>
+          <Gallery
+            images={d.catalogImages}
+            empty="No catalog images available."
+          />
+        </div>
+        <div className="space-y-4" aria-labelledby="console-photos-title">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3
+              id="console-photos-title"
+              className="scroll-mt-6 font-heading text-xl"
+            >
+              Copy photos
+            </h3>
+            <Button variant="outline" asChild>
+              <Link href={`/app/media?itemId=${d.id}`}>
+                {canManage ? "Manage copy photos" : "View all copy photos"}
+              </Link>
+            </Button>
+          </div>
+          <Gallery images={d.photos} empty="No copy photos recorded." />
+          {d.photos.length === 12 && (
+            <p className="text-sm text-muted-foreground">
+              Showing the first 12 photos. Open Photos to see all files.
+            </p>
+          )}
+        </div>
       </section>
       <section
         className="space-y-5 rounded-xl bg-card p-4 sm:p-6"
         aria-labelledby="console-defects-title"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="console-defects-title" className="font-heading text-xl">
+          <h2
+            id="console-defects-title"
+            className="scroll-mt-6 font-heading text-xl"
+          >
             Defects ({d.defectCount})
           </h2>
           <Button variant="outline" asChild>

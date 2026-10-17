@@ -65,20 +65,57 @@ test("opens individual console copies from collection/search and shows private/c
     .click();
   await expect(page).toHaveURL(new RegExp(`/app/consoles/${id}$`));
   await expect(
-    page.getByRole("heading", { name: "My copy", exact: true }),
+    page.getByRole("heading", { name: "My Console", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("COPY-ONE", { exact: true })).toBeVisible();
   await expect(page.getByText("Childhood copy", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Catalog identity", exact: true }),
+    page.getByRole("heading", { name: "Console Information", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Japan", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Console identity preview" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Technical Specifications",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Gallery", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Catalog images", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Copy photos", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Console page sections" })
+    .getByRole("link", { name: "Technical Specifications" })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(`/app/consoles/${id}#console-specifications-title$`),
+  );
+  await expect(
+    page
+      .getByRole("region", { name: "My Console", exact: true })
+      .getByText("Childhood copy"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Console Information", exact: true })
+      .getByText("Childhood copy"),
+  ).toHaveCount(0);
+
   await expect(
     page.getByRole("heading", { name: "Yellowing", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Manage copy photos" }),
   ).toHaveAttribute("href", `/app/media?itemId=${id}`);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: info.outputPath("console-detail.png"),
     fullPage: true,
@@ -161,6 +198,8 @@ test("rejects another tab's stale edit, preserves the draft and confirms deletio
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
   await expect(other.getByRole("dialog")).toHaveCount(0);
+  // Return to the edited tab as a user would before submitting its stale form.
+  await page.bringToFront();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("copy changed");
   await expect(page.getByLabel("Private notes", { exact: true })).toHaveValue(
