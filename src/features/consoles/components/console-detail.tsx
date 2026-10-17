@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MagicCard } from "@/components/magic/magic-card";
+import { BlurFade } from "@/components/magic/blur-fade";
+import { ConsoleSectionNav } from "./console-section-nav";
 import {
   severityLabels,
   statusLabels,
@@ -124,79 +127,79 @@ export function ConsoleDetail({
             </div>
           )}
         </div>
-        <div className="min-w-0 space-y-6 rounded-xl bg-card p-4 sm:p-6">
-          {d.logo ? (
-            <div className="max-w-48">
-              <ConsoleImage url={d.logo.url} alt={`${d.platform.name} logo`} />
-              <p className="mt-2 text-sm text-muted-foreground">
-                {d.logo.source}
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No logo available</p>
-          )}
-          <div className="[overflow-wrap:anywhere]">
-            <p className="text-sm text-muted-foreground">Console platform</p>
-            <p className="mt-1 font-heading text-2xl">{d.platform.name}</p>
-            <p className="mt-2 text-body">{d.model.name}</p>
-          </div>
-          <Facts
-            entries={[
-              {
-                label: "Platform manufacturer",
-                value: d.platform.manufacturer,
-              },
-              { label: "Model manufacturer", value: d.model.manufacturer },
-              { label: "Generation", value: d.platform.generation?.toString() },
-              {
-                label: "Platform release year",
-                value: d.platform.releaseYear?.toString(),
-              },
-              {
-                label: "Model release year",
-                value: d.model.releaseYear?.toString(),
-              },
-            ]}
+        <MagicCard className="p-4 sm:p-6">
+          <div
+            aria-hidden="true"
+            data-console-grid
+            className="pointer-events-none absolute top-0 right-0 h-32 w-40 rounded-tr-xl opacity-40 [mask-image:linear-gradient(to_bottom_left,black,transparent_70%)]"
+            style={{
+              backgroundImage:
+                "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
+              backgroundSize: "24px 24px",
+            }}
           />
-          {d.modelFile ? (
-            <>
-              <a
-                className="inline-flex min-h-11 items-center underline underline-offset-4"
-                href={d.modelFile.url}
-                download
-              >
-                Download 3D file
-              </a>
+          <div className="relative space-y-6">
+            {d.logo ? (
+              <div className="max-w-48">
+                <ConsoleImage
+                  url={d.logo.url}
+                  alt={`${d.platform.name} logo`}
+                />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {d.logo.source}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No logo available</p>
+            )}
+            <BlurFade className="[overflow-wrap:anywhere]">
+              <p className="text-sm text-muted-foreground">Console platform</p>
+              <p className="mt-1 font-heading text-2xl">{d.platform.name}</p>
+              <p className="mt-2 text-body">{d.model.name}</p>
+            </BlurFade>
+            <Facts
+              entries={[
+                {
+                  label: "Platform manufacturer",
+                  value: d.platform.manufacturer,
+                },
+                { label: "Model manufacturer", value: d.model.manufacturer },
+                {
+                  label: "Generation",
+                  value: d.platform.generation?.toString(),
+                },
+                {
+                  label: "Platform release year",
+                  value: d.platform.releaseYear?.toString(),
+                },
+                {
+                  label: "Model release year",
+                  value: d.model.releaseYear?.toString(),
+                },
+              ]}
+            />
+            {d.modelFile ? (
+              <>
+                <a
+                  className="inline-flex min-h-11 items-center underline underline-offset-4"
+                  href={d.modelFile.url}
+                  download
+                >
+                  Download 3D file
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  {d.modelFile.source}
+                </p>
+              </>
+            ) : (
               <p className="text-sm text-muted-foreground">
-                {d.modelFile.source}
+                No 3D file available
               </p>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No 3D file available
-            </p>
-          )}
-        </div>
+            )}
+          </div>
+        </MagicCard>
       </section>
-      <nav
-        aria-label="Console page sections"
-        className="flex flex-wrap gap-x-6 gap-y-2"
-      >
-        {[
-          ["my-console-title", "My Console"],
-          ["console-catalog-title", "Console Information"],
-          ["console-specifications-title", "Technical Specifications"],
-          ["console-gallery-title", "Gallery"],
-        ].map(([id, name]) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
-          >
-            {name}
-          </a>
-        ))}
-      </nav>
+      <ConsoleSectionNav />
       <div className="min-w-0">
         <section
           className="min-w-0 space-y-5 rounded-xl bg-card p-4 sm:p-6"

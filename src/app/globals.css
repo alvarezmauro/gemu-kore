@@ -213,6 +213,11 @@
     .motion-card {
       transform: none !important;
     }
+    [data-motion-blur] {
+      opacity: 1 !important;
+      filter: none !important;
+      transform: none !important;
+    }
   }
 }
 @keyframes content-entry {

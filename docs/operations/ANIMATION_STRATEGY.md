@@ -38,9 +38,9 @@ Shared layout currently covers a mounted card and dialog. It does not implement 
 
 The provider keeps `MotionConfig reducedMotion="user"`. That alone does not disable filters, opacity or CSS keyframes. `useMotionAllowed()` in `src/lib/motion/use-motion-preference.ts` explicitly enables custom Motion effects only when the browser reports `prefers-reduced-motion: no-preference`. Server rendering, unknown preferences and unavailable media-query support use static presentation. The subscription also handles live preference changes.
 
-CSS animations exist only inside the no-preference media query. Reduced motion removes entry/exit keyframes, decorative movement and hover transitions. Lists disable layout motion; shared media disables `layoutId`; Blur Fade skips its effect or cancels active playback and restores opacity, filter and transform. Existing controls, menus and skeletons retain their reduced-motion support.
+CSS animations exist only inside the no-preference media query. Reduced motion removes entry/exit keyframes, decorative movement and hover transitions. Lists disable layout motion; shared media disables `layoutId`; Blur Fade skips its effect or completes active playback at its static end state and restores opacity, filter and transform. Existing controls, menus and skeletons retain their reduced-motion support.
 
-Server HTML is visible before hydration. Blur Fade never writes an initial hidden style, and its animation cleanup restores the static state. CSS entries preserve full opacity and have no hidden delay or fill mode. Optional in-view content stays readable if observation or animation is unavailable. No timers gate content, focus, list changes or successful actions.
+Server HTML is visible before hydration. Blur Fade never writes an initial hidden style, and its animation cleanup restores the static state. Completing rather than canceling playback avoids rewinding internal Motion values to the initial offset; a reduced-motion CSS override also guards against late animation writes. CSS entries preserve full opacity and have no hidden delay or fill mode. Optional in-view content stays readable if observation or animation is unavailable. No timers gate content, focus, list changes or successful actions.
 
 Without JavaScript, the preview's server content, lists and normal anchor navigation remain readable and usable. The dialog, theme menu and demo replay/list buttons require JavaScript. Animation fallback does not provide a JavaScript-free substitute for these controls; future essential product navigation must use real links and server-rendered destination content.
 
@@ -64,3 +64,5 @@ The temporary preview can run without a database. Browser tests build the produc
 ## References
 
 The patterns adapt [Magic UI Blur Fade](https://magicui.design/docs/components/blur-fade), [Motion accessibility](https://motion.dev/docs/react-accessibility) and [Motion layout animation](https://motion.dev/docs/react-layout-animations). The installed Blur Fade is owned source with stricter static rendering and reduced-motion behavior than its registry baseline; preserve these adjustments when updating it.
+
+Task 10.2 (2026-10-17) exercises live reduced-motion cleanup on the console detail summary, including returning to normal motion without a residual offset. Its browser tests also cover native section links and a static presentation without JavaScript. All six shared motion browser cases pass after the cleanup correction.

@@ -1429,6 +1429,8 @@ Use:
 
 Avoid visual overload.
 
+Status: **Completed 2026-10-17.** Added the existing Magic Card fine-mouse spotlight to the console identity panel, a single bounded Blur Fade on the platform/model summary, a faint static theme-aware corner grid, and a scoped Motion selection indicator on native section links. Hash selection supports keyboard activation, Back/Forward and direct-link reloads without shifting link widths. Touch and reduced-motion users retain a static presentation; server-rendered content and fragment links work without JavaScript. Fixed shared Blur Fade cleanup to complete at the static end state instead of rewinding internal Motion values, with a reduced-motion CSS safeguard and browser coverage for toggling back to normal motion. Verified lint, types, formatting, production builds, all 752 unit/component cases across full/focused reruns, 32 console PostgreSQL cases, 32 console/viewer browser scenarios across full/focused runs and six shared motion browser cases. Inspected light desktop and 320px dark/reduced-motion screenshots. Resource-sensitive unit timeouts and an initial test-selector mismatch were resolved through focused reruns without changing unrelated application behavior or test assertions. No dependency, schema/migration, query, authorization, public-delivery or automatic 3D-loading change. Details: [Console detail polish](docs/operations/CONSOLE_DETAIL.md#task-102--restrained-presentation-polish). Next: Task 10.3.
+
 ---
 
 ## TASK 10.3 — Consoles Phase Review

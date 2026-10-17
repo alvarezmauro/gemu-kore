@@ -43,7 +43,9 @@ export function BlurFade({
       },
     );
     return () => {
-      playback.cancel();
+      // cancel() rewinds Motion values to the initial 4px offset. Complete
+      // instead so a queued Motion render also carries the static end state.
+      playback.complete();
       element.style.opacity = "1";
       element.style.filter = "none";
       element.style.transform = "none";

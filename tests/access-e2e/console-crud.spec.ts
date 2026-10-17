@@ -392,3 +392,95 @@ test("keeps the copy after an uncertain upload and requires checking saved files
   expect(uploads).toBe(1);
   expect(await fixture("console-creation-state")).toHaveLength(2);
 });
+
+test("polishes console identity without blocking anchors, history or live reduced motion", async ({
+  page,
+  context,
+}, info) => {
+  await signIn(context, "VIEWER");
+  const { id } = await seed();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`/app/consoles/${id}`);
+  const nav = page.getByRole("navigation", { name: "Console page sections" });
+  const information = nav.getByRole("link", {
+    name: "Console Information",
+    exact: true,
+  });
+  await information.focus();
+  await information.press("Enter");
+  await expect(information).toHaveAttribute("aria-current", "location");
+  const gallery = nav.getByRole("link", { name: "Gallery", exact: true });
+  await gallery.click();
+  await expect(gallery).toHaveAttribute("aria-current", "location");
+  await page.goBack();
+  await expect(information).toHaveAttribute("aria-current", "location");
+  await expect(gallery).not.toHaveAttribute("aria-current", "location");
+  await page.reload();
+  await expect(information).toHaveAttribute("aria-current", "location");
+  await expect(nav).toHaveAttribute("data-section-motion", "enabled");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(nav).toHaveAttribute("data-section-motion", "disabled");
+  await expect(
+    nav.locator('a[aria-current="location"] > [aria-hidden="true"]'),
+  ).toHaveCSS("transform", "none");
+  await expect(page.locator("[data-magic-spotlight]")).toHaveCount(0);
+  const summary = page.locator("[data-motion-blur]");
+  await expect(summary).toHaveCSS("opacity", "1");
+  await expect(summary).toHaveCSS("filter", "none");
+  await expect(summary).toHaveCSS("transform", "none");
+  await expect(page.locator("[data-console-grid]")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(nav).toHaveAttribute("data-section-motion", "enabled");
+  await expect(summary).toHaveCSS("transform", "none");
+  const fine = await page.evaluate(
+    () => matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
+  await expect(page.locator("[data-magic-spotlight]")).toHaveCount(
+    fine ? 1 : 0,
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: info.outputPath("console-polish.png"),
+    fullPage: true,
+  });
+});
+
+test("keeps console content and section navigation usable without JavaScript", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL: "https://127.0.0.1:3111",
+    ignoreHTTPSErrors: true,
+    viewport: { width: 320, height: 720 },
+  });
+  try {
+    await signIn(context, "VIEWER");
+    const { id } = await seed();
+    const page = await context.newPage();
+    await page.goto(`/app/consoles/${id}`);
+    await expect(page.getByText("COPY-ONE", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-motion-blur]")).toHaveCSS("opacity", "1");
+    await expect(page.locator("[data-magic-spotlight]")).toHaveCount(0);
+    await page
+      .getByRole("navigation", { name: "Console page sections" })
+      .getByRole("link", { name: "Gallery", exact: true })
+      .click();
+    await expect(page).toHaveURL(
+      new RegExp(`/app/consoles/${id}#console-gallery-title$`),
+    );
+    await expect(
+      page.getByRole("heading", { name: "Gallery", exact: true }),
+    ).toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  } finally {
+    await context.close();
+  }
+});
