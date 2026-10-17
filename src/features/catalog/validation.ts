@@ -203,7 +203,7 @@ const model = z
       path: ["discontinuedYear"],
     },
   );
-const reference = z
+export const catalogReference = z
   .strictObject({
     id: z.uuid().optional(),
     provider: z.string().trim().toLowerCase().min(1).max(100),
@@ -222,7 +222,7 @@ const reference = z
 const root = {
   id: z.uuid().optional(),
   expectedRevision: z.number().int().positive().max(2147483646).optional(),
-  references: z.array(reference).max(30),
+  references: z.array(catalogReference).max(30),
 };
 export const catalogSave = z
   .discriminatedUnion("kind", [
@@ -231,7 +231,7 @@ export const catalogSave = z
       ...root,
       kind: z.literal("region"),
       fields: region,
-      references: z.array(reference).max(0),
+      references: z.array(catalogReference).max(0),
     }),
     z.strictObject({ ...root, kind: z.literal("platform"), fields: platform }),
     z.strictObject({ ...root, kind: z.literal("model"), fields: model }),
@@ -274,7 +274,7 @@ export const catalogPage = z.strictObject({
   id: z.uuid().optional(),
 });
 export const catalogLookup = z.strictObject({
-  kind: z.enum(["company", "platform", "region"]),
+  kind: z.enum(["company", "platform", "region", "game"]),
   query: z.string().trim().max(200),
 });
 export type CatalogSave = z.output<typeof catalogSave>;

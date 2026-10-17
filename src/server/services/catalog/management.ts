@@ -239,7 +239,12 @@ export async function lookupCatalog(
             parsed.data.query,
             tx,
           )
-        ).map(option);
+        ).map((r) => ({
+          ...option(r),
+          ...("slug" in r && typeof r.slug === "string"
+            ? { detail: r.slug }
+            : {}),
+        }));
       },
       { isolationLevel: "RepeatableRead" },
     );

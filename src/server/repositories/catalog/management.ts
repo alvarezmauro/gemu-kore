@@ -63,7 +63,7 @@ const modelSelect = {
   },
   externalReferences: references,
 } as const;
-export function target(kind: Kind, id: string) {
+export function target(kind: Kind | "game" | "release", id: string) {
   switch (kind) {
     case "company":
       return { companyId: id };
@@ -73,6 +73,10 @@ export function target(kind: Kind, id: string) {
       return { platformId: id };
     case "model":
       return { consoleModelId: id };
+    case "game":
+      return { gameId: id };
+    case "release":
+      return { gameReleaseId: id };
   }
 }
 export async function findCatalogRecord(
@@ -123,7 +127,7 @@ export async function listCatalogRecords(
   }
 }
 export async function lookupCatalogRecords(
-  kind: Exclude<Kind, "model">,
+  kind: Exclude<Kind, "model"> | "game",
   query: string,
   tx: TransactionClient,
 ) {
@@ -139,6 +143,18 @@ export async function lookupCatalogRecords(
     take: 25,
   };
   switch (kind) {
+    case "game":
+      return tx.game.findMany({
+        ...args,
+        select: { ...identity, slug: true },
+        where: {
+          archivedAt: null,
+          OR: [
+            { name: { contains: literal, mode: "insensitive" } },
+            { slug: { contains: literal, mode: "insensitive" } },
+          ],
+        },
+      });
     case "company":
       return tx.company.findMany(args);
     case "region":
@@ -246,7 +262,7 @@ export async function setModelMarkets(
   });
 }
 export async function setCatalogReferences(
-  kind: Exclude<Kind, "region">,
+  kind: Exclude<Kind, "region"> | "game" | "release",
   id: string,
   refs: {
     id?: string;
@@ -284,7 +300,7 @@ export async function setCatalogReferences(
   }
 }
 export async function appendCatalogHistory(
-  kind: Kind,
+  kind: Kind | "game" | "release",
   id: string,
   revision: number,
   actorId: string,
@@ -306,7 +322,7 @@ export async function appendCatalogHistory(
   });
 }
 export function listCatalogHistory(
-  kind: Kind,
+  kind: Kind | "game" | "release",
   id: string,
   tx: TransactionClient,
 ) {

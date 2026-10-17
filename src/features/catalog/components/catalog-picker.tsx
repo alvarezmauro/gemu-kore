@@ -13,7 +13,7 @@ export function CatalogPicker({
   multiple = false,
   disabled = false,
 }: {
-  kind: "company" | "platform" | "region";
+  kind: "company" | "platform" | "region" | "game";
   label: string;
   selected: CatalogOption[];
   onChange: (value: CatalogOption[]) => void;
@@ -67,6 +67,11 @@ export function CatalogPicker({
             <span className="min-w-0 break-words">
               {option.name}
               {option.archived ? " (archived)" : ""}
+              {option.detail && (
+                <span className="block text-sm text-muted-foreground">
+                  {option.detail}
+                </span>
+              )}
             </span>
             <Button
               type="button"
@@ -129,6 +134,7 @@ export function CatalogPicker({
                 disabled={multiple && selected.length >= 30}
               >
                 Select {option.name}
+                {option.detail ? ` (${option.detail})` : ""}
               </Button>
             </li>
           ))}

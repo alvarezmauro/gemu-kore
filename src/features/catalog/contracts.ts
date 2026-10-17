@@ -6,7 +6,12 @@ export const catalogLabels: Record<CatalogKind, string> = {
   platform: "Platforms",
   model: "Hardware models",
 };
-export type CatalogOption = { id: string; name: string; archived: boolean };
+export type CatalogOption = {
+  id: string;
+  name: string;
+  archived: boolean;
+  detail?: string;
+};
 export type ReferenceInput = {
   id?: string;
   provider: string;

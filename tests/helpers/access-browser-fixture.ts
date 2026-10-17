@@ -22,6 +22,58 @@ async function main() {
     let result: unknown = null;
     if (command === "reset-catalog") {
       await database.$executeRaw`TRUNCATE TABLE company, region, console_platform, game, accessory CASCADE`;
+    } else if (command === "seed-game-catalog") {
+      const platform = await database.consolePlatform.create({
+        data: { name: "SNES", slug: "snes" },
+      });
+      const company = await database.company.create({
+        data: { name: "Square", slug: "square" },
+      });
+      const region = await database.region.create({
+        data: { name: "North America", code: "NA", slug: "north-america" },
+      });
+      result = {
+        platformId: platform.id,
+        companyId: company.id,
+        regionId: region.id,
+      };
+    } else if (command === "game-catalog-state") {
+      result = {
+        games: await database.game.findMany({
+          select: {
+            id: true,
+            name: true,
+            revision: true,
+            archivedAt: true,
+            companies: { select: { companyId: true } },
+          },
+        }),
+        releases: await database.gameRelease.findMany({
+          select: {
+            id: true,
+            gameId: true,
+            platformId: true,
+            editionName: true,
+            revision: true,
+            regions: {
+              select: {
+                regionId: true,
+                releaseYear: true,
+                releaseMonth: true,
+                releaseDay: true,
+              },
+            },
+            companies: {
+              select: { companyId: true, role: true, regionId: true },
+            },
+            includedItems: {
+              select: { id: true, name: true, kind: true, quantity: true },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        }),
+        copies: await database.collectionItem.count(),
+      };
     } else if (command === "catalog-state") {
       result = {
         companies: await database.company.count(),

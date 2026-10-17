@@ -63,6 +63,9 @@ export default async function CatalogPage({
           title="Console catalog"
           description="Shared identities for the systems in your collection. Start with companies and markets, then add platforms and hardware models."
         />
+        <Button asChild variant="outline">
+          <Link href="/app/catalog/games">Manage game catalog</Link>
+        </Button>
         <nav aria-label="Catalog sections" className="flex flex-wrap gap-2">
           {catalogKinds.map((k) => (
             <Button

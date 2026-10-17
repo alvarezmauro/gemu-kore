@@ -130,6 +130,9 @@ it("bounds requests and requires revisions for edits", () => {
     false,
   );
   expect(catalogLookup.safeParse({ kind: "game", query: "" }).success).toBe(
+    true,
+  );
+  expect(catalogLookup.safeParse({ kind: "release", query: "" }).success).toBe(
     false,
   );
   const id = "11111111-1111-4111-8111-111111111111";

@@ -365,28 +365,29 @@ model Game {
 }
 
 model GameRelease {
+  includedItems        GameReleaseIncludedItem[]
   assets               CatalogAsset[]
-  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug                 String               @unique
-  seedKey              String?              @unique
-  archivedAt           DateTime?            @db.Timestamptz(3)
-  revision             Int                  @default(1)
-  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
-  updatedAt            DateTime             @default(now()) @updatedAt @db.Timestamptz(3)
-  gameId               String               @db.Uuid
-  platformId           String               @db.Uuid
-  game                 Game                 @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  platform             ConsolePlatform      @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  id                   String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                 String                    @unique
+  seedKey              String?                   @unique
+  archivedAt           DateTime?                 @db.Timestamptz(3)
+  revision             Int                       @default(1)
+  createdAt            DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime                  @default(now()) @updatedAt @db.Timestamptz(3)
+  gameId               String                    @db.Uuid
+  platformId           String                    @db.Uuid
+  game                 Game                      @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platform             ConsolePlatform           @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   editionName          String?
-  editionType          GameEditionType      @default(STANDARD)
+  editionType          GameEditionType           @default(STANDARD)
   printingLabel        String?
   firstReleaseYear     Int?
-  languages            String[]             @default([])
+  languages            String[]                  @default([])
   descriptionOverride  String?
   metadata             Json?
   regionLock           RegionLock?
   regionLockNote       String?
-  identificationStatus IdentificationStatus @default(INCOMPLETE)
+  identificationStatus IdentificationStatus      @default(INCOMPLETE)
   regions              GameReleaseRegion[]
   companies            GameReleaseCompany[]
   ownedGames           OwnedGame[]
@@ -888,36 +889,38 @@ model AssetDependency {
 }
 
 model CatalogAsset {
-  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId            String?           @db.Uuid
-  company              Company?          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  consolePlatformId    String?           @db.Uuid
-  consolePlatform      ConsolePlatform?  @relation(fields: [consolePlatformId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  consoleModelId       String?           @db.Uuid
-  consoleModel         ConsoleModel?     @relation(fields: [consoleModelId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  gameId               String?           @db.Uuid
-  game                 Game?             @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  gameReleaseId        String?           @db.Uuid
-  gameRelease          GameRelease?      @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  accessoryId          String?           @db.Uuid
-  accessory            Accessory?        @relation(fields: [accessoryId], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  accessoryVariantId   String?           @db.Uuid
-  accessoryVariant     AccessoryVariant? @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  includedItemId       String?                  @db.Uuid
+  includedItem         GameReleaseIncludedItem? @relation(fields: [includedItemId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  id                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String?                  @db.Uuid
+  company              Company?                 @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  consolePlatformId    String?                  @db.Uuid
+  consolePlatform      ConsolePlatform?         @relation(fields: [consolePlatformId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  consoleModelId       String?                  @db.Uuid
+  consoleModel         ConsoleModel?            @relation(fields: [consoleModelId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameId               String?                  @db.Uuid
+  game                 Game?                    @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameReleaseId        String?                  @db.Uuid
+  gameRelease          GameRelease?             @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  accessoryId          String?                  @db.Uuid
+  accessory            Accessory?               @relation(fields: [accessoryId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  accessoryVariantId   String?                  @db.Uuid
+  accessoryVariant     AccessoryVariant?        @relation(fields: [accessoryVariantId], references: [id], onDelete: Cascade, onUpdate: Restrict)
   role                 CatalogAssetRole
-  isPrimary            Boolean           @default(false)
+  isPrimary            Boolean                  @default(false)
   caption              String?
   altText              String?
-  sortOrder            Int               @default(0)
-  assetId              String            @db.Uuid
-  asset                Asset             @relation("CatalogPrivateAsset", fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  publicDisplayAssetId String?           @db.Uuid
-  publicDisplayAsset   Asset?            @relation("CatalogPublicAsset", fields: [publicDisplayAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  publicApproved       Boolean           @default(false)
-  approvedById         String?           @db.Uuid
-  approvedBy           User?             @relation("CatalogAssetApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
-  approvedAt           DateTime?         @db.Timestamptz(3)
-  createdAt            DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt            DateTime          @default(now()) @updatedAt @db.Timestamptz(3)
+  sortOrder            Int                      @default(0)
+  assetId              String                   @db.Uuid
+  asset                Asset                    @relation("CatalogPrivateAsset", fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicDisplayAssetId String?                  @db.Uuid
+  publicDisplayAsset   Asset?                   @relation("CatalogPublicAsset", fields: [publicDisplayAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  publicApproved       Boolean                  @default(false)
+  approvedById         String?                  @db.Uuid
+  approvedBy           User?                    @relation("CatalogAssetApprover", fields: [approvedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  approvedAt           DateTime?                @db.Timestamptz(3)
+  createdAt            DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime                 @default(now()) @updatedAt @db.Timestamptz(3)
 
   @@index([assetId])
   @@index([publicDisplayAssetId])
@@ -929,6 +932,7 @@ model CatalogAsset {
   @@index([gameReleaseId, role, sortOrder])
   @@index([accessoryId, role, sortOrder])
   @@index([accessoryVariantId, role, sortOrder])
+  @@index([includedItemId, role, sortOrder], map: "catalog_asset_included_item_role_order")
   @@map("catalog_asset")
 }
 
@@ -980,4 +984,26 @@ model AppAsset {
   @@index([publicDisplayAssetId])
   @@index([approvedById])
   @@map("app_asset")
+}
+
+enum ReleaseComponentKind {
+  PACKAGING
+  MEDIA
+  MANUAL
+  EXTRA
+}
+
+model GameReleaseIncludedItem {
+  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameReleaseId String               @db.Uuid
+  gameRelease   GameRelease          @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  name          String
+  kind          ReleaseComponentKind
+  description   String?
+  quantity      Int                  @default(1)
+  sortOrder     Int                  @default(0)
+  assets        CatalogAsset[]
+
+  @@index([gameReleaseId, sortOrder, id], map: "game_release_included_item_release_order")
+  @@map("game_release_included_item")
 }
