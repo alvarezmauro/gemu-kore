@@ -1,0 +1,118 @@
+{
+  "failures": [
+    {
+      "label": "bad provider query",
+      "status": 400,
+      "code": "INVALID_RESPONSE",
+      "attempts": 1,
+      "retryable": false
+    },
+    {
+      "label": "forbidden credentials",
+      "status": 403,
+      "code": "AUTHENTICATION_FAILED",
+      "attempts": 1,
+      "retryable": false
+    },
+    {
+      "label": "missing provider record",
+      "status": 404,
+      "code": "NOT_FOUND",
+      "attempts": 1,
+      "retryable": false
+    },
+    {
+      "label": "repeated throttle",
+      "status": 429,
+      "code": "RATE_LIMITED",
+      "attempts": 2,
+      "retryable": true
+    },
+    {
+      "label": "repeated server error",
+      "status": 500,
+      "code": "UNAVAILABLE",
+      "attempts": 2,
+      "retryable": true
+    },
+    {
+      "label": "repeated outage",
+      "status": 503,
+      "code": "UNAVAILABLE",
+      "attempts": 2,
+      "retryable": true
+    }
+  ],
+  "tokens": [
+    {
+      "label": "missing access token",
+      "input": { "expires_in": 3600, "token_type": "bearer" }
+    },
+    {
+      "label": "empty access token",
+      "input": {
+        "access_token": "",
+        "expires_in": 3600,
+        "token_type": "bearer"
+      }
+    },
+    {
+      "label": "expired token",
+      "input": {
+        "access_token": "test-token",
+        "expires_in": 0,
+        "token_type": "bearer"
+      }
+    },
+    {
+      "label": "negative expiry",
+      "input": {
+        "access_token": "test-token",
+        "expires_in": -1,
+        "token_type": "bearer"
+      }
+    },
+    {
+      "label": "string expiry",
+      "input": {
+        "access_token": "test-token",
+        "expires_in": "3600",
+        "token_type": "bearer"
+      }
+    },
+    {
+      "label": "unexpected type",
+      "input": {
+        "access_token": "test-token",
+        "expires_in": 3600,
+        "token_type": "basic"
+      }
+    },
+    {
+      "label": "header injection",
+      "input": {
+        "access_token": "test-token\r\nPrivate: secret",
+        "expires_in": 3600,
+        "token_type": "bearer"
+      }
+    }
+  ],
+  "retryAfter": [
+    { "label": "seconds", "header": "2", "delay": 2000 },
+    {
+      "label": "HTTP date",
+      "header": "Mon, 19 Oct 2026 00:00:03 GMT",
+      "delay": 3000
+    },
+    {
+      "label": "invalid header uses bounded default",
+      "header": "not-a-date",
+      "delay": 1000
+    },
+    {
+      "label": "negative interval uses bounded default",
+      "header": "-1",
+      "delay": 1000
+    }
+  ]
+}

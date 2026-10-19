@@ -71,4 +71,18 @@ pnpm exec playwright test tests/e2e/foundation.spec.ts tests/e2e/auth.spec.ts --
 
 The browser runner builds the production application with isolated unavailable database credentials. It checks startup, public liveness, sign-in and private redirects on desktop/mobile Chromium; it does not claim authenticated enrichment coverage. No schema or repository behavior changes, so database integration tests are not a new provider verification mechanism in this task. No live API reliability, production quota capacity or asset usage rights are asserted by fixtures.
 
-Next: **12.3 — Provider Mapping Tests**, expanding adversarial fixtures within this architecture. The user-facing enrichment workflow remains Phase 13.
+## Task 12.3 — Mapping and adversarial coverage
+
+Task 12.3 adds 181 regressions using the [fixture guide](../../tests/fixtures/game-metadata/README.md), bringing the three provider suites to 222 cases. The mapping cases cover identity relationships, date precision/calendar validity, current and deprecated references, commercial markets, company scope, incomplete arrays, malformed media, separate ratings, sampled durations, provenance, privacy and normalized-output bounds. Scripted adapter cases cover token failures, retry intervals/cooldowns, refresh/retry limits, optional-endpoint failures, cancellation, private/unexpected inputs, quoted Unicode search, forged cursors, redirects, response shapes and received-byte limits.
+
+The existing malformed-response table now wraps array payloads so the test runner passes each complete envelope to the adapter. The new transport suite forbids global fetch and asserts every scripted endpoint and request count. No live API access or credentials are required.
+
+Verification for Task 12.3: lint, typecheck, changed-file formatting and all **1,080 unit/component tests** across 61 files pass. The strengthened output-budget case also passes on recheck with its original evidence links preserved. This task changes tests, fixtures and documentation only; provider architecture and runtime files remain unchanged. Production builds, database and browser suites were not rerun for these test-only additions; the Task 12.2 browser/build verification remains historical.
+
+Run only the provider regression suites with:
+
+```sh
+pnpm exec vitest run src/server/providers/game-metadata --maxWorkers=2
+```
+
+Next: **13.1 — Enrichment Architecture**. User-facing review and acceptance remain in their assigned Phase 13 tasks.

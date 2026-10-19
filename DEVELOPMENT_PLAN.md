@@ -1661,6 +1661,8 @@ Create extensive fixture-based tests.
 
 Do not alter provider architecture.
 
+Status: **Completed 2026-10-19.** Added 181 fixture-based regressions covering identity types and related games, partial calendar dates/leap years, current versus deprecated mappings, commercial markets, release/company scope, duplicate or mismatched IDs, incomplete arrays, media identifiers, rating kinds/scales/counts, playtime units/zeros/samples and source timestamps/URLs. Added scripted public-adapter cases for token failures, Retry-After/cooldown behavior, refresh/retry budgets, optional-endpoint failures, cancellation, private/unexpected input fields, escaped Unicode queries, forged pagination, redirects, malformed response envelopes and actual streamed byte limits. Normalized-output checks exercise evidence links, release scope, privacy and the output-size ceiling. Corrected an existing test table to pass array response envelopes intact. Provider suites now contain 222 passing cases; the full unit/component suite passes 1,080 cases across 61 files with two workers. Lint, typecheck, changed-file formatting, documentation links and patch checks pass. Tests use invented version-controlled fixtures and injected transport; no live credentials/network, provider architecture, runtime code, configuration, dependency, migration or application UI change. Build, database and browser suites were not rerun for this test-only task. Documentation: [fixture guide](tests/fixtures/game-metadata/README.md) and [metadata verification](docs/operations/GAME_METADATA.md). Next: Task 13.1, only when requested.
+
 ---
 
 # PHASE 13 — AI Enrichment

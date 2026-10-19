@@ -356,11 +356,13 @@ describe("IGDB provider boundary", () => {
     });
   });
 
-  it.each([
-    [{ ...fixture, id: 43 }],
-    [{ name: "Missing identity" }],
-    { error: "bad" },
-  ])("rejects mismatched/malformed core responses", async (game) => {
+  it.each(
+    [
+      [{ ...fixture, id: 43 }],
+      [{ name: "Missing identity" }],
+      { error: "bad" },
+    ].map((game) => ({ game })),
+  )("rejects mismatched/malformed core responses", async ({ game }) => {
     const h = harness({ game });
     expect(await h.provider.fetch(selected, h.context())).toMatchObject({
       ok: false,

@@ -1,0 +1,362 @@
+{
+  "identities": [
+    {
+      "label": "original",
+      "input": { "game_type": { "id": 501, "type": "Main Game" } },
+      "classification": "ORIGINAL"
+    },
+    {
+      "label": "port",
+      "input": {
+        "game_type": { "id": 502, "type": "Port" },
+        "parent_game": 30
+      },
+      "classification": "PORT"
+    },
+    {
+      "label": "remake",
+      "input": {
+        "game_type": { "id": 503, "type": "Remake" },
+        "parent_game": 30
+      },
+      "classification": "REMAKE"
+    },
+    {
+      "label": "remaster",
+      "input": {
+        "game_type": { "id": 504, "type": "Remaster" },
+        "version_parent": 30
+      },
+      "classification": "REMASTER"
+    },
+    {
+      "label": "compilation",
+      "input": { "game_type": { "id": 505, "type": "Compilation" } },
+      "classification": "COMPILATION"
+    },
+    {
+      "label": "bundle",
+      "input": { "game_type": { "id": 506, "type": "Bundle" } },
+      "classification": "COMPILATION"
+    },
+    {
+      "label": "unknown new type",
+      "input": { "game_type": { "id": 507, "type": "Future Type" } },
+      "classification": "UNKNOWN"
+    },
+    {
+      "label": "unexpanded modern reference",
+      "input": { "game_type": 501 },
+      "classification": "UNKNOWN"
+    },
+    {
+      "label": "deprecated category cannot establish a type",
+      "input": { "game_type": null, "category": 0 },
+      "classification": "UNKNOWN"
+    },
+    {
+      "label": "prototype property is not a type",
+      "input": { "game_type": { "type": "constructor" } },
+      "classification": "UNKNOWN"
+    }
+  ],
+  "dates": [
+    {
+      "label": "year only",
+      "input": { "date_format": { "format": "YYYY" }, "y": 1995 },
+      "expected": {
+        "precision": "YEAR",
+        "year": 1995,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "month only",
+      "input": { "date_format": { "format": "YYYYMMMM" }, "y": 1995, "m": 8 },
+      "expected": {
+        "precision": "MONTH",
+        "year": 1995,
+        "month": 8,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "explicit day",
+      "input": {
+        "date_format": { "format": "YYYYMMMMDD" },
+        "y": 1995,
+        "m": 8,
+        "d": 22
+      },
+      "expected": {
+        "precision": "DAY",
+        "year": 1995,
+        "month": 8,
+        "day": 22,
+        "quarter": null
+      }
+    },
+    {
+      "label": "leap century",
+      "input": {
+        "date_format": { "format": "YYYYMMMMDD" },
+        "y": 2000,
+        "m": 2,
+        "d": 29
+      },
+      "expected": {
+        "precision": "DAY",
+        "year": 2000,
+        "month": 2,
+        "day": 29,
+        "quarter": null
+      }
+    },
+    {
+      "label": "first quarter",
+      "input": { "date_format": { "format": "YYYYQ1" }, "y": 1995 },
+      "expected": {
+        "precision": "QUARTER",
+        "year": 1995,
+        "month": null,
+        "day": null,
+        "quarter": 1
+      }
+    },
+    {
+      "label": "fourth quarter",
+      "input": { "date_format": { "format": "YYYYQ4" }, "y": 1995 },
+      "expected": {
+        "precision": "QUARTER",
+        "year": 1995,
+        "month": null,
+        "day": null,
+        "quarter": 4
+      }
+    },
+    {
+      "label": "invalid century leap day",
+      "input": {
+        "date_format": { "format": "YYYYMMMMDD" },
+        "y": 1900,
+        "m": 2,
+        "d": 29
+      },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "April has no day 31",
+      "input": {
+        "date_format": { "format": "YYYYMMMMDD" },
+        "y": 1995,
+        "m": 4,
+        "d": 31
+      },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "TBD cannot borrow timestamp precision",
+      "input": { "date_format": { "format": "TBD" } },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "unknown future format",
+      "input": { "date_format": { "format": "FUTURE" } },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "deprecated category cannot establish precision",
+      "input": { "date_format": null, "category": 0 },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "numeric reference is unresolved",
+      "input": { "date_format": 71 },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "invalid month",
+      "input": { "m": 13 },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    },
+    {
+      "label": "invalid year",
+      "input": { "y": 0 },
+      "expected": {
+        "precision": "UNKNOWN",
+        "year": null,
+        "month": null,
+        "day": null,
+        "quarter": null
+      }
+    }
+  ],
+  "markets": [
+    { "label": "Europe", "region": "europe", "expected": "EUROPE" },
+    {
+      "label": "North America",
+      "region": "North America",
+      "expected": "NORTH_AMERICA"
+    },
+    { "label": "Australia", "region": "australia", "expected": "AUSTRALIA" },
+    {
+      "label": "New Zealand",
+      "region": "new_zealand",
+      "expected": "NEW_ZEALAND"
+    },
+    { "label": "Japan", "region": "japan", "expected": "JAPAN" },
+    { "label": "China", "region": "china", "expected": "CHINA" },
+    { "label": "Asia", "region": "asia", "expected": "ASIA" },
+    { "label": "Worldwide", "region": "worldwide", "expected": "WORLDWIDE" },
+    { "label": "Korea", "region": "korea", "expected": "KOREA" },
+    { "label": "Brazil", "region": "brazil", "expected": "BRAZIL" },
+    { "label": "new market", "region": "future_market", "expected": null },
+    {
+      "label": "region lock is not a market",
+      "region": "region_free",
+      "expected": null
+    },
+    {
+      "label": "video standard is not a market",
+      "region": "PAL",
+      "expected": null
+    },
+    {
+      "label": "language is not a market",
+      "region": "English",
+      "expected": null
+    },
+    {
+      "label": "prototype property is not a market",
+      "region": "__proto__",
+      "expected": null
+    }
+  ],
+  "ratings": [
+    { "label": "measured zero", "value": 0, "expected": 0 },
+    { "label": "maximum", "value": 100, "expected": 100 },
+    { "label": "fractional score", "value": 83.25, "expected": 83.25 },
+    { "label": "negative", "value": -1, "expected": null },
+    { "label": "above declared scale", "value": 101, "expected": null },
+    { "label": "numeric string", "value": "90", "expected": null },
+    { "label": "missing score", "value": null, "expected": null },
+    {
+      "label": "structured certification",
+      "value": { "rating": 18 },
+      "expected": null
+    }
+  ],
+  "playtime": [
+    {
+      "label": "one positive second",
+      "input": { "hastily": 1 },
+      "minutes": 1,
+      "state": "present"
+    },
+    {
+      "label": "subminute",
+      "input": { "hastily": 29 },
+      "minutes": 1,
+      "state": "present"
+    },
+    {
+      "label": "nearest minute below midpoint",
+      "input": { "hastily": 89 },
+      "minutes": 1,
+      "state": "present"
+    },
+    {
+      "label": "nearest minute at midpoint",
+      "input": { "hastily": 90 },
+      "minutes": 2,
+      "state": "present"
+    },
+    {
+      "label": "integer storage maximum",
+      "input": { "hastily": 128849018820 },
+      "minutes": 2147483647,
+      "state": "present"
+    },
+    {
+      "label": "above integer storage maximum",
+      "input": { "hastily": 128849018880 },
+      "minutes": null,
+      "state": "limited"
+    },
+    {
+      "label": "ambiguous zero",
+      "input": { "hastily": 0 },
+      "minutes": null,
+      "state": "limited"
+    },
+    {
+      "label": "negative seconds",
+      "input": { "hastily": -1 },
+      "minutes": null,
+      "state": "limited"
+    },
+    {
+      "label": "fractional seconds",
+      "input": { "hastily": 1.5 },
+      "minutes": null,
+      "state": "limited"
+    },
+    {
+      "label": "numeric string",
+      "input": { "hastily": "3600" },
+      "minutes": null,
+      "state": "limited"
+    },
+    {
+      "label": "unknown category",
+      "input": { "hastily": null },
+      "minutes": null,
+      "state": "present"
+    }
+  ]
+}
