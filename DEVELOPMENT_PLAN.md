@@ -1704,6 +1704,8 @@ Cover:
 
 Use explicit target foreign keys with exactly one populated target. Separate editor-generated proposals from admin acceptance. Add enrichment to the existing manual game flow without making it a prerequisite for saving.
 
+Status: **Completed 2026-10-19 (design only).** Documented the structured-provider → optional grounded web/AI → frozen suggestions → review → accepted-change workflow against the implemented provider and catalog boundaries. Defined explicit run targets, current editor/admin permissions, immutable request intent and source snapshots, candidate/field selection, confidence semantics, missing/conflicting data, bounded execution, retry leases/generations and recovery. Specified revision-checked idempotent atomic acceptance, manual-replacement acknowledgements, whole-group updates, source lineage and private media/publication safeguards. Recorded current rating-storage and image-ingestion prerequisites with explicit ineligible capabilities, preserving manual game saving throughout. Assigned service, preview, provenance and review work to Tasks 13.2–13.5 without adding runtime code, configuration, migrations, dependencies or UI. Documentation formatting, local-link/fence, whitespace, patch-integrity and documentation-only scope checks pass; runtime suites are not applicable to this design-only task. Documentation: [Enrichment architecture](docs/architecture/ENRICHMENT_ARCHITECTURE.md). Next: Task 13.2, only when requested.
+
 ---
 
 ## TASK 13.2 — Enrichment Service
