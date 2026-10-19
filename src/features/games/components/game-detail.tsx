@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PlaytimeSummary } from "./playtime-summary";
+import type { Playtime } from "../playtime-validation";
 import { TrailerPlayer } from "./trailer-player";
 import type { TrailerReference } from "../trailer-validation";
 import { ScreenshotGallery } from "./screenshot-gallery";
@@ -19,11 +21,17 @@ export function GameDetail({
   locations,
   screenshots,
   trailer,
+  playtime,
 }: {
   detail: GameCopyDetail;
   canManage: boolean;
   locations: CopyLocation[];
   screenshots: ScreenshotGalleryData;
+  playtime: {
+    estimates: Playtime | null;
+    scope: "game" | "release";
+    canManage: boolean;
+  };
   trailer: { reference: TrailerReference | null; scope: "game" | "release" };
 }) {
   return (
@@ -99,6 +107,7 @@ export function GameDetail({
           ["About", "about-game"],
           ["Screenshots", "screenshots"],
           ["Trailer", "game-trailer"],
+          ["Playtime", "game-playtime"],
           ["Release and contents", "game-release"],
           ["Personal photos", "game-photos"],
         ].map(([label, id]) => (
@@ -281,6 +290,33 @@ export function GameDetail({
               href={`/app/catalog/games/trailer?kind=release&id=${d.release.id}`}
             >
               Manage release trailer
+            </Link>
+          </Button>
+        )}
+      </section>
+      <section
+        id="game-playtime"
+        className="scroll-mt-24 space-y-4"
+        aria-labelledby="game-playtime-title"
+      >
+        <h2 id="game-playtime-title" className="font-heading text-2xl">
+          Playtime
+        </h2>
+        {playtime.estimates && (
+          <p className="text-sm text-muted-foreground">
+            {playtime.scope === "release"
+              ? "Estimates for this release."
+              : "Game default estimates; this release has no playtime override."}{" "}
+            Blank durations are unknown.
+          </p>
+        )}
+        <PlaytimeSummary estimates={playtime.estimates} />
+        {playtime.canManage && (
+          <Button asChild variant="outline">
+            <Link
+              href={`/app/catalog/games/playtime?kind=release&id=${d.release.id}`}
+            >
+              Manage release playtime
             </Link>
           </Button>
         )}

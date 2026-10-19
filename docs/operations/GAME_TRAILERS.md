@@ -71,8 +71,9 @@ Implementation verification uses disposable PostgreSQL and browser fixtures,
 without migrating or changing personal development data. This task does not
 expose public trailer queries or public-approval controls. Future public
 projections must enforce public settings, item visibility and trailer approval.
-Provider imports, enrichment, uploaded-video ingestion and playtime remain in
-their assigned tasks. No dependency or environment variable is added.
+Provider imports, enrichment and uploaded-video ingestion remain in
+their assigned tasks. Task 11.6 adds [playtime estimates](GAME_PLAYTIME.md).
+No dependency or environment variable is added.
 
 ## Verification
 

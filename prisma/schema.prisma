@@ -345,6 +345,7 @@ model ConsoleModelRegion {
 }
 
 model Game {
+  playtime              GamePlaytime?
   assets                CatalogAsset[]
   id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                  String
@@ -369,6 +370,7 @@ model Game {
 }
 
 model GameRelease {
+  playtime              GamePlaytime?
   includedItems         GameReleaseIncludedItem[]
   assets                CatalogAsset[]
   id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1019,4 +1021,28 @@ model GameReleaseIncludedItem {
 enum TrailerProvider {
   YOUTUBE
   DIRECT_URL
+}
+
+enum PlaytimeSourceType {
+  MANUAL
+  PROVIDER
+}
+
+model GamePlaytime {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameId               String?            @unique @db.Uuid
+  gameReleaseId        String?            @unique @db.Uuid
+  game                 Game?              @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  gameRelease          GameRelease?       @relation(fields: [gameReleaseId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  mainMinutes          Int?
+  mainExtrasMinutes    Int?
+  completionistMinutes Int?
+  sourceType           PlaytimeSourceType
+  sourceName           String
+  sourceUrl            String?
+  observedAt           DateTime           @db.Timestamptz(3)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime           @default(now()) @updatedAt @db.Timestamptz(3)
+
+  @@map("game_playtime")
 }

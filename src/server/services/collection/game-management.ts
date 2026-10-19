@@ -1,4 +1,5 @@
 import "server-only";
+import { playtimeDto } from "../catalog/playtime";
 import { storedTrailer } from "@/features/games/trailer-validation";
 import { readScreenshotGallery } from "../catalog/screenshots";
 import {
@@ -153,6 +154,14 @@ export async function getOwnedGame(
           detail,
           canManage,
           locations: canManage ? choices : [],
+          playtime: {
+            estimates: playtimeDto(selected.playtime ?? selected.game.playtime),
+            scope:
+              selected.playtime !== null
+                ? ("release" as const)
+                : ("game" as const),
+            canManage: actor.role === "ADMIN",
+          },
           trailer: {
             reference: storedTrailer(
               selected.trailerProvider !== null ? selected : selected.game,

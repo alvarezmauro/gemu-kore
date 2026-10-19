@@ -4,6 +4,7 @@ import type { TransactionClient } from "@/server/db/transaction";
 import { gameSelect, releaseSelect } from "./games";
 import { platformSelect } from "./consoles";
 import { trailerSelect } from "../catalog/trailers";
+import { playtimeSelect } from "../catalog/playtime";
 const image = { id: true, width: true, height: true } as const;
 export function ownedGame(id: string, tx: TransactionClient) {
   return tx.collectionItem.findUnique({
@@ -24,11 +25,13 @@ export function ownedGame(id: string, tx: TransactionClient) {
             select: {
               ...releaseSelect,
               ...trailerSelect,
+              playtime: { select: playtimeSelect },
               firstReleaseYear: true,
               game: {
                 select: {
                   ...gameSelect,
                   ...trailerSelect,
+                  playtime: { select: playtimeSelect },
                   companies: {
                     where: { role: "DEVELOPER" },
                     select: { company: { select: { name: true } } },

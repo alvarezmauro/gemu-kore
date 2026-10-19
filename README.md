@@ -7,9 +7,9 @@ Tasks **1.1â€“1.4** provide the application and testing foundation. Tasks **2.1â
 ## Local development
 
 Private game details now include [screenshot galleries](docs/operations/GAME_SCREENSHOTS.md)
-and [YouTube/direct-video trailers](docs/operations/GAME_TRAILERS.md). Apply the
-Task 11.5 trailer migration through the normal database workflow before running
-the updated application.
+and [YouTube/direct-video trailers](docs/operations/GAME_TRAILERS.md), plus sourced
+[playtime estimates](docs/operations/GAME_PLAYTIME.md). Apply the Task 11.5/11.6
+migrations through the normal database workflow before running the updated application.
 
 Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. With those installed, run from the repository root:
 

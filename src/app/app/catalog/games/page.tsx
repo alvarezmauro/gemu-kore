@@ -106,6 +106,15 @@ export default async function GameCatalogPage({
               </Button>
             )}
             {data.selected && (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/app/catalog/games/playtime?kind=${data.kind}&id=${data.selected.id}`}
+                >
+                  Manage playtime
+                </Link>
+              </Button>
+            )}
+            {data.selected && (
               <section
                 className="max-w-3xl space-y-4"
                 aria-labelledby="game-history-title"
