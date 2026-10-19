@@ -960,3 +960,66 @@ it("appends collection photos in order, advances revision once and resolves auth
     ).status,
   ).toBe(200);
 });
+it("records UTF-8 screenshot provenance on the image family and advances the release exactly once", async () => {
+  const platform = await db.consolePlatform.create({
+    data: { name: "SNES", slug: randomUUID() },
+  });
+  const game = await db.game.create({
+    data: { name: "Game", slug: randomUUID() },
+  });
+  const release = await db.gameRelease.create({
+    data: { gameId: game.id, platformId: platform.id, slug: randomUUID() },
+  });
+  const { emptyScreenshotUpload } =
+    await import("@/features/games/screenshot-validation");
+  const screenshot = {
+    ...emptyScreenshotUpload,
+    caption: "森",
+    author: "山田",
+    sourceUrl: "https://example.com/scene",
+    sourceType: "CURATED",
+    retrievedAt: "2024-02-29",
+  };
+  const bytes = await image();
+  const response = await send(bytes, {
+    "x-gemukore-target": encodeURIComponent(
+      JSON.stringify({
+        kind: "catalog",
+        target: "gameRelease",
+        id: release.id,
+        role: "SCREENSHOT",
+        screenshot,
+      }),
+    ),
+  });
+  expect(response.status).toBe(201);
+  const result = await response.json();
+  const rows = await db.asset.findMany();
+  expect(rows).toHaveLength(3);
+  for (const row of rows)
+    expect(row).toMatchObject({
+      sourceType: "CURATED",
+      author: "山田",
+      sourceUrl: "https://example.com/scene",
+      rightsStatus: "UNKNOWN",
+      publicSafe: false,
+      retrievedAt: new Date("2024-02-29T00:00:00Z"),
+    });
+  expect(
+    await db.catalogAsset.findUnique({ where: { id: result.useId } }),
+  ).toMatchObject({
+    gameReleaseId: release.id,
+    role: "SCREENSHOT",
+    caption: "森",
+    sortOrder: 0,
+    publicApproved: false,
+  });
+  const context = await requirePrivateAccess(headers);
+  await completeUpload(context, result.uploadId, signal(), storage);
+  expect(
+    await db.gameRelease.findUnique({ where: { id: release.id } }),
+  ).toMatchObject({ revision: 2 });
+  expect(
+    await db.metadataChange.count({ where: { gameReleaseId: release.id } }),
+  ).toBe(1);
+});

@@ -87,6 +87,15 @@ export default async function GameCatalogPage({
               kind={data.kind}
               record={data.selected}
             />
+            {data.selected?.kind === "release" && (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/app/catalog/games/screenshots?releaseId=${data.selected.id}`}
+                >
+                  Manage release screenshots
+                </Link>
+              </Button>
+            )}
             {data.selected && (
               <section
                 className="max-w-3xl space-y-4"

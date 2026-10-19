@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ScreenshotGallery } from "./screenshot-gallery";
+import type { ScreenshotGalleryData } from "../screenshot-contracts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MagicCard } from "@/components/magic/magic-card";
@@ -13,10 +15,12 @@ export function GameDetail({
   detail: d,
   canManage,
   locations,
+  screenshots,
 }: {
   detail: GameCopyDetail;
   canManage: boolean;
   locations: CopyLocation[];
+  screenshots: ScreenshotGalleryData;
 }) {
   return (
     <div className="min-w-0 space-y-8">
@@ -89,6 +93,7 @@ export function GameDetail({
         {[
           ["My copy", "my-copy"],
           ["About", "about-game"],
+          ["Screenshots", "screenshots"],
           ["Release and contents", "game-release"],
           ["Personal photos", "game-photos"],
         ].map(([label, id]) => (
@@ -213,6 +218,37 @@ export function GameDetail({
           Release and expected contents
         </h2>
         <GameReleaseSummary release={d.release} />
+      </section>
+      <section
+        id="screenshots"
+        className="scroll-mt-24 space-y-4"
+        aria-labelledby="screenshots-title"
+      >
+        <h2 id="screenshots-title" className="font-heading text-2xl">
+          Screenshots
+        </h2>
+        <ScreenshotGallery
+          gallery={screenshots}
+          previous={
+            screenshots.page > 1
+              ? `/app/games/${d.id}?screenshotsPage=${screenshots.page - 1}#screenshots`
+              : undefined
+          }
+          next={
+            screenshots.hasNext
+              ? `/app/games/${d.id}?screenshotsPage=${screenshots.page + 1}#screenshots`
+              : undefined
+          }
+        />
+        {screenshots.canManage && (
+          <Button asChild variant="outline">
+            <Link
+              href={`/app/catalog/games/screenshots?releaseId=${d.release.id}`}
+            >
+              Manage release screenshots
+            </Link>
+          </Button>
+        )}
       </section>
       <section
         id="game-photos"

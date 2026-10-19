@@ -92,7 +92,28 @@ export async function makeReady(
       data: { ...base, appSettingsId: 1, role: target.role },
     });
   return tx.catalogAsset.create({
-    data: { ...base, [`${target.target}Id`]: target.id, role: target.role },
+    data: {
+      ...base,
+      [`${target.target}Id`]: target.id,
+      role: target.role,
+      ...(target.screenshot
+        ? {
+            caption: target.screenshot.caption,
+            altText: target.screenshot.altText,
+          }
+        : {}),
+      ...(target.role === "SCREENSHOT" && target.target === "gameRelease"
+        ? {
+            sortOrder:
+              ((
+                await tx.catalogAsset.aggregate({
+                  where: { gameReleaseId: target.id, role: "SCREENSHOT" },
+                  _max: { sortOrder: true },
+                })
+              )._max.sortOrder ?? -1) + 1,
+          }
+        : {}),
+    },
   });
 }
 export async function hasReferences(id: string, tx: TransactionClient) {

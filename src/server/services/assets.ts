@@ -5,6 +5,9 @@ import { z } from "zod";
 import { PrivateAccessError, type PrivateAccessContext } from "../auth/access";
 import { PermissionError, requirePermission } from "../auth/permissions";
 import { withTransaction, type TransactionClient } from "../db/transaction";
+import { lockCatalogWrites } from "../repositories/catalog/management";
+import { screenshotRelease } from "../repositories/catalog/screenshots";
+import { recordScreenshotUpload } from "./catalog/screenshots";
 import {
   findAsset,
   hasFamilyUses,
@@ -39,6 +42,16 @@ import {
   advanceCollectionItem,
 } from "../repositories/collection/items";
 let processing = false;
+function screenshotSource(target: UploadTarget) {
+  if (target.kind !== "catalog" || !target.screenshot) return {};
+  const { caption, altText, retrievedAt, ...source } = target.screenshot;
+  void caption;
+  void altText;
+  return {
+    ...source,
+    retrievedAt: retrievedAt ? new Date(`${retrievedAt}T00:00:00Z`) : null,
+  };
+}
 async function authorizeTarget(
   context: PrivateAccessContext,
   target: UploadTarget,
@@ -56,6 +69,14 @@ async function authorizeTarget(
   );
   const identity = await targetIdentity(target, tx);
   if (!identity) throw new AssetError("NOT_FOUND");
+  if (
+    target.kind === "catalog" &&
+    target.role === "SCREENSHOT" &&
+    target.target === "gameRelease"
+  ) {
+    const release = await screenshotRelease(target.id, tx);
+    if (!release || release.archivedAt) throw new AssetError("INVALID_INPUT");
+  }
   const expectsModel =
     target.kind === "catalog"
       ? target.role === "MODEL_3D"
@@ -146,6 +167,7 @@ export async function uploadAsset(
           ...createObjectLocator(id, description.mimeType),
           originalFilename: description.filename,
           uploadedById: actor.userId,
+          ...screenshotSource(target.data),
         },
         tx,
       );
@@ -207,6 +229,7 @@ export async function uploadAsset(
               deliveryClass: "DISPLAY",
               ...createObjectLocator(artifact.id, artifact.mimeType),
               uploadedById: actor.userId,
+              ...screenshotSource(target.data),
               transformMetadata: {
                 schemaVersion: 1,
                 data: {
@@ -310,6 +333,12 @@ export async function completeUpload(
     // Consistent root-before-asset order shared by collection mutations.
     if (manifest.data.target.kind === "collection")
       await lockCollectionItem(manifest.data.target.id, tx);
+    if (
+      manifest.data.target.kind === "catalog" &&
+      manifest.data.target.role === "SCREENSHOT" &&
+      manifest.data.target.target === "gameRelease"
+    )
+      await lockCatalogWrites(tx);
     const actor = await authorizeTarget(
       context,
       manifest.data.target,
@@ -331,6 +360,17 @@ export async function completeUpload(
       if ((await findAsset(expected.id, tx))?.state !== "PENDING")
         throw new AssetError("CONFLICT");
     await makeReady(manifest, tx);
+    if (
+      manifest.data.target.kind === "catalog" &&
+      manifest.data.target.role === "SCREENSHOT" &&
+      manifest.data.target.target === "gameRelease"
+    )
+      await recordScreenshotUpload(
+        manifest.data.target.id,
+        manifest.data.useId,
+        actor.userId,
+        tx,
+      );
     if (manifest.data.target.kind === "collection") {
       const item = await findCollectionItem(manifest.data.target.id, tx);
       if (!item) throw new AssetError("NOT_FOUND");

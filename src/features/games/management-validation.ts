@@ -12,4 +12,7 @@ export const gameMutation = z.discriminatedUnion("operation", [
   gameUpdate,
   z.strictObject({ operation: z.literal("delete"), ...scope }),
 ]);
-export const gameDetailInput = z.strictObject({ id: z.uuid() });
+export const gameDetailInput = z.strictObject({
+  id: z.uuid(),
+  screenshotsPage: z.number().int().min(1).max(1000).default(1),
+});

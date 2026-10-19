@@ -74,11 +74,15 @@ export async function uploadRequest(request: Request) {
     const context = await requirePrivateAccess(request.headers);
     sameOrigin(request);
     const targetHeader = request.headers.get("x-gemukore-target");
-    if (!targetHeader || targetHeader.length > 2048)
+    if (!targetHeader || targetHeader.length > 8192)
       throw new AssetError("INVALID_INPUT");
     let target: unknown;
     try {
-      target = JSON.parse(targetHeader);
+      target = JSON.parse(
+        targetHeader.startsWith("%7B")
+          ? decodeURIComponent(targetHeader)
+          : targetHeader,
+      );
     } catch {
       throw new AssetError("INVALID_INPUT");
     }

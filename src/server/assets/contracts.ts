@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { screenshotUpload } from "@/features/games/screenshot-validation";
 
 export const targetSchema = z.discriminatedUnion("kind", [
   z
@@ -46,8 +47,15 @@ export const targetSchema = z.discriminatedUnion("kind", [
         "MODEL_3D",
         "PREVIEW",
       ]),
+      screenshot: screenshotUpload.optional(),
     })
-    .strict(),
+    .strict()
+    .refine(
+      (v) =>
+        !v.screenshot ||
+        (v.target === "gameRelease" && v.role === "SCREENSHOT"),
+      "Screenshot details require a game release screenshot target.",
+    ),
   z
     .object({
       kind: z.literal("application"),

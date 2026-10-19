@@ -1,4 +1,5 @@
 import "server-only";
+import { readScreenshotGallery } from "../catalog/screenshots";
 import {
   PrivateAccessError,
   type PrivateAccessContext,
@@ -147,7 +148,18 @@ export async function getOwnedGame(
           defectCount: item._count.defects,
         };
         const canManage = canPerform(actor.role, "collection.manage");
-        return { detail, canManage, locations: canManage ? choices : [] };
+        return {
+          detail,
+          canManage,
+          locations: canManage ? choices : [],
+          screenshots: await readScreenshotGallery(
+            selected.id,
+            selected.gameId,
+            p.data.screenshotsPage,
+            actor.role === "ADMIN",
+            tx,
+          ),
+        };
       },
       { isolationLevel: "RepeatableRead" },
     );

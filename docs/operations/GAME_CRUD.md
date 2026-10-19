@@ -65,8 +65,9 @@ provider calls. Public projections and publication controls are unchanged.
 ## Scope and checks
 
 This task completes owned-game create/read/update/delete using the existing
-schema and creation flow. Screenshots and source metadata remain Task 11.4;
-trailers, playtime, providers, enrichment and component-presence/3D features stay
+schema and creation flow. Task 11.4 subsequently adds
+[screenshots and source metadata](GAME_SCREENSHOTS.md). Trailers, playtime,
+providers, enrichment and component-presence/3D features stay
 in their scheduled tasks. No dependencies or migrations are added.
 
 Unit checks cover strict edit/delete validation, exact-copy links, preserved

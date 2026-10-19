@@ -14,11 +14,17 @@ export const metadata = {
 };
 export default async function GamePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  const result = await getOwnedGamePageData({ id });
+  const query = await searchParams;
+  const raw = query.screenshotsPage ?? "1";
+  const screenshotsPage =
+    typeof raw === "string" && /^[1-9]\d{0,3}$/.test(raw) ? Number(raw) : 0;
+  const result = await getOwnedGamePageData({ id, screenshotsPage });
   if (result.status !== "authorized") {
     if (result.status === "UNAUTHENTICATED") redirect("/login");
     if (result.status === "DENIED") redirect("/access-denied");
@@ -66,6 +72,7 @@ export default async function GamePage({
         </div>
         <GameDetail
           detail={result.detail}
+          screenshots={result.screenshots}
           locations={result.locations}
           canManage={result.canManage}
         />
