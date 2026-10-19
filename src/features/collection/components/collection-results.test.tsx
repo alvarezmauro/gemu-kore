@@ -74,5 +74,9 @@ it("provides labeled toggle buttons without making the entire card a nested navi
   render(<CollectionResults items={[item]} view="grid" choose={choose} />);
   fireEvent.click(screen.getByRole("button", { name: "List view" }));
   expect(choose).toHaveBeenCalledWith("list");
-  expect(screen.getAllByRole("link")).toHaveLength(2);
+  expect(screen.getAllByRole("link")).toHaveLength(3);
+  expect(screen.getByRole("link", { name: /View game/ })).toHaveAttribute(
+    "href",
+    `/app/games/${item.id}`,
+  );
 });

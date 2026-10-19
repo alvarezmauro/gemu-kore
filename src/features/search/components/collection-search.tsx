@@ -236,13 +236,13 @@ export function CollectionSearch({
                       </p>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      {item.type === "CONSOLE" && (
+                      {(item.type === "CONSOLE" || item.type === "GAME") && (
                         <Button asChild>
                           <Link
-                            href={`/app/consoles/${item.id}`}
-                            aria-label={`View console ${item.title}, copy ${item.id.slice(0, 8)}`}
+                            href={`/app/${item.type === "CONSOLE" ? "consoles" : "games"}/${item.id}`}
+                            aria-label={`View ${item.type === "CONSOLE" ? "console" : "game"} ${item.title}, copy ${item.id.slice(0, 8)}`}
                           >
-                            View console
+                            View {item.type === "CONSOLE" ? "console" : "game"}
                           </Link>
                         </Button>
                       )}

@@ -376,7 +376,7 @@ export function GameWizard({
           ) : (
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <Link href="/app/collection?type=game">Browse games</Link>
+                <Link href={`/app/games/${savedId}`}>View game</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href={`/app/media?itemId=${savedId}`}>Manage photos</Link>

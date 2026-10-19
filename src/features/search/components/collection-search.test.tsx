@@ -55,6 +55,10 @@ it("renders narrow results with existing copy-scoped photo/defect actions", asyn
     `/app/media?itemId=${result.items[0].id}`,
   );
   expect(screen.getByText("Matched: Identity")).toBeVisible();
+  expect(screen.getByRole("link", { name: /View game/ })).toHaveAttribute(
+    "href",
+    `/app/games/${result.items[0].id}`,
+  );
 });
 it("cancels and ignores an obsolete response when the query changes", async () => {
   let finish!: (value: SearchResult) => void;

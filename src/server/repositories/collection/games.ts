@@ -1,7 +1,7 @@
 import "server-only";
 import type { TransactionClient } from "@/server/db/transaction";
 import type { Prisma, GameEditionType } from "@/server/db/generated/client";
-const gameSelect = {
+export const gameSelect = {
   id: true,
   name: true,
   slug: true,
@@ -9,7 +9,7 @@ const gameSelect = {
   revision: true,
   archivedAt: true,
 } satisfies Prisma.GameSelect;
-const releaseSelect = {
+export const releaseSelect = {
   id: true,
   revision: true,
   slug: true,

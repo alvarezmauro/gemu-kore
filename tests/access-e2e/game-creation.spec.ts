@@ -155,7 +155,18 @@ test("editor creates a private game with canonical release filters, defects and 
     },
   ]);
   expect(errors).toEqual([]);
-  await page.getByRole("link", { name: "Browse games", exact: true }).click();
+  await page.getByRole("link", { name: "View game", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Chrono Trigger", level: 1 }),
+  ).toBeVisible();
+  const navigation = page.getByRole("button", {
+    name: "Open navigation",
+    exact: true,
+  });
+  if (await navigation.isVisible()) await navigation.click();
+  await page
+    .getByRole("link", { name: "Browse collection", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Your collection", exact: true }),
   ).toBeVisible();

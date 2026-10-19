@@ -139,8 +139,8 @@ it("groups copies separately from catalog, previews canonical data and routes ex
   expect(push).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("option", { name: "Back to results" }));
   fireEvent.click(screen.getAllByRole("option", { name: /Chrono Trigger/ })[0]);
-  fireEvent.click(screen.getByRole("option", { name: "View copy photos" }));
-  expect(push).toHaveBeenCalledWith(`/app/media?itemId=${item.id}`);
+  fireEvent.click(screen.getByRole("option", { name: "View game" }));
+  expect(push).toHaveBeenCalledWith(`/app/games/${item.id}`);
   await waitFor(() =>
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
   );

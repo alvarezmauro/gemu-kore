@@ -51,8 +51,9 @@ unsaved draft fields and local file selections.
 
 ## Scope and verification
 
-This task adds creation only. Owned-game editing/deletion/detail controls remain
-Task 11.3; canonical screenshot galleries, trailers, playtime, providers,
+This task adds creation only. Task 11.3 subsequently adds owned-game
+[viewing, editing and deletion](GAME_CRUD.md); canonical screenshot galleries,
+trailers, playtime, providers,
 enrichment, and component-presence tracking remain their planned tasks. No new
 dependencies or schema migrations are required beyond Task 11.1.
 

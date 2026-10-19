@@ -223,12 +223,18 @@ function PaletteSession({ close }: { close: () => void }) {
               </CommandItem>
               {selected.scope === "copy" && (
                 <>
-                  {selected.item.type === "CONSOLE" && (
+                  {(selected.item.type === "CONSOLE" ||
+                    selected.item.type === "GAME") && (
                     <CommandItem
-                      value="console"
-                      onSelect={() => go(`/app/consoles/${selected.item.id}`)}
+                      value="copy-detail"
+                      onSelect={() =>
+                        go(
+                          `/app/${selected.item.type === "CONSOLE" ? "consoles" : "games"}/${selected.item.id}`,
+                        )
+                      }
                     >
-                      View console
+                      View{" "}
+                      {selected.item.type === "CONSOLE" ? "console" : "game"}
                     </CommandItem>
                   )}
                   <CommandItem
