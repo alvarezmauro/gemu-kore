@@ -1617,6 +1617,8 @@ GameMetadataProvider
 
 so IGDB does not leak throughout application code.
 
+Status: **Completed 2026-10-19 (design only).** Documented the server-only GameMetadataProvider boundary, typed search/fetch envelopes, normalized evidence and partial-result semantics, external identity namespaces, local relationship resolution and Game-versus-physical-release safeguards. Defined sourced ratings/playtime mappings, optional credentials, bounded transport, cancellation/retry/error behavior and the Phase 13 review/provenance/acceptance handoff. Checked provider constraints against official IGDB/Twitch documentation. No application code, dependency, configuration, migration, endpoint or enrichment UI was added. Documentation formatting, local-link/fence checks and patch-integrity checks pass; runtime suites are not applicable to this documentation-only task. Documentation: [Game metadata provider architecture](docs/architecture/GAME_METADATA_PROVIDER_ARCHITECTURE.md). Next: Task 12.2, only when requested.
+
 ---
 
 ## TASK 12.2 — IGDB Integration

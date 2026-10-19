@@ -90,6 +90,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [3D architecture and provisional performance limits](docs/architecture/3D_ARCHITECTURE.md)
 - [Private ModelViewer, controls and supported files](docs/operations/MODEL_VIEWER.md)
 - [3D performance evidence and physical-device calibration](docs/performance/3D_PERFORMANCE.md)
+- [Game metadata provider architecture and IGDB implementation boundaries](docs/architecture/GAME_METADATA_PROVIDER_ARCHITECTURE.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)
