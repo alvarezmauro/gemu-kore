@@ -1,4 +1,5 @@
 import "server-only";
+import { storedTrailer } from "@/features/games/trailer-validation";
 import { readScreenshotGallery } from "../catalog/screenshots";
 import {
   PrivateAccessError,
@@ -152,6 +153,15 @@ export async function getOwnedGame(
           detail,
           canManage,
           locations: canManage ? choices : [],
+          trailer: {
+            reference: storedTrailer(
+              selected.trailerProvider !== null ? selected : selected.game,
+            ),
+            scope:
+              selected.trailerProvider !== null
+                ? ("release" as const)
+                : ("game" as const),
+          },
           screenshots: await readScreenshotGallery(
             selected.id,
             selected.gameId,

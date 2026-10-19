@@ -345,55 +345,63 @@ model ConsoleModelRegion {
 }
 
 model Game {
-  assets             CatalogAsset[]
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String
-  slug               String              @unique
-  seedKey            String?             @unique
-  archivedAt         DateTime?           @db.Timestamptz(3)
-  revision           Int                 @default(1)
-  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
-  description        String?
-  aliases            String[]            @default([])
-  releases           GameRelease[]
-  companies          GameCompany[]
-  externalReferences ExternalReference[]
-  metadataChanges    MetadataChange[]
+  assets                CatalogAsset[]
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  slug                  String              @unique
+  seedKey               String?             @unique
+  archivedAt            DateTime?           @db.Timestamptz(3)
+  revision              Int                 @default(1)
+  createdAt             DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+  description           String?
+  aliases               String[]            @default([])
+  releases              GameRelease[]
+  companies             GameCompany[]
+  externalReferences    ExternalReference[]
+  metadataChanges       MetadataChange[]
+  trailerProvider       TrailerProvider?
+  trailerId             String?
+  trailerUrl            String?
+  trailerPublicApproved Boolean             @default(false)
 
   @@map("game")
 }
 
 model GameRelease {
-  includedItems        GameReleaseIncludedItem[]
-  assets               CatalogAsset[]
-  id                   String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug                 String                    @unique
-  seedKey              String?                   @unique
-  archivedAt           DateTime?                 @db.Timestamptz(3)
-  revision             Int                       @default(1)
-  createdAt            DateTime                  @default(now()) @db.Timestamptz(3)
-  updatedAt            DateTime                  @default(now()) @updatedAt @db.Timestamptz(3)
-  gameId               String                    @db.Uuid
-  platformId           String                    @db.Uuid
-  game                 Game                      @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  platform             ConsolePlatform           @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  editionName          String?
-  editionType          GameEditionType           @default(STANDARD)
-  printingLabel        String?
-  firstReleaseYear     Int?
-  languages            String[]                  @default([])
-  descriptionOverride  String?
-  metadata             Json?
-  regionLock           RegionLock?
-  regionLockNote       String?
-  identificationStatus IdentificationStatus      @default(INCOMPLETE)
-  regions              GameReleaseRegion[]
-  companies            GameReleaseCompany[]
-  ownedGames           OwnedGame[]
-  identifiers          ProductIdentifier[]
-  externalReferences   ExternalReference[]
-  metadataChanges      MetadataChange[]
+  includedItems         GameReleaseIncludedItem[]
+  assets                CatalogAsset[]
+  id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String                    @unique
+  seedKey               String?                   @unique
+  archivedAt            DateTime?                 @db.Timestamptz(3)
+  revision              Int                       @default(1)
+  createdAt             DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime                  @default(now()) @updatedAt @db.Timestamptz(3)
+  gameId                String                    @db.Uuid
+  platformId            String                    @db.Uuid
+  game                  Game                      @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platform              ConsolePlatform           @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  editionName           String?
+  editionType           GameEditionType           @default(STANDARD)
+  printingLabel         String?
+  firstReleaseYear      Int?
+  languages             String[]                  @default([])
+  descriptionOverride   String?
+  metadata              Json?
+  regionLock            RegionLock?
+  regionLockNote        String?
+  identificationStatus  IdentificationStatus      @default(INCOMPLETE)
+  regions               GameReleaseRegion[]
+  companies             GameReleaseCompany[]
+  ownedGames            OwnedGame[]
+  identifiers           ProductIdentifier[]
+  externalReferences    ExternalReference[]
+  metadataChanges       MetadataChange[]
+  trailerProvider       TrailerProvider?
+  trailerId             String?
+  trailerUrl            String?
+  trailerPublicApproved Boolean                   @default(false)
 
   @@index([gameId, platformId])
   @@index([platformId])
@@ -1006,4 +1014,9 @@ model GameReleaseIncludedItem {
 
   @@index([gameReleaseId, sortOrder, id], map: "game_release_included_item_release_order")
   @@map("game_release_included_item")
+}
+
+enum TrailerProvider {
+  YOUTUBE
+  DIRECT_URL
 }

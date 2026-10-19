@@ -66,9 +66,10 @@ provider calls. Public projections and publication controls are unchanged.
 
 This task completes owned-game create/read/update/delete using the existing
 schema and creation flow. Task 11.4 subsequently adds
-[screenshots and source metadata](GAME_SCREENSHOTS.md). Trailers, playtime,
+[screenshots and source metadata](GAME_SCREENSHOTS.md). Task 11.5 adds
+[structured trailer references and deferred playback](GAME_TRAILERS.md). Playtime,
 providers, enrichment and component-presence/3D features stay
-in their scheduled tasks. No dependencies or migrations are added.
+in their scheduled tasks. The original CRUD task added no dependencies or migrations.
 
 Unit checks cover strict edit/delete validation, exact-copy links, preserved
 draft/revision behavior, and confirmation submission. PostgreSQL checks cover

@@ -3,6 +3,7 @@ import type { Prisma } from "@/server/db/generated/client";
 import type { TransactionClient } from "@/server/db/transaction";
 import { gameSelect, releaseSelect } from "./games";
 import { platformSelect } from "./consoles";
+import { trailerSelect } from "../catalog/trailers";
 const image = { id: true, width: true, height: true } as const;
 export function ownedGame(id: string, tx: TransactionClient) {
   return tx.collectionItem.findUnique({
@@ -22,10 +23,12 @@ export function ownedGame(id: string, tx: TransactionClient) {
           gameRelease: {
             select: {
               ...releaseSelect,
+              ...trailerSelect,
               firstReleaseYear: true,
               game: {
                 select: {
                   ...gameSelect,
+                  ...trailerSelect,
                   companies: {
                     where: { role: "DEVELOPER" },
                     select: { company: { select: { name: true } } },

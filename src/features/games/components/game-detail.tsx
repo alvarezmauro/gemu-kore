@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { TrailerPlayer } from "./trailer-player";
+import type { TrailerReference } from "../trailer-validation";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import type { ScreenshotGalleryData } from "../screenshot-contracts";
 import { Button } from "@/components/ui/button";
@@ -16,11 +18,13 @@ export function GameDetail({
   canManage,
   locations,
   screenshots,
+  trailer,
 }: {
   detail: GameCopyDetail;
   canManage: boolean;
   locations: CopyLocation[];
   screenshots: ScreenshotGalleryData;
+  trailer: { reference: TrailerReference | null; scope: "game" | "release" };
 }) {
   return (
     <div className="min-w-0 space-y-8">
@@ -94,6 +98,7 @@ export function GameDetail({
           ["My copy", "my-copy"],
           ["About", "about-game"],
           ["Screenshots", "screenshots"],
+          ["Trailer", "game-trailer"],
           ["Release and contents", "game-release"],
           ["Personal photos", "game-photos"],
         ].map(([label, id]) => (
@@ -246,6 +251,36 @@ export function GameDetail({
               href={`/app/catalog/games/screenshots?releaseId=${d.release.id}`}
             >
               Manage release screenshots
+            </Link>
+          </Button>
+        )}
+      </section>
+      <section
+        id="game-trailer"
+        className="scroll-mt-24 space-y-4"
+        aria-labelledby="game-trailer-title"
+      >
+        <h2 id="game-trailer-title" className="font-heading text-2xl">
+          Trailer
+        </h2>
+        {trailer.reference && (
+          <p className="text-sm text-muted-foreground">
+            {trailer.scope === "release"
+              ? "Trailer for this release."
+              : "Game-level trailer; this release has no trailer override."}
+          </p>
+        )}
+        <TrailerPlayer
+          key={JSON.stringify(trailer.reference)}
+          trailer={trailer.reference}
+          title={`Trailer for ${d.game.name}`}
+        />
+        {screenshots.canManage && (
+          <Button asChild variant="outline">
+            <Link
+              href={`/app/catalog/games/trailer?kind=release&id=${d.release.id}`}
+            >
+              Manage release trailer
             </Link>
           </Button>
         )}
