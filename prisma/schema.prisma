@@ -12,23 +12,25 @@ datasource db {
 // Core catalog/collection: DOMAIN_MODEL.md §10. Deferred features have no placeholder FKs.
 
 model User {
-  uploadedAssets        Asset[]               @relation("AssetUploader")
-  reviewedAssets        Asset[]               @relation("AssetReviewer")
-  approvedCatalogAssets CatalogAsset[]        @relation("CatalogAssetApprover")
-  approvedItemMedia     CollectionItemMedia[] @relation("ItemMediaApprover")
-  approvedAppAssets     AppAsset[]            @relation("AppAssetApprover")
-  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  enrichmentRuns        EnrichmentRun[]        @relation("EnrichmentRequester")
+  enrichmentReviews     EnrichmentSuggestion[] @relation("EnrichmentReviewer")
+  uploadedAssets        Asset[]                @relation("AssetUploader")
+  reviewedAssets        Asset[]                @relation("AssetReviewer")
+  approvedCatalogAssets CatalogAsset[]         @relation("CatalogAssetApprover")
+  approvedItemMedia     CollectionItemMedia[]  @relation("ItemMediaApprover")
+  approvedAppAssets     AppAsset[]             @relation("AppAssetApprover")
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                  String
   email                 String
-  emailVerified         Boolean               @default(false)
+  emailVerified         Boolean                @default(false)
   image                 String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   sessions              Session[]
   accounts              Account[]
-  createdItems          CollectionItem[]      @relation("ItemCreator")
-  updatedItems          CollectionItem[]      @relation("ItemUpdater")
-  publishedItems        CollectionItem[]      @relation("ItemPublisher")
+  createdItems          CollectionItem[]       @relation("ItemCreator")
+  updatedItems          CollectionItem[]       @relation("ItemUpdater")
+  publishedItems        CollectionItem[]       @relation("ItemPublisher")
   metadataChanges       MetadataChange[]
 
   @@unique([email])
@@ -345,6 +347,7 @@ model ConsoleModelRegion {
 }
 
 model Game {
+  enrichmentRuns        EnrichmentRun[]
   playtime              GamePlaytime?
   assets                CatalogAsset[]
   id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -370,6 +373,7 @@ model Game {
 }
 
 model GameRelease {
+  enrichmentRuns        EnrichmentRun[]
   playtime              GamePlaytime?
   includedItems         GameReleaseIncludedItem[]
   assets                CatalogAsset[]
@@ -458,6 +462,7 @@ model GameReleaseCompany {
 }
 
 model Accessory {
+  enrichmentRuns     EnrichmentRun[]
   assets             CatalogAsset[]
   id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name               String
@@ -481,6 +486,7 @@ model Accessory {
 }
 
 model AccessoryVariant {
+  enrichmentRuns         EnrichmentRun[]
   assets                 CatalogAsset[]
   id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                   String
@@ -710,33 +716,35 @@ model Defect {
 }
 
 model MetadataChange {
-  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fieldPath             String
-  before                Json
-  after                 Json
-  rootRevision          Int
-  origin                MetadataOrigin
-  sourceSnapshot        Json?
-  snapshotSchemaVersion Int               @default(1)
-  actorId               String?           @db.Uuid
-  actor                 User?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  createdAt             DateTime          @default(now()) @db.Timestamptz(3)
-  companyId             String?           @db.Uuid
-  company               Company?          @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  regionId              String?           @db.Uuid
-  region                Region?           @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  platformId            String?           @db.Uuid
-  platform              ConsolePlatform?  @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  consoleModelId        String?           @db.Uuid
-  consoleModel          ConsoleModel?     @relation(fields: [consoleModelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  gameId                String?           @db.Uuid
-  game                  Game?             @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  gameReleaseId         String?           @db.Uuid
-  gameRelease           GameRelease?      @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  accessoryId           String?           @db.Uuid
-  accessory             Accessory?        @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  accessoryVariantId    String?           @db.Uuid
-  accessoryVariant      AccessoryVariant? @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  enrichmentSuggestionId String?               @unique @db.Uuid
+  enrichmentSuggestion   EnrichmentSuggestion? @relation(fields: [enrichmentSuggestionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  id                     String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fieldPath              String
+  before                 Json
+  after                  Json
+  rootRevision           Int
+  origin                 MetadataOrigin
+  sourceSnapshot         Json?
+  snapshotSchemaVersion  Int                   @default(1)
+  actorId                String?               @db.Uuid
+  actor                  User?                 @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt              DateTime              @default(now()) @db.Timestamptz(3)
+  companyId              String?               @db.Uuid
+  company                Company?              @relation(fields: [companyId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  regionId               String?               @db.Uuid
+  region                 Region?               @relation(fields: [regionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  platformId             String?               @db.Uuid
+  platform               ConsolePlatform?      @relation(fields: [platformId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  consoleModelId         String?               @db.Uuid
+  consoleModel           ConsoleModel?         @relation(fields: [consoleModelId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameId                 String?               @db.Uuid
+  game                   Game?                 @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameReleaseId          String?               @db.Uuid
+  gameRelease            GameRelease?          @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryId            String?               @db.Uuid
+  accessory              Accessory?            @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryVariantId     String?               @db.Uuid
+  accessoryVariant       AccessoryVariant?     @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([companyId, rootRevision, fieldPath])
   @@unique([regionId, rootRevision, fieldPath])
@@ -756,6 +764,92 @@ model MetadataChange {
   @@index([accessoryVariantId, createdAt, id])
   @@index([actorId])
   @@map("metadata_change")
+}
+
+enum EnrichmentFetchStatus {
+  PENDING
+  RUNNING
+  NEEDS_SELECTION
+  COMPLETED
+  FAILED
+}
+
+enum EnrichmentReviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CONFLICT
+}
+
+model EnrichmentRun {
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestKey            String                 @unique @db.Uuid
+  requestedById         String?                @db.Uuid
+  requestedBy           User?                  @relation("EnrichmentRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  gameId                String?                @db.Uuid
+  game                  Game?                  @relation(fields: [gameId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  gameReleaseId         String?                @db.Uuid
+  gameRelease           GameRelease?           @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryId           String?                @db.Uuid
+  accessory             Accessory?             @relation(fields: [accessoryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryVariantId    String?                @db.Uuid
+  accessoryVariant      AccessoryVariant?      @relation(fields: [accessoryVariantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  targetBaseRevision    Int
+  targetSnapshot        Json
+  query                 Json
+  fingerprint           String
+  provider              String
+  pipelineVersion       String                 @default("1")
+  snapshotSchemaVersion Int                    @default(1)
+  fetchStatus           EnrichmentFetchStatus  @default(PENDING)
+  runVersion            Int                    @default(1)
+  attemptCount          Int                    @default(0)
+  attempts              Json                   @default("[]")
+  operationToken        String?                @db.Uuid
+  leaseUntil            DateTime?              @db.Timestamptz(3)
+  selectedCandidate     Json?
+  candidates            Json?
+  result                Json?
+  reviewToken           String?
+  preparedChoices       Json?
+  receipt               Json?
+  failureCode           String?
+  startedAt             DateTime               @default(now()) @db.Timestamptz(3)
+  completedAt           DateTime?              @db.Timestamptz(3)
+  updatedAt             DateTime               @default(now()) @updatedAt @db.Timestamptz(3)
+  suggestions           EnrichmentSuggestion[]
+
+  @@index([gameId, startedAt])
+  @@index([gameReleaseId, startedAt])
+  @@index([accessoryId, startedAt])
+  @@index([accessoryVariantId, startedAt])
+  @@index([requestedById, startedAt])
+  @@index([fetchStatus, startedAt])
+  @@map("enrichment_run")
+}
+
+model EnrichmentSuggestion {
+  id               String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId            String                 @db.Uuid
+  run              EnrichmentRun          @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  fieldPath        String
+  before           Json
+  proposed         Json
+  sourceSnapshot   Json
+  origin           MetadataOrigin
+  confidence       Float?
+  confidenceMethod String?
+  reviewStatus     EnrichmentReviewStatus @default(PENDING)
+  reviewedById     String?                @db.Uuid
+  reviewedBy       User?                  @relation("EnrichmentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?              @db.Timestamptz(3)
+  createdAt        DateTime               @default(now()) @db.Timestamptz(3)
+  change           MetadataChange?
+
+  @@unique([runId, fieldPath])
+  @@index([runId, reviewStatus])
+  @@index([reviewedById])
+  @@map("enrichment_suggestion")
 }
 
 // Phase 5: logical files, fixed lineage and explicitly approved uses.

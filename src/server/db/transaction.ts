@@ -7,7 +7,11 @@ export type TransactionClient = Prisma.TransactionClient;
 
 export function withTransaction<T>(
   operation: (transaction: TransactionClient) => Promise<T>,
-  options: { isolationLevel?: Prisma.TransactionIsolationLevel } = {},
+  options: {
+    isolationLevel?: Prisma.TransactionIsolationLevel;
+    timeout?: number;
+    maxWait?: number;
+  } = {},
 ) {
   return getDatabase().$transaction(operation, {
     maxWait: 5_000,

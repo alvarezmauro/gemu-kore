@@ -1720,6 +1720,8 @@ REASONING:
 
 Implement the architecture approved by Astra.
 
+Status: **Completed 2026-10-19.** Added persisted, bounded enrichment runs and immutable field proposals with explicit canonical targets and unique accepted-history links. Implemented private structured-provider search/fetch, candidate and field selection, developer bindings, freeze/reject/apply, idempotency, quotas, cancellation, retry generations and lease recovery. Acceptance rechecks current administrator permissions, target/dependency revisions and manual-value acknowledgements, then commits one root revision with the selected catalog groups, provider provenance, final decisions and a repeatable receipt atomically. Rating/image acceptance and optional web/AI stages report their missing prerequisites; broad Game evidence cannot rewrite physical release metadata. Manual saving remains independent. Added authenticated server actions and an [operations guide](docs/operations/ENRICHMENT.md); preview controls remain Task 13.3. Verification: schema validation, lint, typecheck, 1,084 unit/component cases, 20 enrichment integration cases plus 36 catalog/playtime/trailer/manual-creation regressions, and 18 desktop/mobile production-build browser checks pass. Migrations were exercised only on disposable PostgreSQL. Next: Task 13.3, only when requested.
+
 ---
 
 ## TASK 13.3 — Enrichment Preview UI

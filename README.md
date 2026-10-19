@@ -97,6 +97,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Game metadata provider architecture and IGDB implementation boundaries](docs/architecture/GAME_METADATA_PROVIDER_ARCHITECTURE.md)
 - [IGDB metadata setup, server usage and verification](docs/operations/GAME_METADATA.md)
 - [Enrichment workflow, review, provenance and acceptance architecture](docs/architecture/ENRICHMENT_ARCHITECTURE.md)
+- [Enrichment service operations, limits and recovery](docs/operations/ENRICHMENT.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)
