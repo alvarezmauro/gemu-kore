@@ -39,6 +39,8 @@ export default defineConfig({
       S3_BUCKET: "",
       S3_ACCESS_KEY_ID: "",
       S3_SECRET_ACCESS_KEY: "",
+      IGDB_CLIENT_ID: "",
+      IGDB_CLIENT_SECRET: "",
     },
   },
 });

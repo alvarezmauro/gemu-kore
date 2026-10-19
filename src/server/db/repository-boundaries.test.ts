@@ -122,3 +122,40 @@ it("permits the marked adapter's SDK import and requires its server marker", asy
     ),
   ).not.toEqual([]);
 });
+
+it.each([
+  [
+    "src/server/providers/game-metadata/igdb.ts",
+    "@/server/repositories/catalog/management",
+  ],
+  ["src/server/providers/game-metadata/igdb.ts", "../../services/access"],
+  ["src/server/providers/game-metadata/igdb.ts", "@/features/games/contracts"],
+  ["src/server/providers/game-metadata/igdb.ts", "@prisma/client"],
+  ["src/server/providers/game-metadata/igdb.ts", "react"],
+  [servicePath, "@/server/providers/game-metadata/igdb"],
+  [servicePath, "../../providers/game-metadata/igdb-mapping"],
+  [servicePath, "@/server/providers/game-metadata/http"],
+  ["src/app/page.tsx", "@/server/providers/game-metadata"],
+])("rejects metadata boundary bypass in %s from %s", async (path, source) => {
+  expect(
+    await boundaryMessages(
+      `import "server-only"; import { example } from "${source}"; export { example };`,
+      path,
+    ),
+  ).not.toEqual([]);
+});
+
+it("requires server-only providers and permits service use of the neutral composition point", async () => {
+  expect(
+    await boundaryMessages(
+      "export const example = true;",
+      "src/server/providers/game-metadata/contracts.ts",
+    ),
+  ).not.toEqual([]);
+  expect(
+    await boundaryMessages(
+      'import "server-only"; import { getGameMetadataProvider } from "@/server/providers/game-metadata"; export { getGameMetadataProvider };',
+      servicePath,
+    ),
+  ).toEqual([]);
+});

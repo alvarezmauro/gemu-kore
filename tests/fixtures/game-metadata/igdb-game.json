@@ -1,0 +1,78 @@
+{
+  "id": 42,
+  "name": "Orbit Quest",
+  "url": "https://www.igdb.com/games/orbit-quest",
+  "updated_at": 1760000000,
+  "summary": "<p>A fictional adventure &amp; puzzle game.</p>",
+  "alternative_names": [{ "id": 500, "name": "Orbit Quest International" }],
+  "game_type": { "id": 91, "type": "Main Game" },
+  "first_release_date": 807235200,
+  "platforms": [{ "id": 19, "name": "Example 16-bit Platform" }],
+  "release_dates": [
+    {
+      "id": 700,
+      "game": 42,
+      "platform": { "id": 19, "name": "Example 16-bit Platform" },
+      "date_format": { "id": 71, "format": "YYYYMMMM" },
+      "release_region": { "id": 83, "region": "north_america" },
+      "y": 1995,
+      "m": 8,
+      "date": 807235200,
+      "status": { "id": 2, "name": "Released" }
+    }
+  ],
+  "involved_companies": [
+    {
+      "id": 991,
+      "game": 42,
+      "company": {
+        "id": 7,
+        "name": "Example Studio",
+        "url": "https://www.igdb.com/companies/example-studio"
+      },
+      "developer": true,
+      "publisher": true,
+      "porting": false,
+      "supporting": false
+    }
+  ],
+  "cover": {
+    "id": 12,
+    "game": 42,
+    "image_id": "example_cover",
+    "width": 600,
+    "height": 800
+  },
+  "screenshots": [
+    {
+      "id": 12,
+      "game": 42,
+      "image_id": "example_screen",
+      "width": 640,
+      "height": 480
+    }
+  ],
+  "artworks": [
+    {
+      "id": 13,
+      "game": 42,
+      "image_id": "example_art",
+      "width": 1200,
+      "height": 800
+    }
+  ],
+  "videos": [
+    {
+      "id": 18,
+      "game": 42,
+      "video_id": "video123_45",
+      "name": "Example trailer"
+    }
+  ],
+  "rating": 87.3,
+  "rating_count": 120,
+  "aggregated_rating": 82,
+  "aggregated_rating_count": 8,
+  "total_rating": 84.65,
+  "total_rating_count": 128
+}

@@ -1643,6 +1643,8 @@ Implement provider:
 
 Normalize external responses into internal DTOs.
 
+Status: **Completed 2026-10-19.** Implemented the server-only IGDB adapter and explicit provider composition point with runtime-validated neutral search/fetch contracts, external identity namespaces, sourced evidence, partial-result states and bounded diagnostics. Search supports escaped terms, validated platform/year filters and query-bound pagination; retrieval normalizes game identity, platform/market/date observations, company roles, image candidates, structured YouTube references, separate rating groups and sampled playtime estimates. Broad evidence never establishes physical-edition identity or local UUIDs. Added optional credentials validated on capability use, process-local token reuse/single-flight acquisition, independent caller cancellation, deadlines, request/body/output budgets, throttling/cooldowns, bounded retries and sanitized errors. ESLint enforces provider/service boundaries. No dependency, database migration, catalog mutation, media download, enrichment endpoint or UI was added. Checks pass: lint, typecheck, changed-file formatting, production builds, 899 unit/component cases with two workers, and 18 desktop/mobile Chromium startup/auth/liveness scenarios with metadata credentials disabled. Provider coverage uses deterministic invented fixtures; live IGDB connectivity and aggregate multi-instance quotas are not claimed. No persistence behavior changed, so database integration suites were not rerun for this adapter-only task. Documentation: [Game metadata integration](docs/operations/GAME_METADATA.md). Next: Task 12.3, only when requested.
+
 ---
 
 ## TASK 12.3 — Provider Mapping Tests

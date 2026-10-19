@@ -6,6 +6,8 @@ Date: **2026-10-19**
 
 Status: **Design complete.** This document defines the boundary for Task 12.2; it adds no provider implementation, configuration, migration, endpoint or enrichment UI.
 
+Implementation follow-up: Task 12.2 implements the adapter and optional configuration described in [Game metadata integration](../operations/GAME_METADATA.md). The inspected repository state in §2 is historical to Task 12.1. Enrichment review and acceptance remain Phase 13.
+
 ## 1. Decision and scope
 
 Use a server-only `GameMetadataProvider` with provider-neutral search and fetch contracts. A structured provider retrieves and normalizes evidence. Application services authorize requests, resolve local identities and, in Phase 13, prepare reviewable suggestions. Only a separate authorized acceptance operation changes canonical data.

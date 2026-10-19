@@ -9,6 +9,17 @@ const sdkBoundary = {
     "S3 SDK imports belong only in the server storage adapter. Use its neutral contract.",
 };
 
+const metadataAdapterBoundary = {
+  group: [
+    "@/server/providers/game-metadata/igdb*",
+    "**/providers/game-metadata/igdb*",
+    "@/server/providers/game-metadata/http",
+    "**/providers/game-metadata/http",
+  ],
+  message:
+    "Provider-specific implementation belongs behind the neutral metadata contract and composition point.",
+};
+
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
@@ -25,8 +36,13 @@ export default defineConfig([
   ]),
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/storage/s3.ts"],
-    rules: { "no-restricted-imports": ["error", { patterns: [sdkBoundary] }] },
+    ignores: ["src/server/storage/s3.ts", "src/server/providers/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { patterns: [sdkBoundary, metadataAdapterBoundary] },
+      ],
+    },
   },
   {
     files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
@@ -36,6 +52,7 @@ export default defineConfig([
         {
           patterns: [
             sdkBoundary,
+            metadataAdapterBoundary,
             {
               group: [
                 "@prisma/**",
@@ -45,6 +62,8 @@ export default defineConfig([
                 "@/server/repositories/**",
                 "**/server/db/**",
                 "**/server/repositories/**",
+                "@/server/providers/**",
+                "**/server/providers/**",
               ],
               message:
                 "UI and route entry points must use feature/service boundaries, not database access.",
@@ -62,6 +81,7 @@ export default defineConfig([
         {
           patterns: [
             sdkBoundary,
+            metadataAdapterBoundary,
             {
               group: [
                 "@prisma/**",
@@ -150,6 +170,7 @@ export default defineConfig([
         {
           patterns: [
             sdkBoundary,
+            metadataAdapterBoundary,
             {
               group: [
                 "react",
@@ -227,6 +248,58 @@ export default defineConfig([
         {
           selector: "ImportDeclaration[source.value=/^@aws-sdk\\//]",
           message: "SDK imports belong in s3.ts only.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/server/providers/**/*.ts"],
+    ignores: ["**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            sdkBoundary,
+            {
+              group: [
+                "react",
+                "react/**",
+                "next",
+                "next/**",
+                "@prisma/**",
+                "pg",
+                "@/app/**",
+                "@/components/**",
+                "@/features/**",
+                "@/server/db/**",
+                "@/server/repositories/**",
+                "@/server/auth/**",
+                "@/server/services/**",
+                "@/server/storage/**",
+                "@/server/ai/**",
+                "**/app/**",
+                "**/components/**",
+                "**/features/**",
+                "**/db/**",
+                "**/repositories/**",
+                "**/auth/**",
+                "**/services/**",
+                "**/storage/**",
+                "**/ai/**",
+              ],
+              message:
+                "Metadata adapters retrieve evidence only; services own authorization and persistence.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "Program:not(:has(ImportDeclaration[source.value='server-only']))",
+          message: "Every metadata provider module must import server-only.",
         },
       ],
     },

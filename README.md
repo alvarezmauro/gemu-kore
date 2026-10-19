@@ -11,6 +11,10 @@ and [YouTube/direct-video trailers](docs/operations/GAME_TRAILERS.md), plus sour
 [playtime estimates](docs/operations/GAME_PLAYTIME.md). Apply the Task 11.5/11.6
 migrations through the normal database workflow before running the updated application.
 
+Task **12.2** adds optional server-only [IGDB metadata lookup](docs/operations/GAME_METADATA.md),
+with sourced results and bounded requests. Setup is optional; enrichment review and its
+user interface arrive in Phase 13.
+
 Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. With those installed, run from the repository root:
 
 ```sh
@@ -91,6 +95,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Private ModelViewer, controls and supported files](docs/operations/MODEL_VIEWER.md)
 - [3D performance evidence and physical-device calibration](docs/performance/3D_PERFORMANCE.md)
 - [Game metadata provider architecture and IGDB implementation boundaries](docs/architecture/GAME_METADATA_PROVIDER_ARCHITECTURE.md)
+- [IGDB metadata setup, server usage and verification](docs/operations/GAME_METADATA.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)
