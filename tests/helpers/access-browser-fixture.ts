@@ -20,7 +20,68 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "reset-game-creation") {
+    if (command === "seed-enrichment") {
+      const { token, gameId, prepare } = JSON.parse(argument!);
+      const { signedSessionCookie } = await import("./access-session");
+      const { requirePrivateAccess } =
+        await import("../../src/server/auth/access");
+      const { createEnrichmentRunner, prepareEnrichmentReview } =
+        await import("../../src/server/services/enrichment");
+      const { mapGame, mapSearch } =
+        await import("../../src/server/providers/game-metadata/igdb-mapping");
+      const { default: raw } =
+        await import("../fixtures/game-metadata/igdb-game.json");
+      const when = "2026-10-19T12:00:00.000Z";
+      const cookie = signedSessionCookie(
+        token,
+        process.env.BETTER_AUTH_SECRET!,
+      );
+      const actor = await requirePrivateAccess(
+        new Headers({
+          Cookie: `__Secure-gemukore.session_token=${cookie}; gemukore.session_token=${cookie}`,
+        }),
+      );
+      const runner = createEnrichmentRunner(() => ({
+        id: "IGDB",
+        search: async () => ({ ok: true, data: mapSearch([raw], when, null) }),
+        fetch: async () => ({ ok: true, data: mapGame(raw, [], when) }),
+      }));
+      const game = await database.game.findUniqueOrThrow({
+        where: { id: gameId },
+      });
+      const found = await runner.start(actor, {
+        target: { kind: "game", id: gameId },
+        expectedRevision: game.revision,
+        requestKey: randomUUID(),
+        query: "Orbit Quest",
+      });
+      const fetched = await runner.selectCandidate(actor, {
+        runId: found.id,
+        expectedRunVersion: found.runVersion,
+        externalId: "42",
+      });
+      result = prepare
+        ? await prepareEnrichmentReview(actor, {
+            runId: fetched.id,
+            expectedRunVersion: fetched.runVersion,
+            fields: ["name", "description", "references"],
+          })
+        : fetched;
+    } else if (command === "enrichment-state") {
+      result = {
+        runs: await database.enrichmentRun.count(),
+        changes: await database.metadataChange.findMany({
+          select: {
+            origin: true,
+            fieldPath: true,
+            enrichmentSuggestionId: true,
+          },
+        }),
+        suggestions: await database.enrichmentSuggestion.findMany({
+          select: { reviewStatus: true, fieldPath: true },
+        }),
+      };
+    } else if (command === "reset-game-creation") {
       await database.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, game, accessory CASCADE`;
     } else if (command === "reset-catalog") {
       await database.$executeRaw`TRUNCATE TABLE company, region, console_platform, game, accessory CASCADE`;
@@ -465,7 +526,15 @@ async function main() {
   }
 }
 
-void main().catch(() => {
+void main().catch((error: unknown) => {
   console.error("Access browser fixture failed.");
+  // Bounded diagnostic identity only: never echo credentials, commands or database errors.
+  if (error instanceof Error)
+    console.error(
+      error.name,
+      "code" in error && typeof error.code === "string"
+        ? error.code
+        : "NO_CODE",
+    );
   process.exitCode = 1;
 });

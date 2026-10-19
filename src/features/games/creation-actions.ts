@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requirePrivateAccess, PrivateAccessError } from "@/server/auth/access";
 import { PermissionError } from "@/server/auth/permissions";
 import {
+  refreshGameSelection,
   GameCreationError,
   findGames,
   findGameReleases,
@@ -94,4 +95,18 @@ export async function saveGameCopy(
   ])
     revalidatePath(path);
   return { status: "success", data: { id } };
+}
+
+export async function refreshSelectedGame(input: unknown) {
+  try {
+    return {
+      status: "success" as const,
+      data: await refreshGameSelection(
+        await requirePrivateAccess(await headers()),
+        input,
+      ),
+    };
+  } catch (error) {
+    return failure(error);
+  }
 }

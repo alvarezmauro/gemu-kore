@@ -1752,6 +1752,8 @@ Apply selected
 Apply all
 ```
 
+Status: **Completed 2026-10-19.** Added the private enrichment review page with explicit provider-match and field/trailer/developer choices, readable current/suggested values, safe source links, unavailable confidence/capability explanations, manual-value acknowledgements, per-field/selected/all application and ignore controls, retained review links for administrator handoff, and retry/cancel/status/stale-result recovery. Editors can prepare their own reviews; current server authorization remains authoritative for all reads and writes. Optional entries in the add-game flow and saved-copy details open a separate tab, preserving copy drafts and photo files. Added a server-validated refresh of the same canonical platform/game/release and a mandatory return through copy review after refresh; no automatic copy submission or retargeting. Updated the [operations guide](docs/operations/ENRICHMENT.md#preview-workflow). Verification: lint, typecheck, formatting, 1,092 unit/component cases, 33 enrichment/manual-creation integration cases, and all 12 authenticated desktop/mobile browser cases pass, including 320px dark/reduced-motion layouts, keyboard ignore, ownership denial, administrator acceptance, stale save rejection and preserved photo upload. Inspected desktop/mobile screenshots. No new dependencies, migrations, live-provider test calls or public enrichment endpoint. Next: Task 13.4, only when requested.
+
 ---
 
 ## TASK 13.4 — Provenance

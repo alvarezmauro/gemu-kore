@@ -25,6 +25,7 @@ import { photoTypes } from "@/features/media/contracts";
 import type { CollectionUploadType } from "@/features/media/upload";
 import { editions } from "../validation";
 import {
+  refreshSelectedGame,
   lookupGames,
   lookupGameReleases,
   loadGameRelease,
@@ -39,6 +40,7 @@ import {
   type CopyLocation,
   type ReleaseFilters,
 } from "../creation-contracts";
+import { EnrichmentLinks } from "@/features/enrichment/components/enrichment-links";
 import { GameReleaseSummary } from "./game-release-summary";
 import { severityLabels } from "@/features/defects/contracts";
 const ReleaseEditor = dynamic(
@@ -81,6 +83,7 @@ export function GameWizard({
   const [createdReleaseId, setCreatedReleaseId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [catalogNotice, setCatalogNotice] = useState("");
   const [savedId, setSavedId] = useState<string | null>(null);
   const pending = useRef(false);
   const requestId = useRef<string | null>(null);
@@ -94,6 +97,7 @@ export function GameWizard({
     if (message && !busy) error.current?.focus();
   }, [message, busy]);
   function resetSelection() {
+    setCatalogNotice("");
     setRelease(null);
     setFilters({ marketId: "", editionType: "" });
     setAppliedFilters({ marketId: "", editionType: "" });
@@ -256,10 +260,44 @@ export function GameWizard({
         return;
       }
       setSavedId(result.data.id);
+      setCatalogNotice("");
       await sendFiles(result.data.id);
     } catch {
       setMessage(
         "We couldn't confirm this save. Keep this page open and try Save again to check the same copy.",
+      );
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  async function refreshCatalogChoices() {
+    if (pending.current || !game || !platform || !release) return;
+    pending.current = true;
+    setBusy(true);
+    setMessage("");
+    setCatalogNotice("");
+    try {
+      const result = await refreshSelectedGame({
+        id: release.id,
+        gameId: game.id,
+        platformId: platform.id,
+      });
+      if (result.status === "error") {
+        setMessage(result.message);
+        return;
+      }
+      setGame(result.data.game);
+      setPlatform(result.data.platform);
+      setRelease(result.data.release);
+      submitted.current = null;
+      setStep(3);
+      setCatalogNotice(
+        "Catalog choices refreshed. Your notes and photos are still here. Continue to review the latest game and release before saving.",
+      );
+    } catch {
+      setMessage(
+        "We couldn't refresh these choices. Keep your draft open and try again.",
       );
     } finally {
       pending.current = false;
@@ -331,6 +369,11 @@ export function GameWizard({
           className="rounded-xl bg-muted p-4 text-sm focus:outline-none"
         >
           {message}
+        </p>
+      )}
+      {catalogNotice && (
+        <p role="status" className="rounded-xl bg-muted p-4 text-sm">
+          {catalogNotice}
         </p>
       )}
       {savedId ? (
@@ -615,6 +658,11 @@ export function GameWizard({
                   {game?.name} · {platform?.name}
                 </p>
                 <GameReleaseSummary release={release} />
+                {game?.description && (
+                  <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+                    Game description: {game.description}
+                  </p>
+                )}
                 <section
                   aria-label="Review my copy"
                   className="space-y-4 rounded-xl bg-card p-5"
@@ -713,6 +761,22 @@ export function GameWizard({
               Selected: {step === 0 ? platform?.name : game?.name}
             </p>
           )}
+        </>
+      )}
+      {!savedId && !creating && game && release && platform && !busy && (
+        <>
+          <EnrichmentLinks gameId={game.id} releaseId={release.id} />
+          <p className="text-sm text-muted-foreground">
+            After accepting metadata in the review tab, refresh these catalog
+            choices. Your copy details and photos stay here.
+          </p>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => void refreshCatalogChoices()}
+          >
+            Refresh catalog choices
+          </Button>
         </>
       )}
     </div>

@@ -6,6 +6,7 @@ import type { AccessRole } from "@/features/auth/contracts";
 import { signedSessionCookie } from "../helpers/access-session";
 import { emptyCopyPhysical } from "@/features/collection/copy-validation";
 import {
+  refreshGameSelection,
   createGameCopy,
   findGames,
   findGameReleases,
@@ -391,4 +392,38 @@ it("rolls back the copy and defects when persistence fails", async () => {
   ).rejects.toMatchObject({ code: "UNAVAILABLE" });
   expect(await db.collectionItem.count()).toBe(0);
   expect(await db.defect.count()).toBe(0);
+});
+
+it("refreshes the same canonical choices without writing a copy or accepting a changed identity", async () => {
+  const user = await actor();
+  const records = await identity();
+  await db.game.update({
+    where: { id: records.game.id },
+    data: {
+      description: "Reviewed provider description",
+      revision: { increment: 1 },
+    },
+  });
+  const input = {
+    id: records.release.id,
+    gameId: records.game.id,
+    platformId: records.platform.id,
+  };
+  const refreshed = await refreshGameSelection(user.context, input);
+  expect(refreshed.game).toMatchObject({
+    id: records.game.id,
+    revision: 2,
+    description: "Reviewed provider description",
+  });
+  expect(refreshed.platform.id).toBe(records.platform.id);
+  expect(refreshed.release.id).toBe(records.release.id);
+  expect(await db.collectionItem.count()).toBe(0);
+  const other = await db.game.create({
+    data: { name: "Other", slug: randomUUID() },
+  });
+  await expect(
+    refreshGameSelection(user.context, { ...input, gameId: other.id }),
+  ).rejects.toMatchObject({ code: "STALE" });
+  const viewer = await actor("VIEWER");
+  await expect(refreshGameSelection(viewer.context, input)).rejects.toThrow();
 });

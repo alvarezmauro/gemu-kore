@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EnrichmentLinks } from "@/features/enrichment/components/enrichment-links";
 import { PlaytimeSummary } from "./playtime-summary";
 import type { Playtime } from "../playtime-validation";
 import { TrailerPlayer } from "./trailer-player";
@@ -60,6 +61,12 @@ export function GameDetail({
           locations={locations}
         />
       )}
+      {canManage &&
+        !d.game.archived &&
+        !d.release.archived &&
+        !d.platform.archived && (
+          <EnrichmentLinks gameId={d.game.id} releaseId={d.release.id} />
+        )}
       <section
         aria-label="Game identity"
         className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"

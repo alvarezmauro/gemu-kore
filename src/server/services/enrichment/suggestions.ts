@@ -113,7 +113,22 @@ export async function getEnrichmentReview(
               ? ["developers" as const]
               : []),
           ];
+    const companyIds = new Set<string>();
+    for (const value of [
+      current.fields.developers,
+      ...suggestions
+        .filter((s) => s.fieldPath === "developers")
+        .flatMap((s) => [s.before, s.proposed]),
+    ]) {
+      const parsed = z
+        .array(z.object({ companyId: z.uuid() }))
+        .safeParse(value);
+      if (parsed.success)
+        for (const row of parsed.data) companyIds.add(row.companyId);
+    }
+    const companyNames = await catalog.companies([...companyIds], tx);
     return {
+      companies: companyNames.map(({ id, name }) => ({ id, name })),
       id: run.id,
       target: current.target,
       label: current.label,
@@ -128,6 +143,18 @@ export async function getEnrichmentReview(
         externalId: candidate.identity.ref.externalId,
         name: candidate.identity.name,
         classification: candidate.identity.classification,
+        platforms:
+          "data" in candidate.platforms
+            ? candidate.platforms.data.map((platform) => platform.value.name)
+            : [],
+        year:
+          "data" in candidate.firstRelease
+            ? candidate.firstRelease.data.value.year
+            : null,
+        description:
+          "data" in candidate.descriptionExcerpt
+            ? candidate.descriptionExcerpt.data.value
+            : null,
       })),
       selectedCandidate: selected
         ? {
@@ -195,6 +222,7 @@ export async function getEnrichmentReview(
         },
         { name: "ai", status: "SKIPPED", reason: "No configured AI adapter." },
       ],
+      canAccept: actor.role === "ADMIN",
       canApply:
         actor.role === "ADMIN" &&
         unchanged(run, current) &&

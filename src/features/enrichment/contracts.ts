@@ -13,7 +13,14 @@ export type EnrichmentReceipt = {
   changeIds: string[];
   revision: number;
 };
+export type EnrichmentTargetSummary = {
+  target: EnrichmentTarget;
+  label: string;
+  revision: number;
+  query: string;
+};
 export type EnrichmentReview = {
+  companies: { id: string; name: string }[];
   id: string;
   target: EnrichmentTarget;
   label: string;
@@ -25,7 +32,14 @@ export type EnrichmentReview = {
   failureCode: string | null;
   attemptCount: number;
   reviewToken: string | null;
-  candidates: { externalId: string; name: string; classification: string }[];
+  candidates: {
+    externalId: string;
+    name: string;
+    classification: string;
+    platforms: string[];
+    year: number | null;
+    description: string | null;
+  }[];
   selectedCandidate: { externalId: string; name: string } | null;
   availableFields: ProposalField[];
   trailerChoices: { externalId: string; title: string | null }[];
@@ -47,6 +61,7 @@ export type EnrichmentReview = {
     status: "COMPLETED" | "SKIPPED";
     reason: string | null;
   }[];
+  canAccept: boolean;
   canApply: boolean;
   receipt: EnrichmentReceipt | null;
 };

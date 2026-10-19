@@ -15,6 +15,8 @@ import type {
   ProviderResult,
 } from "@/server/providers/game-metadata/contracts";
 import {
+  findEnrichmentCompanies,
+  getEnrichmentTarget,
   createEnrichmentRunner,
   getEnrichmentReview,
   prepareEnrichmentReview,
@@ -708,4 +710,41 @@ it("retains accepted lineage and decision times after actor deletion", async () 
     ),
   ).toBe(true);
   await expect(db.game.delete({ where: { id: f.game.id } })).rejects.toThrow();
+});
+
+it("offers editors a narrow active target and company lookup while denying viewers", async () => {
+  const f = await setup();
+  const active = await db.company.create({
+    data: { name: "Example Studio", slug: randomUUID() },
+  });
+  await db.company.create({
+    data: {
+      name: "Example Archived",
+      slug: randomUUID(),
+      archivedAt: new Date(),
+    },
+  });
+  expect(await getEnrichmentTarget(f.owner.context, f.input.target)).toEqual({
+    target: f.input.target,
+    label: `Manual title · ${f.game.slug}`,
+    revision: 1,
+    query: "Manual title",
+  });
+  expect(
+    await findEnrichmentCompanies(f.owner.context, { query: "Example" }),
+  ).toEqual([{ id: active.id, name: active.name }]);
+  const viewer = await actor("VIEWER");
+  await expect(
+    getEnrichmentTarget(viewer.context, f.input.target),
+  ).rejects.toThrow();
+  await expect(
+    findEnrichmentCompanies(viewer.context, { query: "Example" }),
+  ).rejects.toThrow();
+  await db.game.update({
+    where: { id: f.game.id },
+    data: { archivedAt: new Date() },
+  });
+  await expect(
+    getEnrichmentTarget(f.owner.context, f.input.target),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
 });

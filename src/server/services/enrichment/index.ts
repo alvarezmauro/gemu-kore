@@ -9,3 +9,4 @@ export {
 } from "./suggestions";
 export { applyEnrichmentSuggestions } from "./acceptance";
 export const enrichmentRunner = createEnrichmentRunner();
+export { getEnrichmentTarget, findEnrichmentCompanies } from "./entry";

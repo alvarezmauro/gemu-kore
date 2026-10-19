@@ -136,3 +136,16 @@ export function fieldOrigins(
     take: 32,
   });
 }
+
+export function searchCompanies(query: string, tx: TransactionClient) {
+  const literal = query.replace(/[\\%_]/g, "\\$&");
+  return tx.company.findMany({
+    where: {
+      archivedAt: null,
+      name: { contains: literal, mode: "insensitive" },
+    },
+    select: { id: true, name: true },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+    take: 25,
+  });
+}

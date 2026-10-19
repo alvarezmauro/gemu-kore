@@ -8,6 +8,8 @@ import {
 } from "@/server/auth/access";
 import { PermissionError } from "@/server/auth/permissions";
 import {
+  getEnrichmentTarget,
+  findEnrichmentCompanies,
   enrichmentRunner,
   EnrichmentError,
   getEnrichmentReview,
@@ -64,4 +66,11 @@ export async function applySuggestions(input: unknown) {
     revalidatePath("/app/games/[id]", "page");
     return receipt;
   });
+}
+
+export async function loadTarget(input: unknown) {
+  return invoke((context) => getEnrichmentTarget(context, input));
+}
+export async function findCompanies(input: unknown) {
+  return invoke((context) => findEnrichmentCompanies(context, input));
 }

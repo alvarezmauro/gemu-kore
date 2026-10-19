@@ -32,7 +32,7 @@ export async function readEnrichmentTarget(
 export function companies(ids: string[], tx: TransactionClient) {
   return tx.company.findMany({
     where: { id: { in: ids } },
-    select: { id: true, revision: true, archivedAt: true },
+    select: { id: true, name: true, revision: true, archivedAt: true },
     take: 30,
   });
 }

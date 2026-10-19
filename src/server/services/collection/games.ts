@@ -12,6 +12,7 @@ import {
   consolePlatform,
   consoleLocationExists,
 } from "@/server/repositories/collection/consoles";
+import { platform as platformDto } from "./consoles";
 import { findConsolePlatforms } from "./consoles";
 import { getLocations } from "@/server/services/locations";
 import {
@@ -285,5 +286,46 @@ export async function createGameCopy(
     );
   } catch (e) {
     fail(e);
+  }
+}
+
+export async function refreshGameSelection(
+  context: PrivateAccessContext,
+  input: unknown,
+) {
+  try {
+    return await withTransaction(
+      async (tx) => {
+        await requirePermission(context, "collection.manage", tx);
+        const p = releaseSelection.safeParse(input);
+        if (!p.success) throw new GameCreationError("INVALID_INPUT");
+        const [release, game, platform] = await Promise.all([
+          repository.release(p.data.id, tx),
+          repository.game(p.data.gameId, tx),
+          consolePlatform(p.data.platformId, tx),
+        ]);
+        if (
+          !release ||
+          !game ||
+          !platform ||
+          release.archivedAt ||
+          game.archivedAt ||
+          platform.archivedAt ||
+          release.gameId !== game.id ||
+          release.platformId !== platform.id
+        )
+          throw new GameCreationError("STALE");
+        const { archivedAt, ...choice } = game;
+        void archivedAt;
+        return {
+          game: choice,
+          platform: platformDto(platform),
+          release: releaseDto(release),
+        };
+      },
+      { isolationLevel: "RepeatableRead" },
+    );
+  } catch (error) {
+    fail(error);
   }
 }
