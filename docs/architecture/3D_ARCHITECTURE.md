@@ -4,6 +4,8 @@ Task: **9.1 — 3D Architecture**
 Date: **2026-10-15**  
 Status: **Design complete.** Implementation follow-up: Task 9.2 adds the private viewer described in [ModelViewer operations](../operations/MODEL_VIEWER.md); Task 9.3 records [automated performance evidence](../performance/3D_PERFORMANCE.md) and physical iPhone observations, with an explicit native-memory limitation and owner-waived Android testing. The evidence and design-task scope below record the state inspected on 2026-10-15.
 
+Task 14.6 reviews the current shared console, packaging and cartridge implementation in the [3D system review](3D_SYSTEM_REVIEW.md), with refreshed automated lifecycle/performance evidence. The historical device limitations remain open as described there.
+
 ## 1. Decision and scope
 
 Use one reusable, optional `<ModelViewer />` built with Three.js, React Three Fiber (R3F) and selected Drei helpers. The server chooses an authorized presentation; a small client shell shows its static poster and loads the rendering runtime only after **View in 3D**. The viewer handles the stage, camera, controls, loading and cleanup. Content adapters supply console/accessory GLBs or, later, packaging/media geometry with explicit artwork bindings.

@@ -5,9 +5,16 @@ import { dvdFixture } from "../helpers/dvd-fixture";
 import { jewelFixture } from "../helpers/jewel-fixture";
 import { clamshellFixture } from "../helpers/clamshell-fixture";
 import { fixture, openModel, signIn } from "../helpers/model-browser";
-test.beforeEach(async () => {
+import {
+  installAssembledProbe,
+  assembledSession,
+  assembledClosed,
+  attachAssembledEvidence,
+} from "../helpers/assembled-performance";
+test.beforeEach(async ({ page }) => {
   await fixture("reset-search");
   await fixture("reset");
+  await installAssembledProbe(page);
 });
 test.afterAll(async () => {
   await fixture("reset-search");
@@ -278,6 +285,9 @@ for (const family of [
     await expect(page.locator("canvas")).toHaveCount(0);
     expect(transfers).toBe(0);
     expect(geometryTransfers).toBe(0);
+    expect(
+      (await page.evaluate(() => window.__gemu3dProbe.snapshot())).contexts,
+    ).toHaveLength(0);
     const viewer = await openModel(page);
     expect(transfers).toBe(1);
     if (authored) expect(geometryTransfers).toBe(1);
@@ -311,10 +321,12 @@ for (const family of [
       path: info.outputPath("box-mobile.png"),
       fullPage: true,
     });
+    const sessions = [await assembledSession(page)];
     await page
       .getByLabel("Expected package to preview")
       .selectOption({ label: "Inner box" });
     await expect(page.locator("canvas")).toHaveCount(0);
+    await assembledClosed(page);
     await expect(
       page.getByText("No ready packaging preview is available."),
     ).toBeVisible();
@@ -322,12 +334,19 @@ for (const family of [
       .getByLabel("Expected package to preview")
       .selectOption({ label: "Outer box" });
     await openModel(page);
+    sessions.push(await assembledSession(page));
     expect(transfers).toBe(2);
     if (authored) expect(geometryTransfers).toBe(2);
     await viewer
       .getByRole("button", { name: "Close 3D preview", exact: true })
       .click();
     await expect(page.locator("canvas")).toHaveCount(0);
+    await attachAssembledEvidence(
+      info,
+      family,
+      sessions,
+      await assembledClosed(page),
+    );
     expect(errors).toEqual([]);
     await fixture("update", JSON.stringify({ role: "VIEWER" }));
     await page.goto(

@@ -12,6 +12,17 @@ const cases = [
   "benchmark-plain.json",
   "benchmark-shiny.json",
   "benchmark-textured.json",
+  ...(process.argv.includes("--assembled")
+    ? [
+        "snes-cardboard",
+        "nes-cardboard",
+        "genesis-clamshell",
+        "playstation-jewel",
+        "ps2-dvd",
+        "switch-case",
+        "cartridge",
+      ].map((family) => `assembled-${family}.json`)
+    : []),
 ];
 async function main() {
   const root = resolve("test-results"),
@@ -34,7 +45,8 @@ async function main() {
         );
     }
   const path = resolve(
-    process.argv[2] ?? "docs/performance/3D_PERFORMANCE_EVIDENCE.json",
+    process.argv.slice(2).find((arg) => arg !== "--assembled") ??
+      "docs/performance/3D_PERFORMANCE_EVIDENCE.json",
   );
   await mkdir(dirname(path), { recursive: true });
   await writeFile(

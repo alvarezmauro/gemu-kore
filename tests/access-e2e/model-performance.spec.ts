@@ -58,6 +58,8 @@ test("keeps renderer chunks, contexts and model transfers out of static grids an
   page,
   context,
 }, info) => {
+  // Includes isolated setup, two uploads and grid/detail navigation.
+  test.setTimeout(60_000);
   const chunks = await threeChunks();
   const totals = chunks.reduce(
     (sum, c) => ({
@@ -117,6 +119,8 @@ test("settles to zero idle draws, pauses offscreen and stops rotation on live re
   page,
   context,
 }, info) => {
+  // Setup and several separate idle/visibility windows share this study budget.
+  test.setTimeout(60_000);
   await prepareModel(page, context);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const viewer = await openModel(page),
@@ -209,7 +213,9 @@ for (const kind of ["plain", "shiny", "textured"] as const)
     page,
     context,
   }, info) => {
-    test.setTimeout(60000);
+    // Five fresh software-WebGL sessions need more time than the two-cycle studies.
+    // Individual loading, cleanup and heap/allocation assertions keep their limits.
+    test.setTimeout(kind === "textured" ? 90_000 : 60_000);
     const model = modelBenchmark(kind);
     const { viewer, url } = await prepareModel(page, context, model.bytes);
     const sessions = [],

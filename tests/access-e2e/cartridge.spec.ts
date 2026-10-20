@@ -2,9 +2,16 @@ import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import { cartridgeFixture } from "../helpers/cartridge-fixture";
 import { fixture, openModel, signIn } from "../helpers/model-browser";
-test.beforeEach(async () => {
+import {
+  installAssembledProbe,
+  assembledSession,
+  assembledClosed,
+  attachAssembledEvidence,
+} from "../helpers/assembled-performance";
+test.beforeEach(async ({ page }) => {
   await fixture("reset-search");
   await fixture("reset");
+  await installAssembledProbe(page);
 });
 test.afterAll(async () => {
   await fixture("reset-search");
@@ -259,6 +266,9 @@ test(`curates cartridge geometry and independent private labels with accessible 
   await expect(page.locator("canvas")).toHaveCount(0);
   expect(transfers).toBe(0);
   expect(geometryTransfers).toBe(0);
+  expect(
+    (await page.evaluate(() => window.__gemu3dProbe.snapshot())).contexts,
+  ).toHaveLength(0);
   const viewer = await openModel(page);
   expect(transfers).toBe(1);
   if (authored) expect(geometryTransfers).toBe(1);
@@ -288,10 +298,12 @@ test(`curates cartridge geometry and independent private labels with accessible 
     path: info.outputPath("box-mobile.png"),
     fullPage: true,
   });
+  const sessions = [await assembledSession(page)];
   await page
     .getByLabel("Expected component to preview")
     .selectOption({ label: "Second cartridge" });
   await expect(page.locator("canvas")).toHaveCount(0);
+  await assembledClosed(page);
   await openModel(page);
   await viewer.getByRole("button", { name: "Front view", exact: true }).click();
   expect((await viewer.locator("canvas").screenshot()).equals(frontImage)).toBe(
@@ -299,10 +311,12 @@ test(`curates cartridge geometry and independent private labels with accessible 
   );
   expect(transfers).toBe(2);
   expect(geometryTransfers).toBe(2);
+  sessions.push(await assembledSession(page));
   await page
     .getByLabel("Expected component to preview")
     .selectOption({ label: "Box" });
   await expect(page.locator("canvas")).toHaveCount(0);
+  await assembledClosed(page);
   await expect(
     page.getByText("No ready packaging preview is available."),
   ).toBeVisible();
@@ -310,12 +324,19 @@ test(`curates cartridge geometry and independent private labels with accessible 
     .getByLabel("Expected component to preview")
     .selectOption({ label: "Cartridge" });
   await openModel(page);
+  sessions.push(await assembledSession(page));
   expect(transfers).toBe(3);
   expect(geometryTransfers).toBe(3);
   await viewer
     .getByRole("button", { name: "Close 3D preview", exact: true })
     .click();
   await expect(page.locator("canvas")).toHaveCount(0);
+  await attachAssembledEvidence(
+    info,
+    "cartridge",
+    sessions,
+    await assembledClosed(page),
+  );
   expect(errors).toEqual([]);
   await fixture("update", JSON.stringify({ role: "VIEWER" }));
   await page.goto(
