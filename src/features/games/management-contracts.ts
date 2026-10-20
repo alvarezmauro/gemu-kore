@@ -1,3 +1,4 @@
+import type { AssetAttribution } from "@/features/provenance/contracts";
 import type { CopyPhysicalDraft } from "@/features/collection/copy-validation";
 import type { ConsoleImage } from "@/features/consoles/contracts";
 import type {
@@ -26,8 +27,10 @@ export type GameCopyDetail = {
     label: string | null;
     market: string | null;
   }[];
-  cover: ConsoleImage | null;
-  photos: ConsoleImage[];
+  cover:
+    | (ConsoleImage & { source: AssetAttribution; scope: "game" | "release" })
+    | null;
+  photos: (ConsoleImage & { source: AssetAttribution })[];
   defects: {
     id: string;
     title: string;

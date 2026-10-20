@@ -21,12 +21,15 @@ async function main() {
   try {
     let result: unknown = null;
     if (command === "seed-enrichment") {
-      const { token, gameId, prepare } = JSON.parse(argument!);
+      const { token, gameId, prepare, apply } = JSON.parse(argument!);
       const { signedSessionCookie } = await import("./access-session");
       const { requirePrivateAccess } =
         await import("../../src/server/auth/access");
-      const { createEnrichmentRunner, prepareEnrichmentReview } =
-        await import("../../src/server/services/enrichment");
+      const {
+        createEnrichmentRunner,
+        prepareEnrichmentReview,
+        applyEnrichmentSuggestions,
+      } = await import("../../src/server/services/enrichment");
       const { mapGame, mapSearch } =
         await import("../../src/server/providers/game-metadata/igdb-mapping");
       const { default: raw } =
@@ -60,13 +63,58 @@ async function main() {
         expectedRunVersion: found.runVersion,
         externalId: "42",
       });
-      result = prepare
-        ? await prepareEnrichmentReview(actor, {
-            runId: fetched.id,
-            expectedRunVersion: fetched.runVersion,
-            fields: ["name", "description", "references"],
-          })
-        : fetched;
+      const review =
+        prepare || apply
+          ? await prepareEnrichmentReview(actor, {
+              runId: fetched.id,
+              expectedRunVersion: fetched.runVersion,
+              fields: ["name", "description", "references"],
+            })
+          : fetched;
+      result = review;
+      if (apply)
+        await applyEnrichmentSuggestions(actor, {
+          runId: review.id,
+          reviewToken: review.reviewToken,
+          suggestionIds: review.suggestions.map((s) => s.id),
+          manualReplacementIds: review.suggestions
+            .filter((s) => s.manualReplacementRequired)
+            .map((s) => s.id),
+        });
+    } else if (command === "seed-provenance-copy") {
+      const { token, releaseId } = JSON.parse(argument!);
+      const { signedSessionCookie } = await import("./access-session");
+      const { requirePrivateAccess } =
+        await import("../../src/server/auth/access");
+      const { createGameCopy } =
+        await import("../../src/server/services/collection/games");
+      const { emptyCopyPhysical } =
+        await import("../../src/features/collection/copy-validation");
+      const cookie = signedSessionCookie(
+        token,
+        process.env.BETTER_AUTH_SECRET!,
+      );
+      const actor = await requirePrivateAccess(
+        new Headers({
+          Cookie: `__Secure-gemukore.session_token=${cookie}; gemukore.session_token=${cookie}`,
+        }),
+      );
+      const release = await database.gameRelease.findUniqueOrThrow({
+        where: { id: releaseId },
+        include: { game: true, platform: true },
+      });
+      result = {
+        id: await createGameCopy(actor, {
+          ...emptyCopyPhysical,
+          id: randomUUID(),
+          gameId: release.gameId,
+          gameRevision: release.game.revision,
+          releaseId: release.id,
+          releaseRevision: release.revision,
+          platformId: release.platformId,
+          platformRevision: release.platform.revision,
+        }),
+      };
     } else if (command === "enrichment-state") {
       result = {
         runs: await database.enrichmentRun.count(),

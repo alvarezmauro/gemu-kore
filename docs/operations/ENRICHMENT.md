@@ -62,3 +62,5 @@ After selecting a game and release in Add game, use **Review game metadata** or 
 The review offers explicit retry, status refresh and cancellation when a retained operation permits them. An initial synchronous lookup may take up to 45 seconds before a run response is available; its controls remain busy during that request. Closing a tab does not promise immediate remote cancellation. Manual saving never depends on finding or accepting enrichment.
 
 The page uses the shared warm panels and functional controls, stacked comparisons at narrow widths, explicit status text, visible labels, keyboard actions and focused errors. It adds no animation dependency; reduced motion keeps a complete static experience. Private page metadata is generic and excluded from indexing. It introduces no public run endpoint or provenance displays on public pages.
+
+Task 13.4 adds [current source labels, retained administrator history and private media attribution](PROVENANCE.md). Manual replacement checks also treat a field as unknown when its current value no longer matches the latest recorded source.

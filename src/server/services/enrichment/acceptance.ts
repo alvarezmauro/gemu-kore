@@ -1,4 +1,5 @@
 import "server-only";
+import { verifiedFieldOrigin } from "../catalog/provenance";
 import { z } from "zod";
 import type { PrivateAccessContext } from "@/server/auth/access";
 import * as repository from "@/server/repositories/enrichment";
@@ -113,9 +114,13 @@ export async function applyEnrichmentSuggestions(
           await repository.fieldOrigins(
             target.target.kind,
             target.target.id,
+            Object.keys(target.fields),
             tx,
           )
-        ).map((row) => [row.fieldPath, row.origin]),
+        ).map((row) => [
+          row.fieldPath,
+          verifiedFieldOrigin(row.fieldPath, target.fields[row.fieldPath], row),
+        ]),
       );
       for (const row of selected) {
         if (

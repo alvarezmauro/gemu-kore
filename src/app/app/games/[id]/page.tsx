@@ -72,6 +72,7 @@ export default async function GamePage({
         </div>
         <GameDetail
           detail={result.detail}
+          provenance={result.provenance}
           playtime={result.playtime}
           trailer={result.trailer}
           screenshots={result.screenshots}

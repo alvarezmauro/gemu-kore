@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { GameSources } from "@/features/provenance/components/game-sources";
+import { AssetSource } from "@/features/provenance/components/asset-source";
+import type { GameProvenance } from "@/features/provenance/contracts";
 import { EnrichmentLinks } from "@/features/enrichment/components/enrichment-links";
 import { PlaytimeSummary } from "./playtime-summary";
 import type { Playtime } from "../playtime-validation";
@@ -18,6 +21,7 @@ import { GameReleaseSummary } from "./game-release-summary";
 import { GameControls } from "./game-controls";
 export function GameDetail({
   detail: d,
+  provenance,
   canManage,
   locations,
   screenshots,
@@ -25,6 +29,7 @@ export function GameDetail({
   playtime,
 }: {
   detail: GameCopyDetail;
+  provenance: GameProvenance;
   canManage: boolean;
   locations: CopyLocation[];
   screenshots: ScreenshotGalleryData;
@@ -74,10 +79,25 @@ export function GameDetail({
         <div className="min-w-0">
           {d.cover ? (
             <>
-              <ConsoleImage {...d.cover} />
+              <ConsoleImage
+                url={d.cover.url}
+                alt={d.cover.alt}
+                width={d.cover.width}
+                height={d.cover.height}
+              />
               <p className="mt-2 text-sm text-muted-foreground">
-                Catalog cover{d.cover.caption ? ` · ${d.cover.caption}` : ""}
+                Catalog cover ·{" "}
+                {d.cover.scope === "release"
+                  ? "Release cover"
+                  : "Game default; no release cover recorded"}
+                {d.cover.caption ? ` · ${d.cover.caption}` : ""}
               </p>
+              <details className="mt-3 rounded-lg bg-muted p-3">
+                <summary className="min-h-11 cursor-pointer py-3 text-sm">
+                  Cover source details
+                </summary>
+                <AssetSource source={d.cover.source} />
+              </details>
             </>
           ) : (
             <div className="flex aspect-[3/2] items-center justify-center rounded-xl bg-stone p-6 text-center text-muted-foreground">
@@ -117,6 +137,7 @@ export function GameDetail({
           ["Playtime", "game-playtime"],
           ["Release and contents", "game-release"],
           ["Personal photos", "game-photos"],
+          ["Metadata sources", "game-sources"],
         ].map(([label, id]) => (
           <a
             key={id}
@@ -340,7 +361,18 @@ export function GameDetail({
           <ul className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {d.photos.map((photo, i) => (
               <li key={`${photo.url}:${i}`} className="min-w-0">
-                <ConsoleImage {...photo} />
+                <ConsoleImage
+                  url={photo.url}
+                  alt={photo.alt}
+                  width={photo.width}
+                  height={photo.height}
+                />
+                <details className="mt-3 rounded-lg bg-muted p-3">
+                  <summary className="min-h-11 cursor-pointer py-3 text-sm">
+                    Photo {i + 1} source details
+                  </summary>
+                  <AssetSource source={photo.source} />
+                </details>
                 {photo.caption && (
                   <p className="mt-2 text-sm [overflow-wrap:anywhere]">
                     {photo.caption}
@@ -363,6 +395,7 @@ export function GameDetail({
           </Link>
         </Button>
       </section>
+      <GameSources provenance={provenance} />
     </div>
   );
 }

@@ -1,11 +1,17 @@
 import "server-only";
 import type { Prisma } from "@/server/db/generated/client";
 import type { TransactionClient } from "@/server/db/transaction";
+import { assetSourceSelect } from "../catalog/provenance";
 import { gameSelect, releaseSelect } from "./games";
 import { platformSelect } from "./consoles";
 import { trailerSelect } from "../catalog/trailers";
 import { playtimeSelect } from "../catalog/playtime";
-const image = { id: true, width: true, height: true } as const;
+const image = {
+  id: true,
+  width: true,
+  height: true,
+  ...assetSourceSelect,
+} as const;
 export function ownedGame(id: string, tx: TransactionClient) {
   return tx.collectionItem.findUnique({
     where: { id },
@@ -101,7 +107,12 @@ export function gameCover(
       isPrimary: true,
       asset: { state: "READY", kind: "IMAGE", deliveryClass: "DISPLAY" },
     },
-    select: { caption: true, altText: true, asset: { select: image } },
+    select: {
+      gameReleaseId: true,
+      caption: true,
+      altText: true,
+      asset: { select: image },
+    },
     orderBy: [{ gameReleaseId: { sort: "asc", nulls: "last" } }, { id: "asc" }],
   });
 }

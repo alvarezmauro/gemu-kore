@@ -126,14 +126,23 @@ export function decideSuggestions(
 export function fieldOrigins(
   kind: "game" | "release",
   id: string,
+  fields: string[],
   tx: TransactionClient,
 ) {
   return tx.metadataChange.findMany({
-    where: kind === "game" ? { gameId: id } : { gameReleaseId: id },
+    where: {
+      ...(kind === "game" ? { gameId: id } : { gameReleaseId: id }),
+      fieldPath: { in: fields },
+    },
     distinct: ["fieldPath"],
-    select: { fieldPath: true, origin: true },
+    select: {
+      fieldPath: true,
+      origin: true,
+      after: true,
+      snapshotSchemaVersion: true,
+    },
     orderBy: { rootRevision: "desc" },
-    take: 32,
+    take: Math.min(fields.length, 32),
   });
 }
 

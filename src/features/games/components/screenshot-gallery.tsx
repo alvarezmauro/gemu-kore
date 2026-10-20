@@ -1,4 +1,5 @@
 "use client";
+import { AssetSource } from "@/features/provenance/components/asset-source";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,58 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { ConsoleImage } from "@/features/consoles/components/console-image";
-import type {
-  Screenshot,
-  ScreenshotGalleryData,
-} from "../screenshot-contracts";
-function Source({ photo }: { photo: Screenshot }) {
-  const s = photo.source;
-  return (
-    <div className="space-y-2 text-sm [overflow-wrap:anywhere]">
-      <p>Source: {s.provider ?? s.type.toLowerCase().replaceAll("_", " ")}</p>
-      {s.url && (
-        <p>
-          <a
-            className="underline"
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Source page
-          </a>
-        </p>
-      )}
-      {s.author && <p>Author: {s.author}</p>}
-      {s.licenseName && <p>License: {s.licenseName}</p>}
-      {s.licenseUrl && (
-        <p>
-          <a
-            className="underline"
-            href={s.licenseUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            License page
-          </a>
-        </p>
-      )}
-      {s.attribution && (
-        <p className="whitespace-pre-wrap">Attribution: {s.attribution}</p>
-      )}
-      {s.restrictions && (
-        <p className="whitespace-pre-wrap">
-          Usage restrictions: {s.restrictions}
-        </p>
-      )}
-      {s.retrievedAt && (
-        <p>
-          Retrieved:{" "}
-          <time dateTime={s.retrievedAt}>{s.retrievedAt.slice(0, 10)}</time>
-        </p>
-      )}
-    </div>
-  );
-}
+import type { ScreenshotGalleryData } from "../screenshot-contracts";
 export function ScreenshotGallery({
   gallery,
   previous,
@@ -115,7 +65,7 @@ export function ScreenshotGallery({
                 <summary className="min-h-11 cursor-pointer py-3 text-sm">
                   Screenshot source details
                 </summary>
-                <Source photo={item} />
+                <AssetSource source={item.source} />
               </details>
             </li>
           ))}
@@ -179,7 +129,7 @@ export function ScreenshotGallery({
                 {...photo}
                 alt={photo.altText ?? photo.caption ?? "Game screenshot"}
               />
-              <Source photo={photo} />
+              <AssetSource source={photo.source} />
               <div className="flex flex-wrap gap-3">
                 <Button
                   variant="outline"

@@ -1770,6 +1770,8 @@ Persist where imported metadata came from.
 
 Never silently overwrite manual information.
 
+Status: **Completed 2026-10-19.** Added private game/release source displays and administrator history attribution using retained immutable change snapshots, with explicit manual, imported, seeded, AI-assisted and unknown origins. Source projections expose safe links, retrieval/update dates, supported transformations and unavailable confidence without exposing enrichment queries, tokens, actors or raw snapshots. Per-field lookups verify current values against recorded changes independently of the history display window; legacy untracked corrections require manual-replacement acknowledgement during review and acceptance. Unified cover, personal-photo and screenshot attribution while preserving publication and rights checks. Added [provenance operations documentation](docs/operations/PROVENANCE.md). Verification: lint, typecheck, formatting, 1,104 unit/component cases, 55 provenance/enrichment/catalog integration cases and 18 authenticated desktop/mobile browser cases pass, with focused final regression runs and screenshot inspection. Tests use disposable databases/storage and deterministic provider fixtures. No new dependencies, migrations, live-provider calls or public endpoint. Next: Task 13.5, only when requested.
+
 ---
 
 ## TASK 13.5 — Enrichment Review

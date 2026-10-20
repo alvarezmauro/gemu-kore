@@ -1,4 +1,5 @@
 import "server-only";
+import { assetAttribution, readGameProvenance } from "../catalog/provenance";
 import { playtimeDto } from "../catalog/playtime";
 import { storedTrailer } from "@/features/games/trailer-validation";
 import { readScreenshotGallery } from "../catalog/screenshots";
@@ -83,6 +84,7 @@ function image(row: Awaited<ReturnType<typeof repository.gamePhotos>>[number]) {
     url: `/api/media/private/${row.asset.id}`,
     alt: row.altText ?? row.caption ?? "Game image",
     caption: row.caption,
+    source: assetAttribution(row.asset),
     width: row.asset.width ?? 1,
     height: row.asset.height ?? 1,
   };
@@ -144,7 +146,12 @@ export async function getOwnedGame(
             label: c.creditLabel,
             market: c.releaseRegion?.region.name ?? null,
           })),
-          cover: cover ? image(cover) : null,
+          cover: cover
+            ? {
+                ...image(cover),
+                scope: cover.gameReleaseId ? "release" : "game",
+              }
+            : null,
           photos: photos.map(image),
           defects: item.defects,
           defectCount: item._count.defects,
@@ -152,6 +159,11 @@ export async function getOwnedGame(
         const canManage = canPerform(actor.role, "collection.manage");
         return {
           detail,
+          provenance: await readGameProvenance(
+            selected.gameId,
+            selected.id,
+            tx,
+          ),
           canManage,
           locations: canManage ? choices : [],
           playtime: {

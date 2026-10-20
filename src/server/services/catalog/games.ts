@@ -9,6 +9,7 @@ import {
 } from "@/server/db/transaction";
 import * as repository from "@/server/repositories/catalog/games";
 import * as shared from "@/server/repositories/catalog/management";
+import { describeMetadataSource } from "./provenance";
 import { CatalogError } from "./management";
 import {
   gameSave,
@@ -252,6 +253,7 @@ export async function getGameCatalog(
             fieldPath: h.fieldPath,
             revision: h.rootRevision,
             createdAt: h.createdAt.toISOString(),
+            attribution: describeMetadataSource(h),
             before: JSON.stringify(h.before),
             after: JSON.stringify(h.after),
           })),

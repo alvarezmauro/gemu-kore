@@ -1,4 +1,5 @@
 import "server-only";
+import { assetAttribution } from "./provenance";
 import { Prisma } from "@/server/db/generated/client";
 import {
   PrivateAccessError,
@@ -18,7 +19,6 @@ import * as repository from "@/server/repositories/catalog/screenshots";
 import {
   screenshotPage,
   screenshotMutation,
-  safeScreenshotUrl,
 } from "@/features/games/screenshot-validation";
 import type {
   Screenshot,
@@ -62,17 +62,7 @@ function dto(
     url: `/api/media/private/${a.id}`,
     width: a.width ?? 1,
     height: a.height ?? 1,
-    source: {
-      type: a.sourceType,
-      provider: a.provider,
-      url: safeScreenshotUrl(a.sourceUrl),
-      author: a.author,
-      licenseName: a.licenseName,
-      licenseUrl: safeScreenshotUrl(a.licenseUrl),
-      attribution: a.attribution,
-      restrictions: a.usageRestrictions,
-      retrievedAt: a.retrievedAt?.toISOString() ?? null,
-    },
+    source: assetAttribution(a),
   };
 }
 export async function readScreenshotGallery(

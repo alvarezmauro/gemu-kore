@@ -335,6 +335,8 @@ export function listCatalogHistory(
       after: true,
       rootRevision: true,
       origin: true,
+      sourceSnapshot: true,
+      snapshotSchemaVersion: true,
       createdAt: true,
     },
     orderBy: [{ rootRevision: "desc" }, { fieldPath: "asc" }],

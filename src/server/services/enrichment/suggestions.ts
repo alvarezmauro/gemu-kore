@@ -1,4 +1,5 @@
 import "server-only";
+import { verifiedFieldOrigin } from "../catalog/provenance";
 import { z } from "zod";
 import type { PrivateAccessContext } from "@/server/auth/access";
 import { Prisma } from "@/server/db/generated/client";
@@ -82,8 +83,20 @@ export async function getEnrichmentReview(
     }
     const origins = new Map(
       (
-        await repository.fieldOrigins(targetOf(run).kind, current.target.id, tx)
-      ).map((item) => [item.fieldPath, item.origin]),
+        await repository.fieldOrigins(
+          targetOf(run).kind,
+          current.target.id,
+          Object.keys(current.fields),
+          tx,
+        )
+      ).map((item) => [
+        item.fieldPath,
+        verifiedFieldOrigin(
+          item.fieldPath,
+          current.fields[item.fieldPath],
+          item,
+        ),
+      ]),
     );
     const metadata = run.result
       ? validateProviderOutput(gameMetadataResult, run.result)

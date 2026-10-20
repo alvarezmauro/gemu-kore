@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MetadataSource } from "@/features/provenance/components/metadata-source";
 import { notFound, redirect } from "next/navigation";
 import { ApplicationShell } from "@/components/layout/application-shell";
 import { PageContainer } from "@/components/layout/page-container";
@@ -131,6 +132,7 @@ export default async function GameCatalogPage({
                       <p>
                         {h.fieldPath} · Revision {h.revision}
                       </p>
+                      <MetadataSource attribution={h.attribution} />
                       <time className="text-sm" dateTime={h.createdAt}>
                         {h.createdAt}
                       </time>
