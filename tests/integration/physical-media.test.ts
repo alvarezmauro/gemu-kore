@@ -549,3 +549,237 @@ it("rejects valid foreign slots, duplicate labels and model assets at the databa
     }),
   ).rejects.toThrow();
 });
+
+it("reads legacy metadata as unspecified without rewriting retained rows or preview contracts", async () => {
+  const c = await setup();
+  await db.physicalMediaTemplate.update({
+    where: { id: c.draft.id },
+    data: {
+      metadata: {
+        schemaVersion: 1,
+        synthetic: true,
+        measurementNote: c.draft.measurementNote,
+      },
+    },
+  });
+  await c.promote();
+  await assignPhysicalMedia(c.admin.context, await c.input());
+  const before = await db.physicalMediaTemplate.findUniqueOrThrow({
+    where: { id: c.draft.id },
+  });
+  await createPhysicalMediaTemplate(c.admin.context, c.draft);
+  const manager = await c.manager();
+  expect(manager.templates.find((t) => t.id === c.draft.id)?.format).toEqual({
+    schemaVersion: 1,
+    formatKey: "unspecified",
+    variant: "",
+  });
+  const detail = await getOwnedGame(c.admin.context, { id: c.copyId });
+  expect(
+    detail.media.find((t) => t.id === c.component.id)?.format?.formatKey,
+  ).toBe("unspecified");
+  const preview = await c.view();
+  expect(preview.content).toMatchObject({
+    rendererVersion: "cartridge-v1",
+    kind: "PHYSICAL_MEDIA",
+    familyKey: "cartridge",
+  });
+  expect(JSON.stringify(preview)).not.toMatch(
+    /formatKey|measurementNote|storageNamespace/,
+  );
+  expect(
+    await db.physicalMediaTemplate.findUniqueOrThrow({
+      where: { id: c.draft.id },
+    }),
+  ).toEqual(before);
+});
+it("retains curator formats and variants, rejects conflicting retries and freezes approved metadata", async () => {
+  const c = await setup(),
+    model = await c.promote();
+  const snes = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 2,
+      format: {
+        schemaVersion: 1,
+        formatKey: "snes-us",
+        variant: "Synthetic shell A",
+      },
+    },
+    gb = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 3,
+      format: {
+        schemaVersion: 1,
+        formatKey: "game-boy",
+        variant: "Synthetic shell B",
+      },
+    };
+  await createPhysicalMediaTemplate(c.admin.context, snes);
+  await createPhysicalMediaTemplate(c.admin.context, snes);
+  await createPhysicalMediaTemplate(c.admin.context, gb);
+  await expect(
+    createPhysicalMediaTemplate(c.admin.context, {
+      ...snes,
+      format: { ...snes.format, variant: "Conflicting shell" },
+    }),
+  ).rejects.toMatchObject({ code: "STALE" });
+  await expect(
+    createPhysicalMediaTemplate(c.admin.context, {
+      ...snes,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 4,
+      format: { ...snes.format, formatKey: "invented-format" },
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  const t = (await c.manager()).templates.find((t) => t.id === snes.id)!;
+  expect(t.format).toEqual(snes.format);
+  expect(t.dimensions).toEqual(c.draft.dimensions);
+  expect(
+    (await c.manager()).templates.find((t) => t.id === gb.id)?.format,
+  ).toEqual(gb.format);
+  await db.physicalMediaTemplate.update({
+    where: { id: snes.id },
+    data: { baseModelAssetId: model.id, status: "READY", revision: 2 },
+  });
+  await assignPhysicalMedia(c.admin.context, {
+    ...(await c.input()),
+    templateId: snes.id,
+    bindings: [
+      { slotId: t.slots[0].id, assetId: c.asset.id, transform: fullArtwork },
+    ],
+  });
+  expect(
+    (await getOwnedGame(c.admin.context, { id: c.copyId })).media.find(
+      (t) => t.id === c.component.id,
+    )?.format,
+  ).toEqual(snes.format);
+  await expect(
+    db.physicalMediaTemplate.update({
+      where: { id: snes.id },
+      data: {
+        metadata: {
+          schemaVersion: 1,
+          synthetic: true,
+          measurementNote: snes.measurementNote,
+          format: gb.format,
+        },
+      },
+    }),
+  ).rejects.toThrow();
+  const editor = await actor("EDITOR");
+  await expect(
+    createPhysicalMediaTemplate(editor.context, {
+      ...gb,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 4,
+    }),
+  ).rejects.toThrow();
+});
+import type { Prisma } from "@/server/db/generated/client";
+const fixtureJson = (value: Prisma.JsonValue): Prisma.InputJsonValue => {
+  if (value === null) throw new Error("Fixture requires JSON");
+  return value;
+};
+it("bounds metadata choices per format while retaining old assignments and other formats", async () => {
+  const c = await setup();
+  await db.physicalMediaTemplate.update({
+    where: { id: c.draft.id },
+    data: {
+      metadata: {
+        schemaVersion: 1,
+        synthetic: true,
+        measurementNote: c.draft.measurementNote,
+        format: {
+          schemaVersion: 1,
+          formatKey: "snes-us",
+          variant: "Retained original study",
+        },
+      },
+    },
+  });
+  await c.promote();
+  await assignPhysicalMedia(c.admin.context, await c.input());
+  const base = await db.physicalMediaTemplate.findUniqueOrThrow({
+      where: { id: c.draft.id },
+    }),
+    slot = await db.physicalMediaTextureSlot.findFirstOrThrow({
+      where: { physicalMediaTemplateId: c.draft.id },
+    });
+  const ids = Array.from({ length: 51 }, () => randomUUID()),
+    otherId = randomUUID(),
+    legacyId = randomUUID();
+  const rows = ids.map((id, i) => ({
+    ...base,
+    id,
+    slug: randomUUID(),
+    revisionNumber: i + 2,
+    status: "DRAFT" as const,
+    revision: 1,
+    dimensions: fixtureJson(base.dimensions),
+    materialSettings: fixtureJson(base.materialSettings),
+    cameraSettings: fixtureJson(base.cameraSettings),
+    metadata: fixtureJson(base.metadata),
+  }));
+  await db.physicalMediaTemplate.createMany({
+    data: [
+      ...rows,
+      {
+        ...rows[0],
+        id: otherId,
+        slug: randomUUID(),
+        revisionNumber: 53,
+        metadata: {
+          schemaVersion: 1,
+          synthetic: true,
+          measurementNote: "Original study",
+          format: {
+            schemaVersion: 1,
+            formatKey: "game-boy",
+            variant: "Independent study",
+          },
+        },
+      },
+      {
+        ...rows[0],
+        id: legacyId,
+        slug: randomUUID(),
+        revisionNumber: 54,
+        metadata: {
+          schemaVersion: 1,
+          synthetic: true,
+          measurementNote: "Legacy study without format",
+        },
+      },
+    ],
+  });
+  await db.physicalMediaTextureSlot.createMany({
+    data: [...ids, otherId, legacyId].map((id) => ({
+      ...slot,
+      id: randomUUID(),
+      physicalMediaTemplateId: id,
+      target: fixtureJson(slot.target),
+    })),
+  });
+  const manager = await c.manager();
+  expect(manager.moreTemplates).toBe(true);
+  expect(
+    manager.templates.filter((t) => t.format.formatKey === "snes-us"),
+  ).toHaveLength(51);
+  expect(manager.templates.find((t) => t.id === c.draft.id)).toMatchObject({
+    status: "READY",
+    format: { formatKey: "snes-us" },
+  });
+  expect(manager.templates.find((t) => t.id === ids[0])).toBeUndefined();
+  expect(
+    manager.templates.find((t) => t.id === otherId)?.format.formatKey,
+  ).toBe("game-boy");
+  expect(
+    manager.templates.find((t) => t.id === legacyId)?.format.formatKey,
+  ).toBe("unspecified");
+});

@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@/server/db/generated/client";
+import { Prisma } from "@/server/db/generated/client";
 import type { TransactionClient } from "@/server/db/transaction";
 import { assetSourceSelect } from "./provenance";
 const asset = {
@@ -96,12 +96,30 @@ export function template(id: string, tx: TransactionClient) {
     select: templateSelect,
   });
 }
-export function templates(familyKey: "cartridge", tx: TransactionClient) {
+export async function templates(
+  formatKeys: readonly string[],
+  tx: TransactionClient,
+) {
+  if (!formatKeys.length) return [];
+  // Bound each format independently, including pre-metadata rows. A large
+  // catalog for one format must not crowd out another format's choices.
+  const ids = await tx.$queryRaw<{ id: string }[]>(Prisma.sql`
+    SELECT id FROM (
+      SELECT id, row_number() OVER (
+        PARTITION BY COALESCE(metadata #>> '{format,formatKey}', 'unspecified')
+        ORDER BY "revisionNumber" DESC
+      ) AS position
+      FROM physical_media_template
+      WHERE "familyKey" = 'cartridge'
+        AND COALESCE(metadata #>> '{format,formatKey}', 'unspecified') IN (${Prisma.join(formatKeys)})
+    ) ranked WHERE position <= 51
+    ORDER BY id
+  `);
   return tx.physicalMediaTemplate.findMany({
-    where: { familyKey },
+    where: { id: { in: ids.map((t) => t.id) } },
     select: templateSelect,
-    orderBy: [{ familyKey: "asc" }, { revisionNumber: "desc" }],
-    take: 51,
+    orderBy: { revisionNumber: "desc" },
+    take: formatKeys.length * 51,
   });
 }
 export function selectedTemplates(ids: string[], tx: TransactionClient) {

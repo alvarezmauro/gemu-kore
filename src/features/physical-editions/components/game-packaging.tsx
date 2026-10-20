@@ -1,4 +1,5 @@
 "use client";
+import { cartridgeFormatLabel } from "@/features/physical-media/template-metadata";
 import { useState } from "react";
 import { ModelViewer } from "@/components/three/model-viewer";
 import { loadGameCartridge } from "@/features/physical-media/actions";
@@ -52,10 +53,10 @@ export function GamePackaging({
       {component ? (
         <div className="space-y-3">
           <h3 className="font-heading text-xl">{component.name}</h3>
-          <p className="text-sm">
+          <p className="text-sm [overflow-wrap:anywhere]">
             {component.templateName ?? "No template assigned"}
             {component.familyKey
-              ? ` · ${component.familyKey === "cartridge" ? "Cartridge" : boxFormatLabels[component.familyKey]}`
+              ? ` · ${component.familyKey === "cartridge" ? ("media" in component && component.format ? cartridgeFormatLabel(component.format) : "Cartridge") : boxFormatLabels[component.familyKey]}`
               : ""}
             {component.synthetic
               ? " · Synthetic demonstration; not retail measurements"

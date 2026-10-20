@@ -15,6 +15,7 @@ import {
   packagingLimits,
 } from "@/lib/three/packaging-contracts";
 import { cartridgePresentation, modelSettings } from "@/lib/three/contracts";
+import { cartridgeTemplateMetadata } from "@/features/physical-media/template-metadata";
 import type { MediaComponent } from "@/features/physical-media/contracts";
 type Component = NonNullable<
   Awaited<ReturnType<typeof repository.physicalMediaRelease>>
@@ -108,8 +109,12 @@ export async function readMediaComponents(
         ) <= packagingLimits.bytes &&
         [...unique.values()].reduce((n, r) => n + r.width * r.height, 0) <=
           packagingLimits.pixels;
+      const metadata = cartridgeTemplateMetadata.safeParse(
+        c.physicalMediaTemplate?.metadata,
+      );
       return {
         media: true,
+        format: metadata.success ? metadata.data.format : null,
         id: c.id,
         name: c.name,
         quantity: c.quantity,

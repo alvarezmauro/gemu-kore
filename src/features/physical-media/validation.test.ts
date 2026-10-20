@@ -37,3 +37,35 @@ it("requires explicit cartridge type, measured dimensions, evidence and one fron
     }).success,
   ).toBe(true);
 });
+import { cartridgeFormatKey } from "./template-metadata";
+it.each(cartridgeFormatKey.options)(
+  "accepts %s metadata only alongside explicit model measurements and mappings",
+  (formatKey) => {
+    const f = cartridgeFixture(),
+      input = {
+        id: crypto.randomUUID(),
+        name: "Synthetic study",
+        slug: "synthetic-study",
+        familyKey: "cartridge",
+        type: "CARTRIDGE",
+        revisionNumber: 2,
+        dimensions: f.dimensions,
+        slots: f.slots,
+        synthetic: true,
+        measurementNote: "Curator-supplied synthetic study",
+        format: { schemaVersion: 1, formatKey, variant: "Study variant" },
+      };
+    expect(createCartridgeTemplate.parse(input)).toMatchObject({
+      dimensions: f.dimensions,
+      slots: f.slots,
+      format: input.format,
+    });
+    expect(
+      createCartridgeTemplate.safeParse({ ...input, dimensions: undefined })
+        .success,
+    ).toBe(false);
+    expect(
+      createCartridgeTemplate.safeParse({ ...input, slots: undefined }).success,
+    ).toBe(false);
+  },
+);

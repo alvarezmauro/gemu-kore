@@ -30,10 +30,14 @@ import type {
   MediaManager,
   CartridgeTemplate,
 } from "@/features/physical-media/contracts";
+import { CartridgeFormatFields } from "@/features/physical-media/components/cartridge-format-fields";
+import { cartridgeFormatLabel } from "@/features/physical-media/template-metadata";
 type Template = BoxTemplate | CartridgeTemplate;
 type EditionManager = Manager | MediaManager;
 const templateLabel = (t: Template) =>
-  t.familyKey === "cartridge" ? "Cartridge" : boxFormatLabels[t.familyKey];
+  t.familyKey === "cartridge"
+    ? cartridgeFormatLabel(t.format)
+    : boxFormatLabels[t.familyKey];
 const templateShape = (t: Template) =>
   t.familyKey === "cartridge"
     ? "cartridge"
@@ -104,7 +108,16 @@ function NewTemplate({ media }: { media: boolean }) {
                 name: text(form, "name"),
                 slug: text(form, "slug"),
                 familyKey: media ? "cartridge" : text(form, "family"),
-                ...(media ? { type: "CARTRIDGE" } : {}),
+                ...(media
+                  ? {
+                      type: "CARTRIDGE",
+                      format: {
+                        schemaVersion: 1,
+                        formatKey: text(form, "cartridgeFormat"),
+                        variant: text(form, "cartridgeVariant"),
+                      },
+                    }
+                  : {}),
                 revisionNumber: Number(form.get("revision")),
                 dimensions: {
                   schemaVersion: 1,
@@ -123,6 +136,7 @@ function NewTemplate({ media }: { media: boolean }) {
         }}
       >
         <fieldset disabled={mutation.pending} className="min-w-0 space-y-4">
+          {media && <CartridgeFormatFields />}
           {!media && (
             <label className="block">
               Packaging format
@@ -237,7 +251,7 @@ function TemplateRow({ template: t }: { template: Template }) {
   const shape = templateShape(t);
   return (
     <li className="min-w-0 space-y-3 rounded-xl border p-4">
-      <p>
+      <p className="[overflow-wrap:anywhere]">
         {t.name} · {templateLabel(t)} · Revision {t.revisionNumber} · {t.status}
         {t.archived ? " · Archived" : ""}
       </p>

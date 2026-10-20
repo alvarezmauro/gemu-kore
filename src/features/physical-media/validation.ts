@@ -4,6 +4,10 @@ import {
   textureTransform,
 } from "@/lib/three/packaging-contracts";
 import { cartridgeSlots } from "@/lib/three/media-contracts";
+import {
+  cartridgeFormat,
+  unspecifiedCartridgeFormat,
+} from "./template-metadata";
 const revision = z.number().int().positive().max(2147483646);
 export const mediaPage = z.strictObject({ releaseId: z.uuid() });
 const templateFields = {
@@ -22,6 +26,7 @@ export const createCartridgeTemplate = z.strictObject({
   ...templateFields,
   familyKey: z.literal("cartridge"),
   type: z.literal("CARTRIDGE"),
+  format: cartridgeFormat.default(() => ({ ...unspecifiedCartridgeFormat })),
   slots: cartridgeSlots,
 });
 export const templateCommand = z.strictObject({

@@ -35,6 +35,10 @@ import type {
   CartridgeTemplate,
   MediaManager,
 } from "@/features/physical-media/contracts";
+import {
+  cartridgeTemplateMetadata,
+  cartridgeFormatKey,
+} from "@/features/physical-media/template-metadata";
 import { assetAttribution } from "./provenance";
 export class MediaError extends Error {
   constructor(
@@ -61,15 +65,10 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   if (!p.success) throw new MediaError("INVALID_INPUT");
   return p.data;
 }
-const metadata = z.strictObject({
-  schemaVersion: z.literal(1),
-  synthetic: z.boolean(),
-  measurementNote: z.string().min(1).max(1000),
-});
 export function cartridgeTemplateDto(
   row: NonNullable<Awaited<ReturnType<typeof repository.template>>>,
 ): CartridgeTemplate {
-  const m = metadata.parse(row.metadata),
+  const m = cartridgeTemplateMetadata.parse(row.metadata),
     familyKey = cartridgeFamily.parse(row.familyKey);
   if (row.type !== "CARTRIDGE" || row.geometryType !== "GLB")
     throw new MediaError("UNAVAILABLE");
@@ -109,6 +108,7 @@ export function cartridgeTemplateDto(
     name: row.name,
     slug: row.slug,
     familyKey,
+    format: m.format,
     geometryType: "GLB",
     type: "CARTRIDGE",
     baseModel: model?.success ? model.data : null,
@@ -152,6 +152,7 @@ export async function createPhysicalMediaTemplate(
         JSON.stringify(dto.dimensions) !== JSON.stringify(d.dimensions) ||
         dto.synthetic !== d.synthetic ||
         dto.measurementNote !== d.measurementNote ||
+        JSON.stringify(dto.format) !== JSON.stringify(d.format) ||
         ("slots" in d &&
           JSON.stringify(
             dto.slots
@@ -181,6 +182,7 @@ export async function createPhysicalMediaTemplate(
           schemaVersion: 1,
           synthetic: d.synthetic,
           measurementNote: d.measurementNote,
+          format: json(d.format),
         },
         createdById: actor.userId,
       },
@@ -422,12 +424,20 @@ export async function getMediaManager(
       await requirePermission(context, "catalog.manage", tx);
       const release = await repository.physicalMediaRelease(releaseId, tx);
       if (!release) throw new MediaError("NOT_FOUND");
-      const rows: Awaited<ReturnType<typeof repository.templates>> = [];
+      const candidates = await repository.templates(
+        cartridgeFormatKey.options,
+        tx,
+      );
+      const rows: typeof candidates = [];
       let moreTemplates = false;
-      for (const familyKey of ["cartridge"] as const) {
-        const familyRows = await repository.templates(familyKey, tx);
-        rows.push(...familyRows.slice(0, 50));
-        moreTemplates ||= familyRows.length > 50;
+      const counts = new Map<string, number>();
+      for (const row of candidates) {
+        const key = cartridgeTemplateMetadata.parse(row.metadata).format
+          .formatKey;
+        const count = (counts.get(key) ?? 0) + 1;
+        counts.set(key, count);
+        if (count <= 50) rows.push(row);
+        else moreTemplates = true;
       }
       const selected = await repository.selectedTemplates(
         release.includedItems.flatMap((c) =>

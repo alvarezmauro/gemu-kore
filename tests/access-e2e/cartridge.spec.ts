@@ -38,6 +38,33 @@ test(`curates cartridge geometry and independent private labels with accessible 
   await page
     .getByLabel("Unique slug")
     .fill(`synthetic-${formatName.toLowerCase()}-box`);
+  const format = page.getByLabel("Cartridge format", { exact: true });
+  for (const key of [
+    "nes-us",
+    "famicom",
+    "snes-us",
+    "super-famicom",
+    "genesis",
+    "game-boy",
+    "game-boy-color",
+    "game-boy-advance",
+    "nintendo-64",
+    "other",
+    "unspecified",
+  ])
+    await expect(format.locator(`option[value="${key}"]`)).toHaveCount(1);
+  await format.selectOption("other");
+  await expect(
+    page.getByLabel("Shell variant", { exact: true }),
+  ).toHaveAttribute("required", "");
+  await format.selectOption("snes-us");
+  await page
+    .getByLabel("Shell variant", { exact: true })
+    .fill("Original synthetic study");
+  await expect(page.getByLabel("width (mm)", { exact: true })).toHaveValue("");
+  await expect(
+    page.getByLabel("Artwork surface mappings (JSON)", { exact: true }),
+  ).toHaveValue("");
   const dimensions = geometry.dimensions;
   for (const [name, value] of [
     ["width", dimensions.widthMm],
@@ -162,6 +189,11 @@ test(`curates cartridge geometry and independent private labels with accessible 
   const state = await fixture("media-state"),
     templateId = state.templates[0].id;
   expect(state.templates[0].familyKey).toBe("cartridge");
+  expect(state.templates[0].metadata.format).toEqual({
+    schemaVersion: 1,
+    formatKey: "snes-us",
+    variant: "Original synthetic study",
+  });
   await component
     .getByLabel("Cartridge template", { exact: true })
     .selectOption(templateId);
@@ -220,7 +252,7 @@ test(`curates cartridge geometry and independent private labels with accessible 
   await page.goto(`/app/games/${copy.id}`);
   await expect(
     page.getByText(
-      `Synthetic ${formatName} demonstration · Cartridge · Synthetic demonstration; not retail measurements`,
+      `Synthetic ${formatName} demonstration · SNES US cartridge · Original synthetic study · Synthetic demonstration; not retail measurements`,
       { exact: true },
     ),
   ).toBeVisible();

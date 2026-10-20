@@ -3,11 +3,13 @@ import type {
   GlbSlotTarget,
   TextureTransform,
 } from "@/lib/three/packaging-contracts";
+import type { CartridgeFormat } from "./template-metadata";
 export type CartridgeTemplate = {
   id: string;
   name: string;
   slug: string;
   familyKey: "cartridge";
+  format: CartridgeFormat;
   geometryType: "GLB";
   type: "CARTRIDGE";
   baseModel: {
@@ -44,6 +46,7 @@ export type MediaComponent = {
   quantity: number;
   templateName: string | null;
   familyKey: "cartridge" | null;
+  format: CartridgeFormat | null;
   synthetic: boolean;
   available: boolean;
   artworkComplete: boolean;
