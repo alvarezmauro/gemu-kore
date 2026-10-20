@@ -65,14 +65,16 @@ function NewTemplate() {
           id.current ??= crypto.randomUUID();
           mutation.run(async () => {
             let slots: unknown;
-            if (family === "genesis-clamshell") {
+            if (
+              family === "genesis-clamshell" ||
+              family === "playstation-jewel"
+            ) {
               try {
                 slots = JSON.parse(text(form, "slots"));
               } catch {
                 return {
                   status: "error" as const,
-                  message:
-                    "Enter valid JSON for the three artwork surface mappings.",
+                  message: "Enter valid JSON for the artwork surface mappings.",
                 };
               }
             }
@@ -90,7 +92,10 @@ function NewTemplate() {
               },
               synthetic: form.get("synthetic") === "on",
               measurementNote: text(form, "source"),
-              ...(family === "genesis-clamshell" ? { slots } : {}),
+              ...(family === "genesis-clamshell" ||
+              family === "playstation-jewel"
+                ? { slots }
+                : {}),
             });
             if (result.status === "success") id.current = null;
             return result;
@@ -118,12 +123,13 @@ function NewTemplate() {
             Record the measured market/edition variant in the template name and
             source; no universal retail dimensions are supplied.
           </p>
-          {family === "genesis-clamshell" && (
+          {(family === "genesis-clamshell" ||
+            family === "playstation-jewel") && (
             <label className="block">
-              Front, back and spine mappings (JSON)
+              Artwork surface mappings (JSON)
               <Textarea
                 name="slots"
-                aria-label="Front, back and spine mappings (JSON)"
+                aria-label="Artwork surface mappings (JSON)"
                 aria-describedby="slot-guide"
                 required
                 maxLength={6000}
@@ -134,10 +140,11 @@ function NewTemplate() {
                 id="slot-guide"
                 className="block text-sm text-muted-foreground"
               >
-                Enter the three authored GLB primitive targets, diagnostic names
-                and physical artwork sizes from the model. See the packaging
+                Enter the authored GLB primitive targets, diagnostic names and
+                physical artwork sizes from the model. See the packaging
                 authoring guide in project documentation. Upload the model after
-                creating this draft.
+                creating this draft. Genesis needs front/back/spine; jewel cases
+                also need an optional opposite-spine surface.
               </span>
             </label>
           )}
@@ -234,12 +241,16 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
                 href={t.baseModel.url}
                 className="block min-h-11 py-3 underline"
               >
-                Download private clamshell model for review
+                Download private{" "}
+                {t.familyKey === "playstation-jewel"
+                  ? "jewel case"
+                  : "clamshell"}{" "}
+                model for review
               </a>
               {t.modelSource && <AssetSource source={t.modelSource} />}
             </>
           ) : (
-            <p>No clamshell model uploaded.</p>
+            <p>No authored model uploaded.</p>
           )}
           {t.status === "DRAFT" && !t.archived && (
             <>
@@ -251,8 +262,11 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
                   checked={reviewed}
                   onChange={(e) => setReviewed(e.target.checked)}
                 />
-                I reviewed this model’s clamshell shape, measured dimensions,
-                source and front/back/spine mappings.
+                I reviewed this model’s{" "}
+                {t.familyKey === "playstation-jewel"
+                  ? "jewel case"
+                  : "clamshell"}{" "}
+                shape, measured dimensions, source and artwork surface mappings.
               </label>
             </>
           )}
@@ -519,11 +533,15 @@ function PackagingUpload({
       }}
     >
       <h3 className="font-heading text-xl">
-        {geometry ? "Upload clamshell geometry" : "Upload release artwork"}
+        {geometry
+          ? template?.familyKey === "playstation-jewel"
+            ? "Upload jewel case geometry"
+            : "Upload clamshell geometry"
+          : "Upload release artwork"}
       </h3>
       <fieldset disabled={pending || disabled} className="min-w-0 space-y-4">
         <label className="block">
-          {geometry ? "Clamshell GLB file (up to 8 MiB)" : "Artwork file"}
+          {geometry ? "Case GLB file (up to 8 MiB)" : "Artwork file"}
           <Input
             type="file"
             name="file"

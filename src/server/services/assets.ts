@@ -1,4 +1,5 @@
 import "server-only";
+import { authoredFamily } from "@/lib/three/packaging-contracts";
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { z } from "zod";
@@ -79,7 +80,7 @@ async function authorizeTarget(
     const identity = await packagingGeometryIdentity(target.id, tx);
     if (!identity) throw new AssetError("NOT_FOUND");
     if (
-      identity.familyKey !== "genesis-clamshell" ||
+      !authoredFamily.safeParse(identity.familyKey).success ||
       identity.geometryType !== "GLB" ||
       kind !== "MODEL_3D"
     )

@@ -578,3 +578,206 @@ it("bounds template choices per family so many NES revisions cannot hide SNES or
     status: "READY",
   });
 });
+import { jewelFixture } from "../helpers/jewel-fixture";
+import { clamshellFixture } from "../helpers/clamshell-fixture";
+it("keeps jewel, Genesis and cardboard contracts separate while binding both jewel spines explicitly", async () => {
+  const c = await setup();
+  await c.promote();
+  const retained = await db.packagingTemplate.findUniqueOrThrow({
+    where: { id: c.draft.id },
+    include: { slots: { orderBy: { name: "asc" } } },
+  });
+  const f = jewelFixture(),
+    jewel = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      name: "Synthetic jewel case",
+      familyKey: "playstation-jewel",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    };
+  const gen = clamshellFixture(),
+    genesis = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      name: "Synthetic clamshell",
+      familyKey: "genesis-clamshell",
+      dimensions: gen.dimensions,
+      slots: gen.slots,
+    };
+  await createPackagingTemplate(c.admin.context, jewel);
+  await createPackagingTemplate(c.admin.context, jewel);
+  await createPackagingTemplate(c.admin.context, genesis);
+  const model = await db.asset.create({
+    data: {
+      kind: "MODEL_3D",
+      scope: "CATALOG",
+      state: "READY",
+      deliveryClass: "ORIGINAL",
+      storageNamespace: "test",
+      objectKey: randomUUID(),
+      mimeType: "model/gltf-binary",
+      sha256: "d".repeat(64),
+      sizeBytes: f.bytes.length,
+    },
+  });
+  // Exercise database readiness guards here. Real-byte approval is covered by MinIO tests.
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: jewel.id },
+      data: { status: "READY" },
+    }),
+  ).rejects.toThrow();
+  await db.packagingTemplate.update({
+    where: { id: jewel.id },
+    data: { baseModelAssetId: model.id, status: "READY", revision: 2 },
+  });
+  const manager = await c.manager(),
+    t = manager.templates.find((t) => t.id === jewel.id)!;
+  expect(t.slots).toHaveLength(4);
+  expect(
+    t.slots
+      .filter((s) => s.required)
+      .map((s) => s.name)
+      .sort(),
+  ).toEqual(["BACK", "FRONT", "SPINE"]);
+  const input = {
+    releaseId: c.release.id,
+    componentId: c.component.id,
+    expectedRevision: 1,
+    templateId: jewel.id,
+    expectedTemplateRevision: 2,
+    bindings: [] as {
+      slotId: string;
+      assetId: string;
+      transform: typeof fullArtwork;
+    }[],
+  };
+  await assignPackaging(c.admin.context, input);
+  expect((await c.view()).content).toMatchObject({
+    familyKey: "playstation-jewel",
+    rendererVersion: "gltf-slots-v1",
+    artworkComplete: false,
+    geometry: { id: model.id },
+  });
+  input.expectedRevision = 2;
+  input.bindings = t.slots
+    .filter((s) => s.required)
+    .map((s) => ({
+      slotId: s.id,
+      assetId: c.asset.id,
+      transform: fullArtwork,
+    }));
+  await assignPackaging(c.admin.context, input);
+  const complete = await c.view(c.admin.context, c.component.id, 3);
+  expect(complete.content.artworkComplete).toBe(true);
+  if (complete.content.rendererVersion !== "gltf-slots-v1")
+    throw new Error("Expected authored presentation");
+  expect(
+    complete.content.slots.find((s) => s.name === "OPPOSITE_SPINE"),
+  ).toMatchObject({ required: false, resource: null });
+  input.expectedRevision = 3;
+  input.bindings = t.slots.map((s) => ({
+    slotId: s.id,
+    assetId: c.asset.id,
+    transform: fullArtwork,
+  }));
+  await assignPackaging(c.admin.context, input);
+  const both = await c.view(c.admin.context, c.component.id, 4);
+  expect(both.content.slots.filter((s) => s.resource)).toHaveLength(4);
+  await expect(
+    assignPackaging(c.admin.context, {
+      ...input,
+      expectedRevision: 4,
+      bindings: [
+        {
+          slotId: retained.slots[0].id,
+          assetId: c.asset.id,
+          transform: fullArtwork,
+        },
+      ],
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: jewel.id },
+      data: { familyKey: "genesis-clamshell" },
+    }),
+  ).rejects.toThrow();
+  await expect(
+    db.packagingTextureSlot.update({
+      where: { id: t.slots.find((s) => s.name === "OPPOSITE_SPINE")!.id },
+      data: { required: true },
+    }),
+  ).rejects.toThrow();
+  expect(
+    await db.packagingTemplate.findUnique({
+      where: { id: c.draft.id },
+      include: { slots: { orderBy: { name: "asc" } } },
+    }),
+  ).toEqual(retained);
+  expect(await hasReferences(model.id, db)).toBe(true);
+  await expect(
+    db.asset.update({ where: { id: model.id }, data: { state: "DELETING" } }),
+  ).rejects.toThrow();
+});
+it("refuses opposite-spine slots on Genesis and refuses an incomplete jewel slot contract at readiness", async () => {
+  const c = await setup(),
+    f = jewelFixture(),
+    input = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      name: "Synthetic jewel",
+      familyKey: "playstation-jewel",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    };
+  await createPackagingTemplate(c.admin.context, input);
+  await db.packagingTextureSlot.deleteMany({
+    where: { packagingTemplateId: input.id, name: "OPPOSITE_SPINE" },
+  });
+  const model = await db.asset.create({
+    data: {
+      kind: "MODEL_3D",
+      scope: "CATALOG",
+      state: "READY",
+      deliveryClass: "ORIGINAL",
+      storageNamespace: "test",
+      objectKey: randomUUID(),
+      mimeType: "model/gltf-binary",
+      sha256: "d".repeat(64),
+      sizeBytes: f.bytes.length,
+    },
+  });
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: input.id },
+      data: { baseModelAssetId: model.id, status: "READY" },
+    }),
+  ).rejects.toThrow();
+  const gen = clamshellFixture(),
+    genesis = {
+      ...input,
+      id: randomUUID(),
+      slug: randomUUID(),
+      familyKey: "genesis-clamshell",
+      dimensions: gen.dimensions,
+      slots: gen.slots,
+    };
+  await createPackagingTemplate(c.admin.context, genesis);
+  const s = f.slots[3];
+  await expect(
+    db.packagingTextureSlot.create({
+      data: {
+        packagingTemplateId: genesis.id,
+        name: s.name,
+        required: false,
+        materialName: s.target.materialName,
+        target: s.target,
+      },
+    }),
+  ).rejects.toThrow();
+});

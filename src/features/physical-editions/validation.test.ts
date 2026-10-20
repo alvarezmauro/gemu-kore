@@ -60,3 +60,28 @@ it("requires three explicit authored targets when creating a Genesis draft", () 
     createBoxTemplate.safeParse({ ...input, slots: f.slots }).success,
   ).toBe(false);
 });
+
+import { jewelFixture } from "../../../tests/helpers/jewel-fixture";
+it("requires the family-specific slot contract on draft creation", () => {
+  const f = jewelFixture(),
+    input = {
+      id: crypto.randomUUID(),
+      name: "Synthetic jewel case",
+      slug: "synthetic-jewel",
+      familyKey: "playstation-jewel",
+      revisionNumber: 1,
+      dimensions: f.dimensions,
+      synthetic: true,
+      measurementNote: "Synthetic study only",
+      slots: f.slots,
+    };
+  expect(createBoxTemplate.safeParse(input).success).toBe(true);
+  expect(
+    createBoxTemplate.safeParse({ ...input, slots: f.slots.slice(0, 3) })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...input, familyKey: "genesis-clamshell" })
+      .success,
+  ).toBe(false);
+});

@@ -3,6 +3,7 @@ import {
   boxDimensions,
   boxFamily,
   clamshellSlots,
+  jewelSlots,
   textureTransform,
 } from "@/lib/three/packaging-contracts";
 const revision = z.number().int().positive().max(2147483646);
@@ -25,6 +26,11 @@ export const createBoxTemplate = z.discriminatedUnion("familyKey", [
     ...templateFields,
     familyKey: z.literal("genesis-clamshell"),
     slots: clamshellSlots,
+  }),
+  z.strictObject({
+    ...templateFields,
+    familyKey: z.literal("playstation-jewel"),
+    slots: jewelSlots,
   }),
 ]);
 export const templateCommand = z.strictObject({

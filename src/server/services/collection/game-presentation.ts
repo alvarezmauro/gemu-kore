@@ -11,6 +11,8 @@ import { boxTemplateDto, PackagingError } from "../catalog/physical-editions";
 import { boxViewRequest } from "@/features/physical-editions/validation";
 import {
   artworkResource,
+  authoredFamily,
+  authoredSlotName,
   textureTransform,
   packagingLimits,
 } from "@/lib/three/packaging-contracts";
@@ -62,21 +64,21 @@ function content(c: Component) {
     synthetic: template.synthetic,
     dimensions: template.dimensions,
   };
-  if (template.familyKey === "genesis-clamshell") {
+  if (template.geometryType === "GLB") {
     if (!template.baseModel) return null;
     const slots = template.slots.map((s) => ({
-      name: s.name as "FRONT" | "BACK" | "SPINE",
-      required: true as const,
+      name: authoredSlotName.parse(s.name),
+      required: s.required,
       target: s.target!,
       ...artwork(s),
     }));
     return {
       ...identity,
       rendererVersion: "gltf-slots-v1" as const,
-      familyKey: "genesis-clamshell" as const,
+      familyKey: authoredFamily.parse(template.familyKey),
       geometry: template.baseModel,
       slots,
-      artworkComplete: slots.every((s) => s.resource !== null),
+      artworkComplete: slots.every((s) => !s.required || s.resource !== null),
     };
   }
   const slots = template.slots.map((s) => ({

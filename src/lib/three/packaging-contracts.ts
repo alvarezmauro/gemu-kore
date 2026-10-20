@@ -4,13 +4,19 @@ import { z } from "zod";
 // Dimensions and variant suitability still require curator evidence.
 export const boxFamily = z.enum(["nes-cardboard", "snes-cardboard"]);
 export type BoxFamily = z.infer<typeof boxFamily>;
+export const authoredFamily = z.enum([
+  "genesis-clamshell",
+  "playstation-jewel",
+]);
+export type AuthoredFamily = z.infer<typeof authoredFamily>;
 export const packagingFamily = z.enum([
   ...boxFamily.options,
-  "genesis-clamshell",
+  ...authoredFamily.options,
 ]);
 export type PackagingFamily = z.infer<typeof packagingFamily>;
 export const boxFormatLabels: Record<PackagingFamily, string> = {
   "genesis-clamshell": "Genesis clamshell",
+  "playstation-jewel": "PlayStation jewel case",
   "nes-cardboard": "NES cardboard box",
   "snes-cardboard": "SNES cardboard box",
 };
@@ -157,6 +163,36 @@ export const clamshellSlots = z
       ).size === 3,
     "Choose three distinct front, back and spine primitives.",
   );
+export const authoredSlotName = z.enum([
+  "FRONT",
+  "BACK",
+  "SPINE",
+  "OPPOSITE_SPINE",
+]);
+export const jewelSlots = z
+  .array(z.strictObject({ name: authoredSlotName, target: glbSlotTarget }))
+  .length(4)
+  .refine(
+    (slots) =>
+      new Set(slots.map((s) => s.name)).size === 4 &&
+      new Set(
+        slots.map(
+          (s) =>
+            `${s.target.nodeIndex}:${s.target.meshIndex}:${s.target.primitiveIndex}`,
+        ),
+      ).size === 4,
+    "Choose distinct front, back and both spine primitives.",
+  );
+export function authoredSlots(
+  family: AuthoredFamily,
+): z.ZodType<
+  { name: z.infer<typeof authoredSlotName>; target: GlbSlotTarget }[]
+> {
+  return family === "playstation-jewel" ? jewelSlots : clamshellSlots;
+}
+export function requiredAuthoredSlot(name: z.infer<typeof authoredSlotName>) {
+  return name !== "OPPOSITE_SPINE";
+}
 export const packageModelResource = z
   .strictObject({
     id: z.uuid(),

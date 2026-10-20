@@ -1,11 +1,30 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
+import { jewelFixture } from "../tests/helpers/jewel-fixture";
 import { clamshellFixture } from "../tests/helpers/clamshell-fixture";
 import { modelBenchmark } from "../tests/helpers/model-benchmarks";
 async function main() {
   const directory = resolve(process.argv[2] ?? "test-results/three-fixtures");
   await mkdir(directory, { recursive: true });
+  const jewel = jewelFixture();
+  await writeFile(
+    join(directory, "synthetic-playstation-jewel.glb"),
+    jewel.bytes,
+  );
+  await writeFile(
+    join(directory, "synthetic-playstation-jewel-slots.json"),
+    JSON.stringify(jewel.slots, null, 2) + "\n",
+  );
+  console.log(
+    JSON.stringify({
+      path: join(directory, "synthetic-playstation-jewel.glb"),
+      byteLength: jewel.bytes.length,
+      dimensions: jewel.dimensions,
+      source:
+        "Original synthetic jewel case; not retail measurements or catalog data.",
+    }),
+  );
   const clamshell = clamshellFixture();
   await writeFile(
     join(directory, "synthetic-genesis-clamshell.glb"),

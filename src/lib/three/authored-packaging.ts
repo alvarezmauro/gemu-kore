@@ -2,7 +2,12 @@ import { Box3, Matrix4, Quaternion, Vector3 } from "three";
 import { z } from "zod";
 import { inspectModel } from "./profile";
 import { ModelError } from "./contracts";
-import { boxDimensions, clamshellSlots } from "./packaging-contracts";
+import {
+  boxDimensions,
+  authoredFamily,
+  authoredSlots,
+  type AuthoredFamily,
+} from "./packaging-contracts";
 const finite = z.number().finite();
 const index = z.number().int().nonnegative().max(4095);
 const vector = z.tuple([finite, finite, finite]);
@@ -84,10 +89,12 @@ export function inspectAuthoredPackage(
   bytes: ArrayBuffer,
   dimensionsInput: unknown,
   slotsInput: unknown,
+  familyInput: AuthoredFamily = "genesis-clamshell",
 ) {
   const inspection = inspectModel(bytes),
     dimensions = boxDimensions.parse(dimensionsInput),
-    slots = clamshellSlots.parse(slotsInput);
+    family = authoredFamily.parse(familyInput),
+    slots = authoredSlots(family).parse(slotsInput);
   const view = new DataView(bytes),
     jsonLength = view.getUint32(12, true),
     binOffset = 28 + jsonLength;
@@ -128,10 +135,19 @@ export function inspectAuthoredPackage(
     doc.materials.length + slots.length > 64 ||
     doc.materials.some(
       (m) =>
-        m.alphaMode !== "OPAQUE" ||
+        (m.alphaMode !== "OPAQUE" &&
+          !(
+            family === "playstation-jewel" &&
+            m.alphaMode === "BLEND" &&
+            (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) >= 0.05 &&
+            (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) <= 0.8 &&
+            (m.pbrMetallicRoughness?.metallicFactor ?? 1) === 0 &&
+            !m.emissiveFactor?.some((v) => v !== 0)
+          )) ||
         m.doubleSided ||
         m.pbrMetallicRoughness?.baseColorFactor?.some((v) => v < 0 || v > 1) ||
-        (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) !== 1,
+        (m.alphaMode === "OPAQUE" &&
+          (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) !== 1),
     )
   )
     fail();
@@ -150,7 +166,8 @@ export function inspectAuthoredPackage(
       !sizes[a.componentType] ||
       a.type !==
         (components === 3 ? "VEC3" : components === 2 ? "VEC2" : "SCALAR") ||
-      (components > 1 && a.componentType !== 5126)
+      (components > 1 && a.componentType !== 5126) ||
+      (components === 1 && a.componentType === 5126)
     )
       fail();
     const componentSize = sizes[a.componentType],
@@ -180,6 +197,7 @@ export function inspectAuthoredPackage(
     };
     return { count: a.count, read };
   }
+  let transparentDraws = 0;
   const worlds = new Map<number, Matrix4>(),
     bounds = new Box3();
   function node(id: number, parent: Matrix4) {
@@ -217,6 +235,11 @@ export function inspectAuthoredPackage(
       const mesh = doc.meshes[n.mesh];
       if (!mesh) fail();
       for (const p of mesh.primitives) {
+        if (
+          doc.materials[p.material]?.alphaMode === "BLEND" &&
+          ++transparentDraws > 8
+        )
+          fail();
         const positions = accessor(p.attributes.POSITION, 3);
         for (let i = 0; i < positions.count; i++)
           bounds.expandByPoint(
@@ -328,14 +351,18 @@ export function inspectAuthoredPackage(
           ? ([1, 0, 0] as const)
           : slot.name === "BACK"
             ? ([-1, 0, 0] as const)
-            : ([0, 0, 1] as const)),
+            : slot.name === "OPPOSITE_SPINE"
+              ? ([0, 0, -1] as const)
+              : ([0, 0, 1] as const)),
       ),
       expectedNormal = new Vector3(
         ...(slot.name === "FRONT"
           ? ([0, 0, 1] as const)
           : slot.name === "BACK"
             ? ([0, 0, -1] as const)
-            : ([-1, 0, 0] as const)),
+            : slot.name === "OPPOSITE_SPINE"
+              ? ([1, 0, 0] as const)
+              : ([-1, 0, 0] as const)),
       );
     if (
       right.clone().normalize().dot(expectedRight) < 0.999 ||

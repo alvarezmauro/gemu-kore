@@ -4,6 +4,10 @@ import {
   boxDimensions,
   boxFamily,
   glbSlotTarget,
+  authoredFamily,
+  authoredSlotName,
+  authoredSlots,
+  requiredAuthoredSlot,
   packageModelResource,
   boxFaces,
   textureTransform,
@@ -100,7 +104,7 @@ export const packagingPresentation = z
       z.strictObject({
         kind: z.literal("PACKAGING"),
         rendererVersion: z.literal("gltf-slots-v1"),
-        familyKey: z.literal("genesis-clamshell"),
+        familyKey: authoredFamily,
         componentId: z.uuid(),
         templateId: z.uuid(),
         templateRevision: z.number().int().positive(),
@@ -110,14 +114,15 @@ export const packagingPresentation = z
         slots: z
           .array(
             z.strictObject({
-              name: z.enum(["FRONT", "BACK", "SPINE"]),
-              required: z.literal(true),
+              name: authoredSlotName,
+              required: z.boolean(),
               target: glbSlotTarget,
               resource: artworkResource.nullable(),
               transform: textureTransform,
             }),
           )
-          .length(3),
+          .min(3)
+          .max(4),
         artworkComplete: z.boolean(),
       }),
     ]),
@@ -145,13 +150,10 @@ export const packagingPresentation = z
       const slots = p.content.slots,
         geometryId = p.content.geometry.id;
       if (
-        new Set(slots.map((s) => s.name)).size !== 3 ||
-        new Set(
-          slots.map(
-            (s) =>
-              `${s.target.nodeIndex}:${s.target.meshIndex}:${s.target.primitiveIndex}`,
-          ),
-        ).size !== 3 ||
+        !authoredSlots(p.content.familyKey).safeParse(
+          slots.map((s) => ({ name: s.name, target: s.target })),
+        ).success ||
+        slots.some((s) => s.required !== requiredAuthoredSlot(s.name)) ||
         slots.some((s) => s.resource?.id === geometryId)
       )
         ctx.addIssue({ code: "custom", message: "Invalid authored slots" });

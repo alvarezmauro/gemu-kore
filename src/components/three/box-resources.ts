@@ -139,6 +139,7 @@ export async function loadBox(
         bytes.get(content.geometry.id)!.slice().buffer,
         content.dimensions,
         content.slots.map((s) => ({ name: s.name, target: s.target })),
+        content.familyKey,
       );
     let outputPixels = 0;
     const deadline = performance.now() + 10000;

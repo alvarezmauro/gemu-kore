@@ -26,7 +26,9 @@ import {
   boxDimensions,
   packagingFamily,
   glbSlotTarget,
-  clamshellSlots,
+  authoredFamily,
+  authoredSlots,
+  requiredAuthoredSlot,
   packageModelResource,
   boxFaces,
   textureTransform,
@@ -79,7 +81,7 @@ export function boxTemplateDto(
 ): BoxTemplate {
   const m = metadata.parse(row.metadata);
   const familyKey = packagingFamily.parse(row.familyKey);
-  const authored = familyKey === "genesis-clamshell";
+  const authored = authoredFamily.safeParse(familyKey).success;
   const slots = row.slots.map((s) => ({
     id: s.id,
     name: s.name,
@@ -92,13 +94,13 @@ export function boxTemplateDto(
       row.geometryType !== "GLB" ||
       slots.some(
         (s) =>
-          !s.required ||
+          s.required !== (s.name !== "OPPOSITE_SPINE") ||
           s.target?.materialName !==
             row.slots.find((r) => r.id === s.id)?.materialName,
       )
     )
       throw new PackagingError("UNAVAILABLE");
-    clamshellSlots.parse(
+    authoredSlots(authoredFamily.parse(familyKey)).parse(
       slots.map((s) => ({ name: s.name, target: s.target })),
     );
   } else if (
@@ -175,7 +177,7 @@ export async function createPackagingTemplate(
         JSON.stringify(dto.dimensions) !== JSON.stringify(d.dimensions) ||
         dto.synthetic !== d.synthetic ||
         dto.measurementNote !== d.measurementNote ||
-        (d.familyKey === "genesis-clamshell" &&
+        ("slots" in d &&
           JSON.stringify(
             dto.slots
               .map((s) => ({ name: s.name, target: s.target }))
@@ -196,12 +198,15 @@ export async function createPackagingTemplate(
         familyKey: d.familyKey,
         revisionNumber: d.revisionNumber,
         dimensions: json(d.dimensions),
-        geometryType:
-          d.familyKey === "genesis-clamshell" ? "GLB" : "PROCEDURAL_BOX",
+        geometryType: "slots" in d ? "GLB" : "PROCEDURAL_BOX",
         materialSettings: {
           schemaVersion: 1,
           profile:
-            d.familyKey === "genesis-clamshell" ? "plastic-v1" : "cardboard-v1",
+            d.familyKey === "playstation-jewel"
+              ? "jewel-v1"
+              : d.familyKey === "genesis-clamshell"
+                ? "plastic-v1"
+                : "cardboard-v1",
         },
         cameraSettings: json(modelSettings.parse({ preset: "package" })),
         metadata: {
@@ -214,11 +219,11 @@ export async function createPackagingTemplate(
       tx,
     );
     await repository.createSlots(
-      d.familyKey === "genesis-clamshell"
+      "slots" in d
         ? d.slots.map((s) => ({
             packagingTemplateId: d.id,
             name: s.name,
-            required: true,
+            required: requiredAuthoredSlot(s.name),
             materialName: s.target.materialName,
             target: json(s.target),
           }))
@@ -295,6 +300,7 @@ export async function changePackagingTemplate(
           ),
           dto.dimensions,
           dto.slots.map((s) => ({ name: s.name, target: s.target })),
+          authoredFamily.parse(dto.familyKey),
         );
         validatedModelId = asset.id;
       } catch (error) {

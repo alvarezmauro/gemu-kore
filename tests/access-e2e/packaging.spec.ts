@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { jewelFixture } from "../helpers/jewel-fixture";
 import { clamshellFixture } from "../helpers/clamshell-fixture";
 import { fixture, openModel, signIn } from "../helpers/model-browser";
 test.beforeEach(async () => {
@@ -14,13 +15,20 @@ for (const family of [
   "snes-cardboard",
   "nes-cardboard",
   "genesis-clamshell",
+  "playstation-jewel",
 ] as const) {
   const genesis = family === "genesis-clamshell";
-  const formatName = genesis
-    ? "Genesis"
-    : family === "nes-cardboard"
-      ? "NES"
-      : "SNES";
+  const jewel = family === "playstation-jewel";
+  const authored = genesis || jewel;
+  const geometry = jewel ? jewelFixture() : clamshellFixture();
+  const shape = jewel ? "jewel case" : "clamshell";
+  const formatName = jewel
+    ? "PlayStation"
+    : genesis
+      ? "Genesis"
+      : family === "nes-cardboard"
+        ? "NES"
+        : "SNES";
   test(`curates ${formatName} packaging and private artwork, then lazily renders distinct faces with accessible mobile controls`, async ({
     page,
     context,
@@ -49,19 +57,46 @@ for (const family of [
       .getByLabel("Unique slug")
       .fill(`synthetic-${formatName.toLowerCase()}-box`);
     for (const [name, value] of [
-      ["width", genesis ? "120" : family === "nes-cardboard" ? "110" : "180"],
-      ["height", genesis ? "180" : family === "nes-cardboard" ? "160" : "125"],
-      ["depth", genesis ? "28" : family === "nes-cardboard" ? "25" : "30"],
+      [
+        "width",
+        jewel
+          ? "150"
+          : genesis
+            ? "120"
+            : family === "nes-cardboard"
+              ? "110"
+              : "180",
+      ],
+      [
+        "height",
+        jewel
+          ? "135"
+          : genesis
+            ? "180"
+            : family === "nes-cardboard"
+              ? "160"
+              : "125",
+      ],
+      [
+        "depth",
+        jewel
+          ? "12"
+          : genesis
+            ? "28"
+            : family === "nes-cardboard"
+              ? "25"
+              : "30",
+      ],
     ])
       await page.getByLabel(`${name} (mm)`, { exact: true }).fill(value);
     await page
       .getByLabel("Measurement source or synthetic fixture note")
       .fill("Synthetic dimensions for testing only.");
     await page.getByLabel("Synthetic demonstration dimensions").check();
-    if (genesis)
+    if (authored)
       await page
-        .getByLabel("Front, back and spine mappings (JSON)", { exact: true })
-        .fill(JSON.stringify(clamshellFixture().slots));
+        .getByLabel("Artwork surface mappings (JSON)", { exact: true })
+        .fill(JSON.stringify(geometry.slots));
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -73,22 +108,22 @@ for (const family of [
     await expect(
       page.getByRole("button", { name: "Mark ready", exact: true }),
     ).toBeVisible();
-    if (genesis) {
+    if (authored) {
       await expect(
         page.getByRole("button", { name: "Mark ready", exact: true }),
       ).toBeDisabled();
       const upload = page.locator("form").filter({
         has: page.getByRole("heading", {
-          name: "Upload clamshell geometry",
+          name: `Upload ${shape} geometry`,
           exact: true,
         }),
       });
       await upload
-        .getByLabel("Clamshell GLB file (up to 8 MiB)", { exact: true })
+        .getByLabel("Case GLB file (up to 8 MiB)", { exact: true })
         .setInputFiles({
           name: "synthetic-clamshell.glb",
           mimeType: "model/gltf-binary",
-          buffer: clamshellFixture().bytes,
+          buffer: geometry.bytes,
         });
       await upload
         .getByLabel("License name", { exact: true })
@@ -98,12 +133,12 @@ for (const family of [
         .click();
       await expect(
         page.getByRole("link", {
-          name: "Download private clamshell model for review",
+          name: `Download private ${shape} model for review`,
         }),
       ).toBeVisible({ timeout: 25000 });
       await page
         .getByLabel(
-          "I reviewed this model’s clamshell shape, measured dimensions, source and front/back/spine mappings.",
+          `I reviewed this model’s ${shape} shape, measured dimensions, source and artwork surface mappings.`,
           { exact: true },
         )
         .check();
@@ -192,7 +227,7 @@ for (const family of [
     expect(saved.copies[0].hasBox).toBeNull();
     let transfers = 0,
       geometryTransfers = 0;
-    const modelId = genesis ? state.templates[0].baseModelAssetId : null;
+    const modelId = authored ? state.templates[0].baseModelAssetId : null;
     page.on("request", (r) => {
       if (new URL(r.url()).pathname === `/api/media/private/${assetId}`)
         transfers++;
@@ -207,7 +242,7 @@ for (const family of [
     await page.goto(`/app/games/${copy.id}`);
     await expect(
       page.getByText(
-        `Synthetic ${formatName} demonstration · ${genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
+        `Synthetic ${formatName} demonstration · ${jewel ? "PlayStation jewel case" : genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
         { exact: true },
       ),
     ).toBeVisible();
@@ -216,11 +251,11 @@ for (const family of [
     expect(geometryTransfers).toBe(0);
     const viewer = await openModel(page);
     expect(transfers).toBe(1);
-    if (genesis) expect(geometryTransfers).toBe(1);
-    if (genesis)
+    if (authored) expect(geometryTransfers).toBe(1);
+    if (authored)
       await viewer
         .locator("canvas")
-        .screenshot({ path: info.outputPath("clamshell-angle.png") });
+        .screenshot({ path: info.outputPath("authored-case-angle.png") });
     await viewer
       .getByRole("button", { name: "Front view", exact: true })
       .click();
@@ -259,7 +294,7 @@ for (const family of [
       .selectOption({ label: "Outer box" });
     await openModel(page);
     expect(transfers).toBe(2);
-    if (genesis) expect(geometryTransfers).toBe(2);
+    if (authored) expect(geometryTransfers).toBe(2);
     await viewer
       .getByRole("button", { name: "Close 3D preview", exact: true })
       .click();

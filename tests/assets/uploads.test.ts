@@ -1024,20 +1024,26 @@ it("records UTF-8 screenshot provenance on the image family and advances the rel
   ).toBe(1);
 });
 
+import { jewelFixture } from "../helpers/jewel-fixture";
+import {
+  authoredFamily,
+  type AuthoredFamily,
+} from "@/lib/three/packaging-contracts";
 import { clamshellFixture } from "../helpers/clamshell-fixture";
 import { emptyScreenshotUpload } from "@/features/games/screenshot-validation";
 import {
   createPackagingTemplate,
   changePackagingTemplate,
 } from "@/server/services/catalog/physical-editions";
-async function geometryDraft() {
+async function geometryDraft(familyKey: AuthoredFamily = "genesis-clamshell") {
   const context = await requirePrivateAccess(headers),
-    fixture = clamshellFixture();
+    fixture =
+      familyKey === "playstation-jewel" ? jewelFixture() : clamshellFixture();
   const draft = {
     id: randomUUID(),
-    name: "Original synthetic Genesis clamshell",
+    name: `Original synthetic ${familyKey}`,
     slug: randomUUID(),
-    familyKey: "genesis-clamshell",
+    familyKey,
     revisionNumber: 1,
     synthetic: true,
     measurementNote: "Original synthetic fixture; no retail measurements",
@@ -1064,84 +1070,87 @@ async function geometryDraft() {
   };
   return { context, fixture, draft, target, input };
 }
-it("attaches v2 geometry directly, preserves source, retries once, approves and protects the ready model", async () => {
-  const { context, draft, input } = await geometryDraft();
-  const result = await uploadAsset(context, input, signal(), storage);
-  expect(result.useId).toBeUndefined();
-  expect(result.templateId).toBe(draft.id);
-  const model = await db.asset.findUniqueOrThrow({
-    where: { id: result.uploadId },
-  });
-  expect(model).toMatchObject({
-    state: "READY",
-    kind: "MODEL_3D",
-    scope: "CATALOG",
-    publicSafe: false,
-    rightsStatus: "UNKNOWN",
-    provider: "Original test fixture",
-    licenseName: "Test author permission",
-    metadata: { schemaVersion: 2 },
-  });
-  expect(await db.catalogAsset.count()).toBe(0);
-  expect(
-    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
-  ).toMatchObject({
-    baseModelAssetId: result.uploadId,
-    revision: 2,
-    status: "DRAFT",
-  });
-  await Promise.all([
-    completeUpload(context, result.uploadId, signal(), storage),
-    completeUpload(context, result.uploadId, signal(), storage),
-  ]);
-  expect(
-    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
-  ).toMatchObject({ revision: 2 });
-  await expect(
-    changePackagingTemplate(context, {
+it.each(authoredFamily.options)(
+  "attaches %s v2 geometry directly, preserves source, retries once, approves and protects the ready model",
+  async (familyKey) => {
+    const { context, draft, input } = await geometryDraft(familyKey);
+    const result = await uploadAsset(context, input, signal(), storage);
+    expect(result.useId).toBeUndefined();
+    expect(result.templateId).toBe(draft.id);
+    const model = await db.asset.findUniqueOrThrow({
+      where: { id: result.uploadId },
+    });
+    expect(model).toMatchObject({
+      state: "READY",
+      kind: "MODEL_3D",
+      scope: "CATALOG",
+      publicSafe: false,
+      rightsStatus: "UNKNOWN",
+      provider: "Original test fixture",
+      licenseName: "Test author permission",
+      metadata: { schemaVersion: 2 },
+    });
+    expect(await db.catalogAsset.count()).toBe(0);
+    expect(
+      await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+    ).toMatchObject({
+      baseModelAssetId: result.uploadId,
+      revision: 2,
+      status: "DRAFT",
+    });
+    await Promise.all([
+      completeUpload(context, result.uploadId, signal(), storage),
+      completeUpload(context, result.uploadId, signal(), storage),
+    ]);
+    expect(
+      await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+    ).toMatchObject({ revision: 2 });
+    await expect(
+      changePackagingTemplate(context, {
+        id: draft.id,
+        expectedRevision: 2,
+        operation: "ready",
+      }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    await changePackagingTemplate(context, {
       id: draft.id,
       expectedRevision: 2,
       operation: "ready",
-    }),
-  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
-  await changePackagingTemplate(context, {
-    id: draft.id,
-    expectedRevision: 2,
-    operation: "ready",
-    reviewedGeometry: true,
-  });
-  expect(
-    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
-  ).toMatchObject({ revision: 3, status: "READY" });
-  await expect(
-    deleteUnusedAsset(context, result.uploadId, storage),
-  ).rejects.toMatchObject({ code: "CONFLICT" });
-  await expect(
-    db.asset.update({
-      where: { id: result.uploadId },
-      data: { state: "DELETING" },
-    }),
-  ).rejects.toThrow();
-  await expect(
-    db.packagingTemplate.update({
-      where: { id: draft.id },
-      data: { baseModelAssetId: null },
-    }),
-  ).rejects.toThrow();
-  await completeUpload(context, result.uploadId, signal(), storage);
-  await expect(
-    uploadAsset(
-      context,
-      {
-        ...input,
-        body: body(clamshellFixture().bytes),
-        target: { ...input.target, expectedRevision: 3 },
-      },
-      signal(),
-      storage,
-    ),
-  ).rejects.toMatchObject({ code: "CONFLICT" });
-});
+      reviewedGeometry: true,
+    });
+    expect(
+      await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+    ).toMatchObject({ revision: 3, status: "READY" });
+    await expect(
+      deleteUnusedAsset(context, result.uploadId, storage),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(
+      db.asset.update({
+        where: { id: result.uploadId },
+        data: { state: "DELETING" },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      db.packagingTemplate.update({
+        where: { id: draft.id },
+        data: { baseModelAssetId: null },
+      }),
+    ).rejects.toThrow();
+    await completeUpload(context, result.uploadId, signal(), storage);
+    await expect(
+      uploadAsset(
+        context,
+        {
+          ...input,
+          body: body(clamshellFixture().bytes),
+          target: { ...input.target, expectedRevision: 3 },
+        },
+        signal(),
+        storage,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+  },
+);
 it("completes a stored but unconfirmed model concurrently without duplicate attachments", async () => {
   const { context, draft, input } = await geometryDraft();
   let id = "";
@@ -1279,3 +1288,42 @@ it("rejects geometry dimensions/UV drift before readiness and actual oversize st
   ).rejects.toMatchObject({ code: "TOO_LARGE" });
 });
 import { buildGlb } from "../helpers/model-fixture";
+it("rejects a transparent jewel art target at approval while preserving its draft and compatible Genesis template", async () => {
+  const legacy = await geometryDraft();
+  await uploadAsset(legacy.context, legacy.input, signal(), storage);
+  await changePackagingTemplate(legacy.context, {
+    id: legacy.draft.id,
+    expectedRevision: 2,
+    operation: "ready",
+    reviewedGeometry: true,
+  });
+  const { context, draft, input, fixture } =
+    await geometryDraft("playstation-jewel");
+  fixture.document.materials[0].alphaMode = "BLEND";
+  fixture.document.materials[0].pbrMetallicRoughness.baseColorFactor[3] = 0.2;
+  const bytes = buildGlb(fixture.document, fixture.binary);
+  await uploadAsset(
+    context,
+    { ...input, body: body(bytes), declaredSize: bytes.length },
+    signal(),
+    storage,
+  );
+  await expect(
+    changePackagingTemplate(context, {
+      id: draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+      reviewedGeometry: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ status: "DRAFT", revision: 2 });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: legacy.draft.id } }),
+  ).toMatchObject({
+    status: "READY",
+    revision: 3,
+    familyKey: "genesis-clamshell",
+  });
+});

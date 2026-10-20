@@ -1,10 +1,10 @@
 # Private packaging preview
 
-Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells through an authored GLB contract ([authoring guide](GENESIS_PACKAGING_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell maps three art primitives. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
+Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells and PlayStation jewel cases through authored GLB contracts ([Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell maps three art primitives, and a jewel case also maps an optional opposite-spine surface. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
 
 ## Curate a release
 
-These steps cover cardboard templates. For Genesis geometry preparation and approval, use the [authoring guide](GENESIS_PACKAGING_AUTHORING.md).
+These steps cover cardboard templates. For authored geometry preparation and approval, use the [Genesis](GENESIS_PACKAGING_AUTHORING.md) or [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md) authoring guide.
 
 1. As an administrator, open **Game catalog → Game releases → Edit → Manage release packaging**. A release must already contain a `PACKAGING` expected item.
 2. Expand **Create packaging template**, choose **NES cardboard box** or **SNES cardboard box**, and create a draft. Supply width, height and depth in millimeters and a measurement source. Mark synthetic demonstration dimensions explicitly. Choose a unique slug and the next revision number within that format. Different formats can each have revision 1. Put the measured market/edition variant in the name and source; neither format assumes universal retail measurements.
@@ -25,7 +25,7 @@ The upload form exposes an explicit completion check when an upload ID is known 
 
 ## Viewer limits and fallback
 
-The lightweight page adds no canvas or 3D artwork transfers until activation. The version-2 packaging descriptor coexists with the unchanged version-1 console GLB contract. Each procedural box session generates twelve triangles, six independent materials and at most six textures. Genesis sessions load their bounded authored housing and three independent art materials. Physical dimensions set aspect ratios; the shared stage normalizes scale and fits the camera.
+The lightweight page adds no canvas or 3D artwork transfers until activation. The version-2 packaging descriptor coexists with the unchanged version-1 console GLB contract. Each procedural box session generates twelve triangles, six independent materials and at most six textures. Authored sessions load their bounded housing and three or four independent art materials. Physical dimensions set aspect ratios; the shared stage normalizes scale and fits the camera.
 
 Only exact same-origin private PNG/JPEG/WebP resources are accepted: at most 2 MiB each, 12 MiB combined, 2,048 pixels per source edge and 8 million unique source pixels. Actual streamed lengths, MIME types and encoded dimensions are checked before decoding. PNG/WebP animation is rejected. Two transfer workers share a 60-second deadline; composition has a 10-second deadline. Output canvases are at most 1,024 pixels per edge, are not enlarged beyond source resolution, and satisfy a separate cumulative pixel/texture budget while a source bitmap is live.
 
@@ -54,3 +54,7 @@ Current-increment checks: 1,129 unit/component tests, 6 packaging integration te
 ## Task 14.3 — Genesis increment
 
 Genesis now uses a distinct `gltf-slots-v1` contract with explicit front/back/spine primitives, physical artwork sizes, authored housing and direct private geometry uploads. The [Genesis authoring guide](GENESIS_PACKAGING_AUTHORING.md) describes export rules, review, synthetic fixtures, revisions and budgets. Existing NES/SNES contracts, old descriptors, manual `hasBox` and expected-component semantics remain supported. PlayStation jewel, PS2 DVD and Switch cases remain pending.
+
+## Task 14.3 — PlayStation jewel increment
+
+`playstation-jewel` now uses the existing private authored upload/review path with required front/back/spine artwork and an independently mapped optional opposite spine. Clear housing uses bounded standard PBR alpha blending; artwork remains opaque and neutral when unbound. See [jewel authoring](PLAYSTATION_JEWEL_AUTHORING.md) for mappings, review, synthetic geometry, restrictions and migration. Legacy boxes and Genesis remain supported. PS2 DVD and Switch cases remain pending.
