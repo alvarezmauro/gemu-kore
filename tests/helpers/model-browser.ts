@@ -15,13 +15,13 @@ export async function fixture(command: string, argument?: string) {
       command,
       ...(argument ? [argument] : []),
     ],
-    { env: process.env, timeout: 10000 },
+    { env: { ...process.env, NODE_ENV: "production" }, timeout: 15000 },
   );
   return JSON.parse(stdout.trim());
 }
 export async function signIn(
   context: BrowserContext,
-  role: "EDITOR" | "VIEWER" = "EDITOR",
+  role: "ADMIN" | "EDITOR" | "VIEWER" = "EDITOR",
 ) {
   const identity = await fixture("sign-in", JSON.stringify({ role }));
   await context.addCookies([

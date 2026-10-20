@@ -20,7 +20,48 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-enrichment") {
+    if (command === "seed-packaging-components") {
+      const releaseId = argument!;
+      await database.gameReleaseIncludedItem.createMany({
+        data: [
+          {
+            gameReleaseId: releaseId,
+            name: "Outer box",
+            kind: "PACKAGING",
+            sortOrder: 1,
+          },
+          {
+            gameReleaseId: releaseId,
+            name: "Inner box",
+            kind: "PACKAGING",
+            sortOrder: 2,
+          },
+        ],
+      });
+      result = { releaseId };
+    } else if (command === "packaging-state") {
+      result = {
+        uses: await database.catalogAsset.findMany({
+          where: { role: "GALLERY" },
+          select: { assetId: true },
+        }),
+        templates: await database.packagingTemplate.findMany({
+          include: { slots: true },
+        }),
+        bindings: await database.packagingTextureBinding.findMany(),
+        assets: await database.asset.findMany({
+          select: {
+            id: true,
+            sourceType: true,
+            licenseName: true,
+            deliveryClass: true,
+          },
+        }),
+        copies: await database.collectionItem.findMany({
+          select: { id: true, hasBox: true },
+        }),
+      };
+    } else if (command === "seed-enrichment") {
       const { token, gameId, prepare, apply, limited } = JSON.parse(argument!);
       const { signedSessionCookie } = await import("./access-session");
       const { requirePrivateAccess } =

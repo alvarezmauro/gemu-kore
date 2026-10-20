@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { GamePackaging } from "@/features/physical-editions/components/game-packaging";
+import type { PackagingComponent } from "@/features/physical-editions/contracts";
 import { GameSources } from "@/features/provenance/components/game-sources";
 import { AssetSource } from "@/features/provenance/components/asset-source";
 import type { GameProvenance } from "@/features/provenance/contracts";
@@ -27,12 +29,14 @@ export function GameDetail({
   screenshots,
   trailer,
   playtime,
+  packaging,
 }: {
   detail: GameCopyDetail;
   provenance: GameProvenance;
   canManage: boolean;
   locations: CopyLocation[];
   screenshots: ScreenshotGalleryData;
+  packaging: PackagingComponent[];
   playtime: {
     estimates: Playtime | null;
     scope: "game" | "release";
@@ -136,6 +140,7 @@ export function GameDetail({
           ["Trailer", "game-trailer"],
           ["Playtime", "game-playtime"],
           ["Release and contents", "game-release"],
+          ["Physical packaging", "game-packaging"],
           ["Personal photos", "game-photos"],
           ["Metadata sources", "game-sources"],
         ].map(([label, id]) => (
@@ -260,6 +265,31 @@ export function GameDetail({
           Release and expected contents
         </h2>
         <GameReleaseSummary release={d.release} />
+      </section>
+      <section
+        id="game-packaging"
+        aria-labelledby="game-packaging-title"
+        className="scroll-mt-24 space-y-4"
+      >
+        <h2 id="game-packaging-title" className="font-heading text-2xl">
+          Physical packaging
+        </h2>
+        <GamePackaging
+          key={`${d.id}:${d.release.revision}`}
+          id={d.id}
+          copyRevision={d.revision}
+          releaseRevision={d.release.revision}
+          components={packaging}
+        />
+        {screenshots.canManage && (
+          <Button asChild variant="outline">
+            <Link
+              href={`/app/catalog/games/packaging?releaseId=${d.release.id}`}
+            >
+              Manage release packaging
+            </Link>
+          </Button>
+        )}
       </section>
       <section
         id="screenshots"

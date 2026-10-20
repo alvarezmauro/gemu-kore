@@ -6,7 +6,7 @@ function isolated() {
 }
 export async function resetSearchData(db: PrismaClient) {
   isolated();
-  await db.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
+  await db.$executeRaw`TRUNCATE TABLE packaging_template, asset, location, company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item CASCADE`;
   await db.publicSettings.update({
     where: { id: 1 },
     data: {

@@ -1,4 +1,5 @@
 import "server-only";
+import { protectedComponents } from "@/server/repositories/catalog/physical-editions";
 import { Prisma } from "@/server/db/generated/client";
 import type { PrivateAccessContext } from "@/server/auth/access";
 import { PrivateAccessError } from "@/server/auth/access";
@@ -340,6 +341,19 @@ export async function saveGameCatalog(
       } else {
         const f = data.fields,
           old = retained?.kind === "release" ? retained.fields : null;
+        if (
+          data.id &&
+          (await protectedComponents(data.id, tx)).some(
+            (c) =>
+              !f.includedItems.some(
+                (next) => next.id === c.id && next.kind === "PACKAGING",
+              ),
+          )
+        )
+          throw new CatalogError(
+            "INVALID_INPUT",
+            "Detach the packaging template and artwork before removing this component or changing its kind.",
+          );
         await relation("game", f.gameId, old?.gameId === f.gameId, tx);
         await relation(
           "platform",

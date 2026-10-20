@@ -23,7 +23,25 @@ export class ModelResources {
   private bitmaps = new Set<{ close: () => void }>();
   private closedBitmaps = new Set<{ close: () => void }>();
   private objects = new Set<Object3D>();
+  private canvases = new Set<HTMLCanvasElement>();
   private closed = false;
+  bitmap(value: { close: () => void }) {
+    this.bitmaps.add(value);
+    if (this.closed) this.releaseBitmap(value);
+  }
+  releaseBitmap(value: { close: () => void }) {
+    if (!this.closedBitmaps.has(value)) {
+      value.close();
+      this.closedBitmaps.add(value);
+    }
+  }
+  canvas(value: HTMLCanvasElement) {
+    this.canvases.add(value);
+    if (this.closed) {
+      value.width = 0;
+      value.height = 0;
+    }
+  }
   track(value: unknown) {
     if (value instanceof Texture) {
       if (this.textures.has(value)) return;
@@ -84,6 +102,10 @@ export class ModelResources {
     for (const material of this.materials) material.dispose();
     for (const texture of this.textures) texture.dispose();
     this.closeBitmaps();
+    for (const canvas of this.canvases) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
   }
   check() {
     const arrays = new Set<ArrayBufferLike>();

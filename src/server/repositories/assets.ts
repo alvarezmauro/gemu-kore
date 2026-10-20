@@ -96,10 +96,10 @@ export async function makeReady(
       ...base,
       [`${target.target}Id`]: target.id,
       role: target.role,
-      ...(target.screenshot
+      ...((target.screenshot ?? target.artwork)
         ? {
-            caption: target.screenshot.caption,
-            altText: target.screenshot.altText,
+            caption: (target.screenshot ?? target.artwork)!.caption,
+            altText: (target.screenshot ?? target.artwork)!.altText,
           }
         : {}),
       ...(target.role === "SCREENSHOT" && target.target === "gameRelease"
@@ -119,6 +119,7 @@ export async function makeReady(
 export async function hasReferences(id: string, tx: TransactionClient) {
   const where = { OR: [{ assetId: id }, { publicDisplayAssetId: id }] };
   return Boolean(
+    (await tx.packagingTextureBinding.count({ where: { assetId: id } })) ||
     (await tx.catalogAsset.count({ where })) ||
     (await tx.collectionItemMedia.count({ where })) ||
     (await tx.appAsset.count({ where })) ||
@@ -143,6 +144,9 @@ export async function hasFamilyUses(id: string, tx: TransactionClient) {
         ],
       };
       if (
+        (await tx.packagingTextureBinding.count({
+          where: { assetId: sibling.derivedAssetId },
+        })) ||
         (await tx.catalogAsset.count({ where })) ||
         (await tx.collectionItemMedia.count({ where })) ||
         (await tx.appAsset.count({ where }))

@@ -48,6 +48,7 @@ export const targetSchema = z.discriminatedUnion("kind", [
         "PREVIEW",
       ]),
       screenshot: screenshotUpload.optional(),
+      artwork: screenshotUpload.optional(),
     })
     .strict()
     .refine(
@@ -55,6 +56,10 @@ export const targetSchema = z.discriminatedUnion("kind", [
         !v.screenshot ||
         (v.target === "gameRelease" && v.role === "SCREENSHOT"),
       "Screenshot details require a game release screenshot target.",
+    )
+    .refine(
+      (v) => !v.artwork || (v.target === "gameRelease" && v.role === "GALLERY"),
+      "Artwork details require a release gallery target.",
     ),
   z
     .object({

@@ -1,4 +1,5 @@
 import "server-only";
+import { readPackagingComponents } from "./game-presentation";
 import { assetAttribution, readGameProvenance } from "../catalog/provenance";
 import { playtimeDto } from "../catalog/playtime";
 import { storedTrailer } from "@/features/games/trailer-validation";
@@ -159,6 +160,7 @@ export async function getOwnedGame(
         const canManage = canPerform(actor.role, "collection.manage");
         return {
           detail,
+          packaging: await readPackagingComponents(selected.id, tx),
           provenance: await readGameProvenance(
             selected.gameId,
             selected.id,

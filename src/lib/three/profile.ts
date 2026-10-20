@@ -73,7 +73,7 @@ export type ModelInspection = {
 const fail = (): never => {
   throw new ModelError();
 };
-function imageSize(
+export function imageSize(
   bytes: Uint8Array,
   mime: "image/png" | "image/jpeg",
 ): [number, number] {

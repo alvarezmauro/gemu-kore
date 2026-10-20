@@ -1854,6 +1854,9 @@ For example:
 
 SNES.
 
+
+Status: **Completed 2026-10-19.** Added the first private procedural SNES cardboard box renderer with six explicit faces, immutable ready template revisions, measured/synthetic dimension provenance, administrator artwork uploads and crop/rotation bindings, and expected-component previews on owned game details. Reuses the lazy viewer, camera, keyboard/touch/fullscreen controls and reduced-motion behavior; preserves manual `hasBox` and keeps presence/primary-package/public presentation inactive. Artwork admission, transfer/decode budgets, isolated resources, cancellation and cleanup references are enforced. Documentation: [Private packaging preview](docs/operations/PACKAGING_PREVIEW.md). Verification: lint, typecheck, schema validation, production build, deferred bundle budget, formatting/whitespace, 1,121 unit/component tests, 4 packaging integration tests, 52 core-schema tests, 31 asset-pipeline tests and 18 desktop/mobile packaging/console viewer tests pass. The broader integration suite has one existing search-plan benchmark timeout (PostgreSQL 57014, two-second statement limit), reproduced on unchanged baseline `2984960` with its original schema; 101 other search tests pass. No search code or timeout policy was changed. Migration is included and replay-tested on disposable databases; the personal development database was not migrated. Next: Task 14.3, only when requested.
+
 ---
 
 ## TASK 14.3 — Add Packaging Formats

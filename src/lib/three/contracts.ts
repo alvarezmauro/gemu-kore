@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  artworkResource,
+  boxDimensions,
+  boxFaces,
+  textureTransform,
+  packagingLimits,
+} from "./packaging-contracts";
 const finite = z.number().finite();
 const point = z.tuple([finite, finite, finite]);
 const privateImage = z
@@ -12,7 +19,7 @@ const privateImage = z
 export type ModelPoster = z.infer<typeof privateImage>;
 export const modelSettings = z
   .object({
-    preset: z.enum(["console", "object"]).default("object"),
+    preset: z.enum(["console", "object", "package"]).default("object"),
     orientation: z
       .tuple([
         finite.min(-Math.PI * 2).max(Math.PI * 2),
@@ -54,8 +61,84 @@ export const modelPresentation = z
   })
   .strict();
 export type ModelPresentation = z.infer<typeof modelPresentation>;
+export const packagingPresentation = z
+  .strictObject({
+    schemaVersion: z.literal(2),
+    presentationKey: z.string().min(1).max(300),
+    title: z.string().min(1).max(500),
+    source: z.string().min(1).max(100),
+    description: z.string().max(1000),
+    poster: privateImage.nullable(),
+    settings: modelSettings,
+    content: z.strictObject({
+      kind: z.literal("PACKAGING"),
+      rendererVersion: z.literal("box-v1"),
+      componentId: z.uuid(),
+      templateId: z.uuid(),
+      templateRevision: z.number().int().positive(),
+      synthetic: z.boolean(),
+      dimensions: boxDimensions,
+      slots: z
+        .array(
+          z.strictObject({
+            face: z.number().int().min(0).max(5),
+            name: z.string(),
+            required: z.boolean(),
+            resource: artworkResource.nullable(),
+            transform: textureTransform,
+          }),
+        )
+        .length(6),
+      artworkComplete: z.boolean(),
+    }),
+  })
+  .superRefine((p, ctx) => {
+    const slots = p.content.slots,
+      resources = new Map<string, string>();
+    let bytes = 0,
+      pixels = 0;
+    if (
+      new Set(slots.map((s) => s.face)).size !== 6 ||
+      slots.some((s) => {
+        const face = boxFaces[s.face];
+        return face.name !== s.name || face.required !== s.required;
+      })
+    )
+      ctx.addIssue({ code: "custom", message: "Invalid box faces" });
+    for (const slot of slots)
+      if (slot.resource) {
+        const r = slot.resource,
+          fingerprint = JSON.stringify(r);
+        if (resources.has(r.id) && resources.get(r.id) !== fingerprint)
+          ctx.addIssue({
+            code: "custom",
+            message: "Conflicting artwork resource",
+          });
+        if (!resources.has(r.id)) {
+          resources.set(r.id, fingerprint);
+          bytes += r.byteLength;
+          pixels += r.width * r.height;
+        }
+      }
+    if (
+      bytes > packagingLimits.bytes ||
+      pixels > packagingLimits.pixels ||
+      p.content.artworkComplete !==
+        slots.every((s) => !s.required || s.resource !== null)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Artwork exceeds preview limits or completeness is invalid",
+      });
+  });
+export type PackagingPresentation = z.infer<typeof packagingPresentation>;
+export const viewerPresentation = z.union([
+  modelPresentation,
+  packagingPresentation,
+]);
+export type ViewerPresentation = z.infer<typeof viewerPresentation>;
 export type ModelPresentationResult =
-  | { status: "success"; data: ModelPresentation }
+  | { status: "success"; data: ViewerPresentation }
   | { status: "error"; message: string };
 export class ModelError extends Error {
   constructor(

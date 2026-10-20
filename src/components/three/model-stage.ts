@@ -39,7 +39,9 @@ export function fitModelCamera(
     ? new Vector3(
         ...(settings.preset === "console"
           ? ([3, 2, 4] as const)
-          : ([4, 3, 5] as const)),
+          : settings.preset === "package"
+            ? ([3, 2, 6] as const)
+            : ([4, 3, 5] as const)),
       )
     : camera.position.clone().sub(controls.target);
   const distance = reset

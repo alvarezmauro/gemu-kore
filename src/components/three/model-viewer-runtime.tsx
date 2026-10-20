@@ -9,21 +9,23 @@ import {
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
-import { PerspectiveCamera } from "three";
+import { PerspectiveCamera, Vector3 } from "three";
 import { Button } from "@/components/ui/button";
 import { useMotionAllowed } from "@/lib/motion/use-motion-preference";
 import { fetchModel } from "@/lib/three/fetch-model";
 import {
   ModelError,
   modelLimits,
-  type ModelPresentation,
+  type ViewerPresentation,
 } from "@/lib/three/contracts";
 import { drawingDpr } from "@/lib/three/camera";
 import { fitModelCamera, installStudio } from "./model-stage";
 import { parseModel } from "./model-resources";
+import { loadBox } from "./box-resources";
 import { ModelLoading } from "./model-loading";
 type Loaded = Awaited<ReturnType<typeof parseModel>>;
-type Command = "left" | "right" | "up" | "down" | "in" | "out" | "reset";
+type Command =
+  "left" | "right" | "up" | "down" | "in" | "out" | "reset" | "front" | "back";
 type Controller = { run: (command: Command) => void };
 type Controls = ComponentRef<typeof OrbitControls>;
 function Scene({
@@ -37,7 +39,7 @@ function Scene({
   onError,
 }: {
   model: Loaded;
-  presentation: ModelPresentation;
+  presentation: ViewerPresentation;
   visible: boolean;
   rotate: boolean;
   motion: boolean;
@@ -92,6 +94,25 @@ function Scene({
           fit(true);
           return;
         }
+        if (command === "front" || command === "back") {
+          const damping = controls.enableDamping,
+            rotate = controls.autoRotate;
+          controls.enableDamping = false;
+          controls.autoRotate = false;
+          controls.update();
+          const distance = Math.max(
+            controls.minDistance,
+            camera.position.distanceTo(controls.target),
+          );
+          camera.position
+            .copy(controls.target)
+            .add(new Vector3(0, 0, command === "front" ? distance : -distance));
+          controls.update();
+          controls.enableDamping = damping;
+          controls.autoRotate = rotate;
+          invalidate();
+          return;
+        }
         if (command === "in") controls.dollyIn(0.85);
         else if (command === "out") controls.dollyOut(0.85);
         else if (command === "left" || command === "right")
@@ -109,7 +130,7 @@ function Scene({
     return () => {
       controllerRef.current = null;
     };
-  }, [controllerRef, fit, invalidate]);
+  }, [camera.position, controllerRef, fit, invalidate]);
   useEffect(() => {
     alive.current = true;
     const loss = (event: Event) => {
@@ -167,7 +188,7 @@ export default function ModelViewerRuntime({
   container,
   descriptionId,
 }: {
-  presentation: ModelPresentation;
+  presentation: ViewerPresentation;
   onReady: () => void;
   onError: (message: string) => void;
   onExpand: () => void;
@@ -196,20 +217,30 @@ export default function ModelViewerRuntime({
     let decoded: Loaded | undefined;
     void (async () => {
       try {
-        const bytes = await fetchModel(
-          presentation,
-          abort.signal,
-          (received, total) => setPercent(Math.floor((received / total) * 100)),
-        );
-        setPhase("prepare");
-        // Let loading feedback and Close paint before synchronous inspection begins.
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
-        abort.signal.throwIfAborted();
-        const signal = AbortSignal.any([
-          abort.signal,
-          AbortSignal.timeout(10_000),
-        ]);
-        decoded = await parseModel(bytes, presentation.settings, signal);
+        if (presentation.schemaVersion === 2)
+          decoded = await loadBox(
+            presentation,
+            abort.signal,
+            (received, total) =>
+              setPercent(total ? Math.floor((received / total) * 100) : 100),
+            () => setPhase("prepare"),
+          );
+        else {
+          const bytes = await fetchModel(
+            presentation,
+            abort.signal,
+            (received, total) =>
+              setPercent(Math.floor((received / total) * 100)),
+          );
+          setPhase("prepare");
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
+          abort.signal.throwIfAborted();
+          const signal = AbortSignal.any([
+            abort.signal,
+            AbortSignal.timeout(10_000),
+          ]);
+          decoded = await parseModel(bytes, presentation.settings, signal);
+        }
         if (abort.signal.aborted) {
           decoded.owner.dispose();
           return;
@@ -222,7 +253,7 @@ export default function ModelViewerRuntime({
           onError(
             error instanceof ModelError
               ? error.message
-              : "This model couldn't be displayed. Try again or use its private download.",
+              : "This preview couldn't be displayed. Try again or use the static details.",
           );
       }
     })();
@@ -237,7 +268,7 @@ export default function ModelViewerRuntime({
     const timeout = setTimeout(
       () =>
         onError(
-          "The 3D display did not start. Try again or use the private download.",
+          "The 3D display did not start. Try again or use the static details.",
         ),
       10_000,
     );
@@ -306,6 +337,12 @@ export default function ModelViewerRuntime({
     { key: "in", label: "Zoom in" },
     { key: "out", label: "Zoom out" },
     { key: "reset", label: "Reset camera" },
+    ...(presentation.schemaVersion === 2
+      ? [
+          { key: "front" as const, label: "Front view" },
+          { key: "back" as const, label: "Back view" },
+        ]
+      : []),
   ];
   return (
     <div className="min-w-0 space-y-4">

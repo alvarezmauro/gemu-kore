@@ -12,6 +12,7 @@ datasource db {
 // Core catalog/collection: DOMAIN_MODEL.md §10. Deferred features have no placeholder FKs.
 
 model User {
+  packagingTemplates    PackagingTemplate[]    @relation("PackagingCurator")
   enrichmentRuns        EnrichmentRun[]        @relation("EnrichmentRequester")
   enrichmentReviews     EnrichmentSuggestion[] @relation("EnrichmentReviewer")
   uploadedAssets        Asset[]                @relation("AssetUploader")
@@ -929,11 +930,12 @@ enum AppAssetRole {
 }
 
 model Asset {
-  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packagingBindings PackagingTextureBinding[]
+  id                String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   kind              AssetKind
   scope             AssetScope
-  deliveryClass     AssetDeliveryClass    @default(ORIGINAL)
-  state             AssetState            @default(PENDING)
+  deliveryClass     AssetDeliveryClass        @default(ORIGINAL)
+  state             AssetState                @default(PENDING)
   storageNamespace  String
   objectKey         String
   mimeType          String?
@@ -942,8 +944,8 @@ model Asset {
   height            Int?
   durationSeconds   Float?
   originalFilename  String?
-  sha256            String?               @db.VarChar(64)
-  sourceType        AssetSourceType       @default(USER_UPLOAD)
+  sha256            String?                   @db.VarChar(64)
+  sourceType        AssetSourceType           @default(USER_UPLOAD)
   provider          String?
   sourceUrl         String?
   author            String?
@@ -951,26 +953,26 @@ model Asset {
   licenseUrl        String?
   attribution       String?
   usageRestrictions String?
-  retrievedAt       DateTime?             @db.Timestamptz(3)
-  rightsStatus      AssetRightsStatus     @default(UNKNOWN)
-  publicSafe        Boolean               @default(false)
-  reviewedById      String?               @db.Uuid
-  reviewedBy        User?                 @relation("AssetReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
-  reviewedAt        DateTime?             @db.Timestamptz(3)
-  uploadedById      String?               @db.Uuid
-  uploadedBy        User?                 @relation("AssetUploader", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  retrievedAt       DateTime?                 @db.Timestamptz(3)
+  rightsStatus      AssetRightsStatus         @default(UNKNOWN)
+  publicSafe        Boolean                   @default(false)
+  reviewedById      String?                   @db.Uuid
+  reviewedBy        User?                     @relation("AssetReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  reviewedAt        DateTime?                 @db.Timestamptz(3)
+  uploadedById      String?                   @db.Uuid
+  uploadedBy        User?                     @relation("AssetUploader", fields: [uploadedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
   metadata          Json?
   transformMetadata Json?
-  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime              @default(now()) @updatedAt @db.Timestamptz(3)
-  inputs            AssetDependency[]     @relation("DerivedAsset")
-  outputs           AssetDependency[]     @relation("SourceAsset")
-  catalogUses       CatalogAsset[]        @relation("CatalogPrivateAsset")
-  catalogPublicUses CatalogAsset[]        @relation("CatalogPublicAsset")
-  itemUses          CollectionItemMedia[] @relation("ItemPrivateAsset")
-  itemPublicUses    CollectionItemMedia[] @relation("ItemPublicAsset")
-  appUses           AppAsset[]            @relation("AppPrivateAsset")
-  appPublicUses     AppAsset[]            @relation("AppPublicAsset")
+  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime                  @default(now()) @updatedAt @db.Timestamptz(3)
+  inputs            AssetDependency[]         @relation("DerivedAsset")
+  outputs           AssetDependency[]         @relation("SourceAsset")
+  catalogUses       CatalogAsset[]            @relation("CatalogPrivateAsset")
+  catalogPublicUses CatalogAsset[]            @relation("CatalogPublicAsset")
+  itemUses          CollectionItemMedia[]     @relation("ItemPrivateAsset")
+  itemPublicUses    CollectionItemMedia[]     @relation("ItemPublicAsset")
+  appUses           AppAsset[]                @relation("AppPrivateAsset")
+  appPublicUses     AppAsset[]                @relation("AppPublicAsset")
 
   @@unique([storageNamespace, objectKey])
   @@index([sha256])
@@ -1098,18 +1100,88 @@ enum ReleaseComponentKind {
 }
 
 model GameReleaseIncludedItem {
-  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gameReleaseId String               @db.Uuid
-  gameRelease   GameRelease          @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  name          String
-  kind          ReleaseComponentKind
-  description   String?
-  quantity      Int                  @default(1)
-  sortOrder     Int                  @default(0)
-  assets        CatalogAsset[]
+  packagingTemplateId  String?                   @db.Uuid
+  packagingTemplate    PackagingTemplate?        @relation(fields: [packagingTemplateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  packagingBindings    PackagingTextureBinding[]
+  presentationApproved Boolean                   @default(false)
+  id                   String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameReleaseId        String                    @db.Uuid
+  gameRelease          GameRelease               @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  name                 String
+  kind                 ReleaseComponentKind
+  description          String?
+  quantity             Int                       @default(1)
+  sortOrder            Int                       @default(0)
+  assets               CatalogAsset[]
 
+  @@unique([id, packagingTemplateId], map: "component_packaging_template_key")
+  @@index([packagingTemplateId])
   @@index([gameReleaseId, sortOrder, id], map: "game_release_included_item_release_order")
   @@map("game_release_included_item")
+}
+
+enum PackagingTemplateStatus {
+  DRAFT
+  READY
+}
+
+model PackagingTemplate {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  slug             String                    @unique
+  familyKey        String                    @default("snes-cardboard")
+  revisionNumber   Int
+  revision         Int                       @default(1)
+  status           PackagingTemplateStatus   @default(DRAFT)
+  geometryType     String                    @default("PROCEDURAL_BOX")
+  dimensions       Json
+  materialSettings Json
+  cameraSettings   Json
+  metadata         Json
+  archivedAt       DateTime?                 @db.Timestamptz(3)
+  createdById      String?                   @db.Uuid
+  createdBy        User?                     @relation("PackagingCurator", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  createdAt        DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime                  @default(now()) @updatedAt @db.Timestamptz(3)
+  slots            PackagingTextureSlot[]
+  components       GameReleaseIncludedItem[]
+
+  @@unique([familyKey, revisionNumber])
+  @@index([createdById])
+  @@map("packaging_template")
+}
+
+model PackagingTextureSlot {
+  id                  String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packagingTemplateId String                    @db.Uuid
+  template            PackagingTemplate         @relation(fields: [packagingTemplateId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  name                String
+  required            Boolean
+  materialName        String
+  target              Json
+  bindings            PackagingTextureBinding[]
+
+  @@unique([packagingTemplateId, name])
+  @@unique([id, packagingTemplateId], map: "packaging_slot_template_key")
+  @@map("packaging_texture_slot")
+}
+
+model PackagingTextureBinding {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  includedItemId         String                  @db.Uuid
+  packagingTemplateId    String                  @db.Uuid
+  component              GameReleaseIncludedItem @relation(fields: [includedItemId, packagingTemplateId], references: [id, packagingTemplateId], onDelete: Restrict, onUpdate: Restrict)
+  packagingTextureSlotId String                  @db.Uuid
+  slot                   PackagingTextureSlot    @relation(fields: [packagingTextureSlotId, packagingTemplateId], references: [id, packagingTemplateId], onDelete: Restrict, onUpdate: Restrict)
+  assetId                String                  @db.Uuid
+  asset                  Asset                   @relation(fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  transform              Json
+
+  @@unique([includedItemId, packagingTextureSlotId])
+  @@index([assetId])
+  @@index([packagingTextureSlotId, packagingTemplateId])
+  @@index([includedItemId, packagingTemplateId])
+  @@map("packaging_texture_binding")
 }
 
 enum TrailerProvider {

@@ -17,10 +17,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  modelPresentation,
+  viewerPresentation,
   modelLimits,
   ModelError,
-  type ModelPresentation,
+  type ViewerPresentation,
   type ModelPoster as Poster,
   type ModelPresentationResult,
 } from "@/lib/three/contracts";
@@ -46,7 +46,7 @@ class ViewerBoundary extends Component<
   }
   componentDidCatch() {
     this.props.onError(
-      "The 3D viewer is unavailable on this device. The console details and download remain available.",
+      "The 3D viewer is unavailable on this device. Details and static images remain available.",
     );
   }
   render() {
@@ -66,7 +66,7 @@ export function ModelViewer({
   available?: boolean;
   load: () => Promise<ModelPresentationResult>;
 }) {
-  const [presentation, setPresentation] = useState<ModelPresentation | null>(
+  const [presentation, setPresentation] = useState<ViewerPresentation | null>(
     null,
   );
   const [busy, setBusy] = useState(false),
@@ -119,14 +119,17 @@ export function ModelViewer({
         setError(result.message);
         return;
       }
-      const parsed = modelPresentation.safeParse(result.data);
+      const parsed = viewerPresentation.safeParse(result.data);
       if (!parsed.success) {
         setError(
           "This model preview is unavailable. Refresh before trying again.",
         );
         return;
       }
-      if (parsed.data.resource.byteLength > modelLimits.bytes) {
+      if (
+        parsed.data.schemaVersion === 1 &&
+        parsed.data.resource.byteLength > modelLimits.bytes
+      ) {
         setError(new ModelError().message);
         return;
       }
@@ -210,13 +213,12 @@ export function ModelViewer({
       </div>
       {!available && (
         <p className="text-sm text-muted-foreground">
-          No 3D model is available. You can still use the console details and
-          photos.
+          No 3D model is available. You can still use the details and photos.
         </p>
       )}
       <noscript>
-        Interactive 3D needs JavaScript. All console details and available
-        static images remain readable.
+        Interactive 3D needs JavaScript. All details and available static images
+        remain readable.
       </noscript>
     </div>
   );
@@ -244,7 +246,7 @@ export function ModelViewer({
           <DialogTitle>Expanded 3D preview</DialogTitle>
           <DialogDescription>
             Rotate or zoom using touch, pointer, keyboard or the labeled
-            controls. Close returns to the console page.
+            controls. Close returns to the item page.
           </DialogDescription>
           {expanded && panel}
         </DialogContent>

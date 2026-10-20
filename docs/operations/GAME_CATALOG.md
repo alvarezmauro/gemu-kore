@@ -59,3 +59,5 @@ and mobile projects, alongside console-catalog regressions.
 Task verification on 2026-10-17: lint, typecheck, Prisma schema validation,
 formatting, all 766 unit/component tests, and 75 targeted game/catalog/core-schema
 PostgreSQL tests passed. Browser results are recorded in the development plan.
+
+Release packaging has a separate administrator workflow for measured SNES cardboard templates and explicit face artwork assignments. See [Private packaging preview](PACKAGING_PREVIEW.md). Ordinary release edits retain those assignments; detach a component's template before removing it or changing its kind.

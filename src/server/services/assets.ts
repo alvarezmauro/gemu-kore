@@ -42,9 +42,11 @@ import {
   advanceCollectionItem,
 } from "../repositories/collection/items";
 let processing = false;
-function screenshotSource(target: UploadTarget) {
-  if (target.kind !== "catalog" || !target.screenshot) return {};
-  const { caption, altText, retrievedAt, ...source } = target.screenshot;
+function catalogImageSource(target: UploadTarget) {
+  if (target.kind !== "catalog") return {};
+  const details = target.screenshot ?? target.artwork;
+  if (!details) return {};
+  const { caption, altText, retrievedAt, ...source } = details;
   void caption;
   void altText;
   return {
@@ -167,7 +169,7 @@ export async function uploadAsset(
           ...createObjectLocator(id, description.mimeType),
           originalFilename: description.filename,
           uploadedById: actor.userId,
-          ...screenshotSource(target.data),
+          ...catalogImageSource(target.data),
         },
         tx,
       );
@@ -229,7 +231,7 @@ export async function uploadAsset(
               deliveryClass: "DISPLAY",
               ...createObjectLocator(artifact.id, artifact.mimeType),
               uploadedById: actor.userId,
-              ...screenshotSource(target.data),
+              ...catalogImageSource(target.data),
               transformMetadata: {
                 schemaVersion: 1,
                 data: {
