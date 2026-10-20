@@ -1,12 +1,28 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
+import { dvdFixture } from "../tests/helpers/dvd-fixture";
 import { jewelFixture } from "../tests/helpers/jewel-fixture";
 import { clamshellFixture } from "../tests/helpers/clamshell-fixture";
 import { modelBenchmark } from "../tests/helpers/model-benchmarks";
 async function main() {
   const directory = resolve(process.argv[2] ?? "test-results/three-fixtures");
   await mkdir(directory, { recursive: true });
+  const dvd = dvdFixture();
+  await writeFile(join(directory, "synthetic-ps2-dvd.glb"), dvd.bytes);
+  await writeFile(
+    join(directory, "synthetic-ps2-dvd-slots.json"),
+    JSON.stringify(dvd.slots, null, 2) + "\n",
+  );
+  console.log(
+    JSON.stringify({
+      path: join(directory, "synthetic-ps2-dvd.glb"),
+      byteLength: dvd.bytes.length,
+      dimensions: dvd.dimensions,
+      source:
+        "Original synthetic DVD keep case; not retail measurements or catalog data.",
+    }),
+  );
   const jewel = jewelFixture();
   await writeFile(
     join(directory, "synthetic-playstation-jewel.glb"),

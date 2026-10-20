@@ -12,6 +12,8 @@ import {
 } from "@/features/media/upload";
 import {
   packagingFamily,
+  authoredFamily,
+  authoredShapeLabels,
   boxFormatLabels,
   fullArtwork,
 } from "@/lib/three/packaging-contracts";
@@ -47,6 +49,7 @@ function NewTemplate() {
   const mutation = useMutation(),
     id = useRef<string | null>(null);
   const [family, setFamily] = useState("snes-cardboard");
+  const authored = authoredFamily.safeParse(family).success;
   return (
     <details className="min-w-0 rounded-xl border p-4">
       <summary className="min-h-11 cursor-pointer py-3">
@@ -65,10 +68,7 @@ function NewTemplate() {
           id.current ??= crypto.randomUUID();
           mutation.run(async () => {
             let slots: unknown;
-            if (
-              family === "genesis-clamshell" ||
-              family === "playstation-jewel"
-            ) {
+            if (authored) {
               try {
                 slots = JSON.parse(text(form, "slots"));
               } catch {
@@ -92,10 +92,7 @@ function NewTemplate() {
               },
               synthetic: form.get("synthetic") === "on",
               measurementNote: text(form, "source"),
-              ...(family === "genesis-clamshell" ||
-              family === "playstation-jewel"
-                ? { slots }
-                : {}),
+              ...(authored ? { slots } : {}),
             });
             if (result.status === "success") id.current = null;
             return result;
@@ -123,8 +120,7 @@ function NewTemplate() {
             Record the measured market/edition variant in the template name and
             source; no universal retail dimensions are supplied.
           </p>
-          {(family === "genesis-clamshell" ||
-            family === "playstation-jewel") && (
+          {authored && (
             <label className="block">
               Artwork surface mappings (JSON)
               <Textarea
@@ -143,8 +139,8 @@ function NewTemplate() {
                 Enter the authored GLB primitive targets, diagnostic names and
                 physical artwork sizes from the model. See the packaging
                 authoring guide in project documentation. Upload the model after
-                creating this draft. Genesis needs front/back/spine; jewel cases
-                also need an optional opposite-spine surface.
+                creating this draft. Genesis and PS2 need front/back/spine;
+                jewel cases also need an optional opposite-spine surface.
               </span>
             </label>
           )}
@@ -206,6 +202,9 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
   const mutation = useMutation();
   const [reviewed, setReviewed] = useState(false);
   const authored = t.geometryType === "GLB";
+  const shape = authored
+    ? authoredShapeLabels[authoredFamily.parse(t.familyKey)]
+    : "case";
   return (
     <li className="min-w-0 space-y-3 rounded-xl border p-4">
       <p>
@@ -241,11 +240,7 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
                 href={t.baseModel.url}
                 className="block min-h-11 py-3 underline"
               >
-                Download private{" "}
-                {t.familyKey === "playstation-jewel"
-                  ? "jewel case"
-                  : "clamshell"}{" "}
-                model for review
+                Download private {shape} model for review
               </a>
               {t.modelSource && <AssetSource source={t.modelSource} />}
             </>
@@ -262,11 +257,8 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
                   checked={reviewed}
                   onChange={(e) => setReviewed(e.target.checked)}
                 />
-                I reviewed this model’s{" "}
-                {t.familyKey === "playstation-jewel"
-                  ? "jewel case"
-                  : "clamshell"}{" "}
-                shape, measured dimensions, source and artwork surface mappings.
+                I reviewed this model’s {shape} shape, measured dimensions,
+                source and artwork surface mappings.
               </label>
             </>
           )}
@@ -485,6 +477,10 @@ function PackagingUpload({
   disabled: boolean;
 }) {
   const geometry = !!template;
+  const shape =
+    template?.geometryType === "GLB"
+      ? authoredShapeLabels[authoredFamily.parse(template.familyKey)]
+      : "case";
   const router = useRouter(),
     [pending, start] = useTransition(),
     [message, setMessage] = useState(""),
@@ -533,11 +529,7 @@ function PackagingUpload({
       }}
     >
       <h3 className="font-heading text-xl">
-        {geometry
-          ? template?.familyKey === "playstation-jewel"
-            ? "Upload jewel case geometry"
-            : "Upload clamshell geometry"
-          : "Upload release artwork"}
+        {geometry ? `Upload ${shape} geometry` : "Upload release artwork"}
       </h3>
       <fieldset disabled={pending || disabled} className="min-w-0 space-y-4">
         <label className="block">

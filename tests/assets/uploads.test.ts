@@ -1024,6 +1024,7 @@ it("records UTF-8 screenshot provenance on the image family and advances the rel
   ).toBe(1);
 });
 
+import { dvdFixture } from "../helpers/dvd-fixture";
 import { jewelFixture } from "../helpers/jewel-fixture";
 import {
   authoredFamily,
@@ -1038,7 +1039,11 @@ import {
 async function geometryDraft(familyKey: AuthoredFamily = "genesis-clamshell") {
   const context = await requirePrivateAccess(headers),
     fixture =
-      familyKey === "playstation-jewel" ? jewelFixture() : clamshellFixture();
+      familyKey === "ps2-dvd"
+        ? dvdFixture()
+        : familyKey === "playstation-jewel"
+          ? jewelFixture()
+          : clamshellFixture();
   const draft = {
     id: randomUUID(),
     name: `Original synthetic ${familyKey}`,
@@ -1326,4 +1331,28 @@ it("rejects a transparent jewel art target at approval while preserving its draf
     revision: 3,
     familyKey: "genesis-clamshell",
   });
+});
+it("requires opaque DVD housing before approval and preserves a draft after an incompatible upload", async () => {
+  const { context, draft, input } = await geometryDraft("ps2-dvd"),
+    f = dvdFixture();
+  f.document.materials[3].alphaMode = "BLEND";
+  f.document.materials[3].pbrMetallicRoughness.baseColorFactor[3] = 0.2;
+  const bytes = buildGlb(f.document, f.binary);
+  await uploadAsset(
+    context,
+    { ...input, body: body(bytes), declaredSize: bytes.length },
+    signal(),
+    storage,
+  );
+  await expect(
+    changePackagingTemplate(context, {
+      id: draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+      reviewedGeometry: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ status: "DRAFT", revision: 2 });
 });

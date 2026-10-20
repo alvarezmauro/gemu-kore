@@ -202,11 +202,13 @@ export async function createPackagingTemplate(
         materialSettings: {
           schemaVersion: 1,
           profile:
-            d.familyKey === "playstation-jewel"
-              ? "jewel-v1"
-              : d.familyKey === "genesis-clamshell"
-                ? "plastic-v1"
-                : "cardboard-v1",
+            d.familyKey === "ps2-dvd"
+              ? "dvd-v1"
+              : d.familyKey === "playstation-jewel"
+                ? "jewel-v1"
+                : d.familyKey === "genesis-clamshell"
+                  ? "plastic-v1"
+                  : "cardboard-v1",
         },
         cameraSettings: json(modelSettings.parse({ preset: "package" })),
         metadata: {

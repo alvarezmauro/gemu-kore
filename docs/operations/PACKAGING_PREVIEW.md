@@ -1,10 +1,10 @@
 # Private packaging preview
 
-Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells and PlayStation jewel cases through authored GLB contracts ([Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell maps three art primitives, and a jewel case also maps an optional opposite-spine surface. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
+Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells, PlayStation jewel cases and PS2 DVD cases through authored GLB contracts ([Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md), [PS2](PS2_DVD_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell/DVD case maps three art primitives, and a jewel case also maps an optional opposite-spine surface. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
 
 ## Curate a release
 
-These steps cover cardboard templates. For authored geometry preparation and approval, use the [Genesis](GENESIS_PACKAGING_AUTHORING.md) or [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md) authoring guide.
+These steps cover cardboard templates. For authored geometry preparation and approval, use the [Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md) or [PS2](PS2_DVD_AUTHORING.md) authoring guide.
 
 1. As an administrator, open **Game catalog → Game releases → Edit → Manage release packaging**. A release must already contain a `PACKAGING` expected item.
 2. Expand **Create packaging template**, choose **NES cardboard box** or **SNES cardboard box**, and create a draft. Supply width, height and depth in millimeters and a measurement source. Mark synthetic demonstration dimensions explicitly. Choose a unique slug and the next revision number within that format. Different formats can each have revision 1. Put the measured market/edition variant in the name and source; neither format assumes universal retail measurements.
@@ -58,3 +58,7 @@ Genesis now uses a distinct `gltf-slots-v1` contract with explicit front/back/sp
 ## Task 14.3 — PlayStation jewel increment
 
 `playstation-jewel` now uses the existing private authored upload/review path with required front/back/spine artwork and an independently mapped optional opposite spine. Clear housing uses bounded standard PBR alpha blending; artwork remains opaque and neutral when unbound. See [jewel authoring](PLAYSTATION_JEWEL_AUTHORING.md) for mappings, review, synthetic geometry, restrictions and migration. Legacy boxes and Genesis remain supported. PS2 DVD and Switch cases remain pending.
+
+## Task 14.3 — PS2 DVD increment
+
+`ps2-dvd` now uses the reviewed private authored pipeline with three required front/back/spine surfaces and opaque keep-case housing. It retains explicit bindings, geometric/artwork budgets, expected-component semantics and manual `hasBox`. See [DVD authoring](PS2_DVD_AUTHORING.md) for review, synthetic fixtures and migration. Switch remains pending.

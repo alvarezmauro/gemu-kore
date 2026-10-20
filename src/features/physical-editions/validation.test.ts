@@ -85,3 +85,25 @@ it("requires the family-specific slot contract on draft creation", () => {
       .success,
   ).toBe(false);
 });
+import { dvdFixture } from "../../../tests/helpers/dvd-fixture";
+it("admits PS2 drafts only with explicit front/back/spine targets and dimension evidence", () => {
+  const f = dvdFixture(),
+    draft = {
+      ...input,
+      familyKey: "ps2-dvd",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    };
+  expect(createBoxTemplate.safeParse(draft).success).toBe(true);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, slots: f.slots.slice(0, 2) })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, slots: jewelFixture().slots })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, measurementNote: "" }).success,
+  ).toBe(false);
+});

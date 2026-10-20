@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { dvdFixture } from "../helpers/dvd-fixture";
 import { jewelFixture } from "../helpers/jewel-fixture";
 import { clamshellFixture } from "../helpers/clamshell-fixture";
 import { fixture, openModel, signIn } from "../helpers/model-browser";
@@ -16,19 +17,27 @@ for (const family of [
   "nes-cardboard",
   "genesis-clamshell",
   "playstation-jewel",
+  "ps2-dvd",
 ] as const) {
   const genesis = family === "genesis-clamshell";
   const jewel = family === "playstation-jewel";
-  const authored = genesis || jewel;
-  const geometry = jewel ? jewelFixture() : clamshellFixture();
-  const shape = jewel ? "jewel case" : "clamshell";
-  const formatName = jewel
-    ? "PlayStation"
-    : genesis
-      ? "Genesis"
-      : family === "nes-cardboard"
-        ? "NES"
-        : "SNES";
+  const dvd = family === "ps2-dvd";
+  const authored = genesis || jewel || dvd;
+  const geometry = dvd
+    ? dvdFixture()
+    : jewel
+      ? jewelFixture()
+      : clamshellFixture();
+  const shape = dvd ? "DVD case" : jewel ? "jewel case" : "clamshell";
+  const formatName = dvd
+    ? "PS2"
+    : jewel
+      ? "PlayStation"
+      : genesis
+        ? "Genesis"
+        : family === "nes-cardboard"
+          ? "NES"
+          : "SNES";
   test(`curates ${formatName} packaging and private artwork, then lazily renders distinct faces with accessible mobile controls`, async ({
     page,
     context,
@@ -56,39 +65,19 @@ for (const family of [
     await page
       .getByLabel("Unique slug")
       .fill(`synthetic-${formatName.toLowerCase()}-box`);
+    const dimensions = authored
+      ? geometry.dimensions
+      : family === "nes-cardboard"
+        ? { widthMm: 110, heightMm: 160, depthMm: 25 }
+        : { widthMm: 180, heightMm: 125, depthMm: 30 };
     for (const [name, value] of [
-      [
-        "width",
-        jewel
-          ? "150"
-          : genesis
-            ? "120"
-            : family === "nes-cardboard"
-              ? "110"
-              : "180",
-      ],
-      [
-        "height",
-        jewel
-          ? "135"
-          : genesis
-            ? "180"
-            : family === "nes-cardboard"
-              ? "160"
-              : "125",
-      ],
-      [
-        "depth",
-        jewel
-          ? "12"
-          : genesis
-            ? "28"
-            : family === "nes-cardboard"
-              ? "25"
-              : "30",
-      ],
-    ])
-      await page.getByLabel(`${name} (mm)`, { exact: true }).fill(value);
+      ["width", dimensions.widthMm],
+      ["height", dimensions.heightMm],
+      ["depth", dimensions.depthMm],
+    ] as const)
+      await page
+        .getByLabel(`${name} (mm)`, { exact: true })
+        .fill(String(value));
     await page
       .getByLabel("Measurement source or synthetic fixture note")
       .fill("Synthetic dimensions for testing only.");
@@ -147,6 +136,33 @@ for (const family of [
     await expect(
       page.getByRole("button", { name: "Mark ready", exact: true }),
     ).toHaveCount(0);
+    if (dvd) {
+      const neutralState = await fixture("packaging-state");
+      const neutralEditor = page.locator("form").filter({
+        has: page.getByRole("heading", { name: "Outer box", exact: true }),
+      });
+      await neutralEditor
+        .getByLabel("Box template", { exact: true })
+        .selectOption(neutralState.templates[0].id);
+      await neutralEditor
+        .getByRole("button", { name: "Save Outer box packaging", exact: true })
+        .click();
+      await expect(
+        page.getByText("Outer box packaging saved.", { exact: true }),
+      ).toBeVisible();
+      await page.goto(`/app/games/${copy.id}`);
+      await expect(page.getByText(/Artwork incomplete/)).toBeVisible();
+      const neutralViewer = await openModel(page);
+      await neutralViewer
+        .locator("canvas")
+        .screenshot({ path: info.outputPath("dvd-neutral.png") });
+      await neutralViewer
+        .getByRole("button", { name: "Close 3D preview", exact: true })
+        .click();
+      await page.goto(
+        `/app/catalog/games/packaging?releaseId=${catalog.releaseId}`,
+      );
+    }
     const image = await sharp(
       Buffer.from(
         '<svg width="300" height="200"><rect width="300" height="200" fill="#f04444"/><rect width="150" height="100" fill="#25a055"/><text x="10" y="170" font-size="50" fill="white">FRONT</text></svg>',
@@ -242,7 +258,7 @@ for (const family of [
     await page.goto(`/app/games/${copy.id}`);
     await expect(
       page.getByText(
-        `Synthetic ${formatName} demonstration · ${jewel ? "PlayStation jewel case" : genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
+        `Synthetic ${formatName} demonstration · ${dvd ? "PS2 DVD case" : jewel ? "PlayStation jewel case" : genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
         { exact: true },
       ),
     ).toBeVisible();
