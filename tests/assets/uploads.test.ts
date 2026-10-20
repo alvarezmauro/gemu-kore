@@ -1387,3 +1387,204 @@ it("rejects translucent Switch artwork during stored-byte approval and retains t
     await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
   ).toMatchObject({ status: "DRAFT", revision: 2, familyKey: "switch-case" });
 });
+
+import { cartridgeFixture } from "../helpers/cartridge-fixture";
+import {
+  createPhysicalMediaTemplate,
+  changePhysicalMediaTemplate,
+} from "@/server/services/catalog/physical-media";
+async function mediaDraft() {
+  const context = await requirePrivateAccess(headers),
+    fixture = cartridgeFixture();
+  const draft = {
+    id: randomUUID(),
+    name: "Original synthetic cartridge",
+    slug: randomUUID(),
+    familyKey: "cartridge",
+    type: "CARTRIDGE",
+    revisionNumber: 1,
+    synthetic: true,
+    measurementNote: "Original synthetic study; not retail measurements",
+    dimensions: fixture.dimensions,
+    slots: fixture.slots,
+  };
+  await createPhysicalMediaTemplate(context, draft);
+  const target = {
+    kind: "physicalMediaGeometry",
+    id: draft.id,
+    expectedRevision: 1,
+    source: {
+      ...emptyScreenshotUpload,
+      provider: "Original cartridge fixture",
+      licenseName: "Test author permission",
+    },
+  };
+  const input = {
+    target,
+    mimeType: "model/gltf-binary",
+    filename: "original-cartridge.glb",
+    body: body(fixture.bytes),
+    declaredSize: fixture.bytes.length,
+  };
+  return { context, fixture, draft, target, input };
+}
+it("uploads private cartridge geometry directly, preserves provenance and retries before and after reviewed approval", async () => {
+  const c = await mediaDraft(),
+    result = await uploadAsset(c.context, c.input, signal(), storage);
+  expect(result.useId).toBeUndefined();
+  expect(result.templateId).toBe(c.draft.id);
+  expect(await db.catalogAsset.count()).toBe(0);
+  expect(await db.packagingTemplate.count()).toBe(0);
+  expect(
+    await db.asset.findUnique({ where: { id: result.uploadId } }),
+  ).toMatchObject({
+    state: "READY",
+    kind: "MODEL_3D",
+    scope: "CATALOG",
+    publicSafe: false,
+    provider: "Original cartridge fixture",
+    licenseName: "Test author permission",
+    metadata: { schemaVersion: 2 },
+  });
+  await Promise.all([
+    completeUpload(c.context, result.uploadId, signal(), storage),
+    completeUpload(c.context, result.uploadId, signal(), storage),
+  ]);
+  expect(
+    await db.physicalMediaTemplate.findUnique({ where: { id: c.draft.id } }),
+  ).toMatchObject({
+    revision: 2,
+    status: "DRAFT",
+    baseModelAssetId: result.uploadId,
+  });
+  await expect(
+    changePhysicalMediaTemplate(c.context, {
+      id: c.draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await changePhysicalMediaTemplate(c.context, {
+    id: c.draft.id,
+    expectedRevision: 2,
+    operation: "ready",
+    reviewedGeometry: true,
+  });
+  expect(
+    await db.physicalMediaTemplate.findUnique({ where: { id: c.draft.id } }),
+  ).toMatchObject({ revision: 3, status: "READY" });
+  await completeUpload(c.context, result.uploadId, signal(), storage);
+  await expect(
+    deleteUnusedAsset(c.context, result.uploadId, storage),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await expect(
+    db.asset.update({
+      where: { id: result.uploadId },
+      data: { state: "DELETING" },
+    }),
+  ).rejects.toThrow();
+  await expect(
+    uploadAsset(
+      c.context,
+      {
+        ...c.input,
+        body: body(c.fixture.bytes),
+        target: { ...c.target, expectedRevision: 3 },
+      },
+      signal(),
+      storage,
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+});
+it("validates stored cartridge label material before readiness and preserves incompatible private drafts", async () => {
+  const c = await mediaDraft();
+  c.fixture.document.materials[0].pbrMetallicRoughness.baseColorFactor[0] = 0.5;
+  const bytes = buildGlb(c.fixture.document, c.fixture.binary);
+  await uploadAsset(
+    c.context,
+    { ...c.input, body: body(bytes), declaredSize: bytes.length },
+    signal(),
+    storage,
+  );
+  await expect(
+    changePhysicalMediaTemplate(c.context, {
+      id: c.draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+      reviewedGeometry: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.physicalMediaTemplate.findUnique({ where: { id: c.draft.id } }),
+  ).toMatchObject({ revision: 2, status: "DRAFT" });
+});
+it("bounds cartridge uploads and denies stale targets or revoked curators before attaching geometry", async () => {
+  const c = await mediaDraft();
+  await expect(
+    uploadAsset(
+      c.context,
+      {
+        ...c.input,
+        body: body(c.fixture.bytes),
+        declaredSize: 8 * 1024 * 1024 + 1,
+      },
+      signal(),
+      storage,
+    ),
+  ).rejects.toMatchObject({ code: "TOO_LARGE" });
+  await expect(
+    uploadAsset(
+      c.context,
+      {
+        ...c.input,
+        body: body(c.fixture.bytes),
+        target: { ...c.target, expectedRevision: 2 },
+      },
+      signal(),
+      storage,
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await db.accessGrant.update({
+    where: { id: grantId },
+    data: { enabled: false },
+  });
+  await expect(
+    uploadAsset(
+      c.context,
+      { ...c.input, body: body(c.fixture.bytes) },
+      signal(),
+      storage,
+    ),
+  ).rejects.toThrow();
+  expect(
+    await db.physicalMediaTemplate.findUnique({ where: { id: c.draft.id } }),
+  ).toMatchObject({ revision: 1, baseModelAssetId: null });
+});
+it("replaces cartridge draft geometry explicitly and refuses stale completion of the old upload", async () => {
+  const c = await mediaDraft(),
+    first = await uploadAsset(c.context, c.input, signal(), storage);
+  const second = await uploadAsset(
+    c.context,
+    {
+      ...c.input,
+      body: body(c.fixture.bytes),
+      target: { ...c.target, expectedRevision: 2 },
+    },
+    signal(),
+    storage,
+  );
+  expect(first.uploadId).not.toBe(second.uploadId);
+  await expect(
+    completeUpload(c.context, first.uploadId, signal(), storage),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  expect(
+    await db.physicalMediaTemplate.findUnique({ where: { id: c.draft.id } }),
+  ).toMatchObject({ revision: 3, baseModelAssetId: second.uploadId });
+  await deleteUnusedAsset(c.context, first.uploadId, storage);
+  await changePhysicalMediaTemplate(c.context, {
+    id: c.draft.id,
+    expectedRevision: 3,
+    operation: "ready",
+    reviewedGeometry: true,
+  });
+});

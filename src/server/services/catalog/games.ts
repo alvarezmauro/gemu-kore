@@ -346,13 +346,13 @@ export async function saveGameCatalog(
           (await protectedComponents(data.id, tx)).some(
             (c) =>
               !f.includedItems.some(
-                (next) => next.id === c.id && next.kind === "PACKAGING",
+                (next) => next.id === c.id && next.kind === c.kind,
               ),
           )
         )
           throw new CatalogError(
             "INVALID_INPUT",
-            "Detach the packaging template and artwork before removing this component or changing its kind.",
+            "Detach the physical template and artwork before removing this component or changing its kind.",
           );
         await relation("game", f.gameId, old?.gameId === f.gameId, tx);
         await relation(

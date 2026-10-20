@@ -20,6 +20,26 @@ import {
 import { createTemplate, changeTemplate, savePackaging } from "../actions";
 import { uploadArtwork, uploadGeometry } from "../upload";
 import type { PackagingManager as Manager, BoxTemplate } from "../contracts";
+import {
+  createTemplate as createMediaTemplate,
+  changeTemplate as changeMediaTemplate,
+  saveCartridge,
+} from "@/features/physical-media/actions";
+import { uploadCartridgeGeometry } from "@/features/physical-media/upload";
+import type {
+  MediaManager,
+  CartridgeTemplate,
+} from "@/features/physical-media/contracts";
+type Template = BoxTemplate | CartridgeTemplate;
+type EditionManager = Manager | MediaManager;
+const templateLabel = (t: Template) =>
+  t.familyKey === "cartridge" ? "Cartridge" : boxFormatLabels[t.familyKey];
+const templateShape = (t: Template) =>
+  t.familyKey === "cartridge"
+    ? "cartridge"
+    : t.geometryType === "GLB"
+      ? authoredShapeLabels[authoredFamily.parse(t.familyKey)]
+      : "case";
 const selectClass =
   "block min-h-12 w-full min-w-0 rounded-lg border border-input bg-background px-3";
 const text = (form: FormData, key: string) => String(form.get(key) ?? "");
@@ -45,15 +65,15 @@ function useMutation(onSaved?: () => void) {
   }
   return { pending, message, run };
 }
-function NewTemplate() {
+function NewTemplate({ media }: { media: boolean }) {
   const mutation = useMutation(),
     id = useRef<string | null>(null);
   const [family, setFamily] = useState("snes-cardboard");
-  const authored = authoredFamily.safeParse(family).success;
+  const authored = media || authoredFamily.safeParse(family).success;
   return (
     <details className="min-w-0 rounded-xl border p-4">
       <summary className="min-h-11 cursor-pointer py-3">
-        Create packaging template
+        {media ? "Create cartridge template" : "Create packaging template"}
       </summary>
       <p className="my-3 text-sm">
         Enter measured dimensions and their source. A ready revision is
@@ -78,44 +98,49 @@ function NewTemplate() {
                 };
               }
             }
-            const result = await createTemplate({
-              id: id.current,
-              name: text(form, "name"),
-              slug: text(form, "slug"),
-              familyKey: text(form, "family"),
-              revisionNumber: Number(form.get("revision")),
-              dimensions: {
-                schemaVersion: 1,
-                widthMm: Number(form.get("width")),
-                heightMm: Number(form.get("height")),
-                depthMm: Number(form.get("depth")),
+            const result = await (media ? createMediaTemplate : createTemplate)(
+              {
+                id: id.current,
+                name: text(form, "name"),
+                slug: text(form, "slug"),
+                familyKey: media ? "cartridge" : text(form, "family"),
+                ...(media ? { type: "CARTRIDGE" } : {}),
+                revisionNumber: Number(form.get("revision")),
+                dimensions: {
+                  schemaVersion: 1,
+                  widthMm: Number(form.get("width")),
+                  heightMm: Number(form.get("height")),
+                  depthMm: Number(form.get("depth")),
+                },
+                synthetic: form.get("synthetic") === "on",
+                measurementNote: text(form, "source"),
+                ...(authored ? { slots } : {}),
               },
-              synthetic: form.get("synthetic") === "on",
-              measurementNote: text(form, "source"),
-              ...(authored ? { slots } : {}),
-            });
+            );
             if (result.status === "success") id.current = null;
             return result;
           });
         }}
       >
         <fieldset disabled={mutation.pending} className="min-w-0 space-y-4">
-          <label className="block">
-            Packaging format
-            <select
-              aria-label="Packaging format"
-              name="family"
-              className={selectClass}
-              value={family}
-              onChange={(e) => setFamily(e.target.value)}
-            >
-              {packagingFamily.options.map((key) => (
-                <option key={key} value={key}>
-                  {boxFormatLabels[key]}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!media && (
+            <label className="block">
+              Packaging format
+              <select
+                aria-label="Packaging format"
+                name="family"
+                className={selectClass}
+                value={family}
+                onChange={(e) => setFamily(e.target.value)}
+              >
+                {packagingFamily.options.map((key) => (
+                  <option key={key} value={key}>
+                    {boxFormatLabels[key]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <p className="text-sm text-muted-foreground">
             Record the measured market/edition variant in the template name and
             source; no universal retail dimensions are supplied.
@@ -136,12 +161,18 @@ function NewTemplate() {
                 id="slot-guide"
                 className="block text-sm text-muted-foreground"
               >
-                Enter the authored GLB primitive targets, diagnostic names and
-                physical artwork sizes from the model. See the packaging
-                authoring guide in project documentation. Upload the model after
-                creating this draft. Genesis, PS2 and Switch need
-                front/back/spine; jewel cases also need an optional
-                opposite-spine surface.
+                {media ? (
+                  "Map one FRONT_LABEL primitive using its indexed target, matching diagnostic names, UV0 and measured art rectangle. Upload the cartridge GLB after creating the draft."
+                ) : (
+                  <>
+                    Enter the authored GLB primitive targets, diagnostic names
+                    and physical artwork sizes from the model. See the packaging
+                    authoring guide in project documentation. Upload the model
+                    after creating this draft. Genesis, PS2 and Switch need
+                    front/back/spine; jewel cases also need an optional
+                    opposite-spine surface.
+                  </>
+                )}
               </span>
             </label>
           )}
@@ -199,18 +230,15 @@ function NewTemplate() {
     </details>
   );
 }
-function TemplateRow({ template: t }: { template: BoxTemplate }) {
+function TemplateRow({ template: t }: { template: Template }) {
   const mutation = useMutation();
   const [reviewed, setReviewed] = useState(false);
   const authored = t.geometryType === "GLB";
-  const shape = authored
-    ? authoredShapeLabels[authoredFamily.parse(t.familyKey)]
-    : "case";
+  const shape = templateShape(t);
   return (
     <li className="min-w-0 space-y-3 rounded-xl border p-4">
       <p>
-        {t.name} · {boxFormatLabels[t.familyKey]} · Revision {t.revisionNumber}{" "}
-        · {t.status}
+        {t.name} · {templateLabel(t)} · Revision {t.revisionNumber} · {t.status}
         {t.archived ? " · Archived" : ""}
       </p>
       <p className="text-sm">
@@ -273,7 +301,9 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
             }
             onClick={() =>
               mutation.run(() =>
-                changeTemplate({
+                (t.familyKey === "cartridge"
+                  ? changeMediaTemplate
+                  : changeTemplate)({
                   id: t.id,
                   expectedRevision: t.revision,
                   operation: "ready",
@@ -290,7 +320,9 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
           disabled={mutation.pending}
           onClick={() =>
             mutation.run(() =>
-              changeTemplate({
+              (t.familyKey === "cartridge"
+                ? changeMediaTemplate
+                : changeTemplate)({
                 id: t.id,
                 expectedRevision: t.revision,
                 operation: t.archived ? "restore" : "archive",
@@ -309,9 +341,11 @@ function ComponentEditor({
   data,
   component: c,
   onSaved,
+  media,
 }: {
-  data: Manager;
-  component: Manager["components"][number];
+  data: EditionManager;
+  media: boolean;
+  component: EditionManager["components"][number];
   onSaved: () => void;
 }) {
   const [templateId, setTemplateId] = useState(c.templateId ?? ""),
@@ -324,7 +358,7 @@ function ComponentEditor({
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         mutation.run(() =>
-          savePackaging({
+          (media ? saveCartridge : savePackaging)({
             releaseId: data.release.id,
             componentId: c.id,
             expectedRevision: data.release.revision,
@@ -362,10 +396,10 @@ function ComponentEditor({
         className="min-w-0 space-y-4"
       >
         <label className="block">
-          Box template
+          {media ? "Cartridge template" : "Box template"}
           <select
             className={selectClass}
-            aria-label="Box template"
+            aria-label={media ? "Cartridge template" : "Box template"}
             value={templateId}
             onChange={(e) => setTemplateId(e.target.value)}
           >
@@ -378,8 +412,7 @@ function ComponentEditor({
               )
               .map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} · {boxFormatLabels[t.familyKey]} · r
-                  {t.revisionNumber}
+                  {t.name} · {templateLabel(t)} · r{t.revisionNumber}
                   {t.archived ? " · Archived" : ""}
                 </option>
               ))}
@@ -388,8 +421,11 @@ function ComponentEditor({
         <p className="text-sm text-muted-foreground">
           Changing the template starts an empty artwork assignment. Saving
           without a template explicitly detaches its artwork. Missing faces
-          remain neutral; front, back and spine are required for complete
-          artwork.
+          remain neutral;{" "}
+          {media
+            ? "the front label is required"
+            : "front, back and spine are required"}{" "}
+          for complete artwork.
         </p>
         <div key={templateId} className="grid min-w-0 gap-4 md:grid-cols-2">
           {template?.slots.map((slot) => {
@@ -462,7 +498,9 @@ function ComponentEditor({
           Crop coordinates use fractions of the upright source image. Artwork is
           contained with neutral margins; it is never stretched.
         </p>
-        <Button type="submit">Save {c.name} packaging</Button>
+        <Button type="submit">
+          Save {c.name} {media ? "artwork" : "packaging"}
+        </Button>
       </fieldset>
       <p role="status">{mutation.message}</p>
     </form>
@@ -473,15 +511,12 @@ function PackagingUpload({
   releaseId,
   disabled,
 }: {
-  template?: BoxTemplate;
+  template?: Template;
   releaseId?: string;
   disabled: boolean;
 }) {
   const geometry = !!template;
-  const shape =
-    template?.geometryType === "GLB"
-      ? authoredShapeLabels[authoredFamily.parse(template.familyKey)]
-      : "case";
+  const shape = template ? templateShape(template) : "case";
   const router = useRouter(),
     [pending, start] = useTransition(),
     [message, setMessage] = useState(""),
@@ -510,7 +545,11 @@ function PackagingUpload({
               sourceType: "USER_UPLOAD" as const,
             };
             if (template)
-              await uploadGeometry(file, template, source, setProgress);
+              await (
+                template.familyKey === "cartridge"
+                  ? uploadCartridgeGeometry
+                  : uploadGeometry
+              )(file, template, source, setProgress);
             else await uploadArtwork(file, releaseId!, source, setProgress);
             setMessage(
               geometry
@@ -534,7 +573,11 @@ function PackagingUpload({
       </h3>
       <fieldset disabled={pending || disabled} className="min-w-0 space-y-4">
         <label className="block">
-          {geometry ? "Case GLB file (up to 8 MiB)" : "Artwork file"}
+          {geometry
+            ? template?.familyKey === "cartridge"
+              ? "Cartridge GLB file (up to 8 MiB)"
+              : "Case GLB file (up to 8 MiB)"
+            : "Artwork file"}
           <Input
             type="file"
             name="file"
@@ -612,7 +655,7 @@ function PackagingUpload({
               try {
                 await checkCollectionUpload(uncertain);
                 setUncertain(undefined);
-                setMessage("Upload completed. Refreshing packaging.");
+                setMessage("Upload completed. Refreshing files.");
                 router.refresh();
               } catch (error) {
                 setMessage(
@@ -631,17 +674,29 @@ function PackagingUpload({
   );
 }
 export function PackagingManager({ data }: { data: Manager }) {
+  return <EditionManagerForm data={data} media={false} />;
+}
+export function CartridgeManager({ data }: { data: MediaManager }) {
+  return <EditionManagerForm data={data} media />;
+}
+function EditionManagerForm({
+  data,
+  media,
+}: {
+  data: EditionManager;
+  media: boolean;
+}) {
   const [saved, setSaved] = useState("");
   return (
     <div className="min-w-0 max-w-4xl space-y-8">
       <p>
-        Expected catalog packaging only. Owned component presence and the manual
-        “has box” answer are unchanged.
+        Expected catalog {media ? "media" : "packaging"} only. Owned component
+        presence and the manual “has box” answer are unchanged.
       </p>
       {data.release.archived && (
         <p role="status">
           Restore the release and its parent catalog records before assigning
-          packaging or uploading artwork.
+          {media ? "cartridge artwork" : "packaging"} or uploading artwork.
         </p>
       )}
       <p role="status">{saved}</p>
@@ -650,17 +705,23 @@ export function PackagingManager({ data }: { data: Manager }) {
         className="min-w-0 space-y-4"
       >
         <h2 id="packaging-components" className="font-heading text-2xl">
-          Expected packaging components
+          Expected {media ? "media" : "packaging"} components
         </h2>
         {!data.components.length && (
-          <p>Add a packaging item to the release’s expected contents first.</p>
+          <p>
+            Add a {media ? "media" : "packaging"} item to the release’s expected
+            contents first.
+          </p>
         )}
         {data.components.map((c) => (
           <ComponentEditor
             key={`${c.id}-${data.release.revision}`}
             data={data}
+            media={media}
             component={c}
-            onSaved={() => setSaved(`${c.name} packaging saved.`)}
+            onSaved={() =>
+              setSaved(`${c.name} ${media ? "artwork" : "packaging"} saved.`)
+            }
           />
         ))}
       </section>
@@ -669,9 +730,9 @@ export function PackagingManager({ data }: { data: Manager }) {
         className="min-w-0 space-y-4"
       >
         <h2 id="packaging-templates" className="font-heading text-2xl">
-          Packaging templates
+          {media ? "Cartridge templates" : "Packaging templates"}
         </h2>
-        <NewTemplate />
+        <NewTemplate media={media} />
         <ul className="min-w-0 space-y-4">
           {data.templates.map((t) => (
             <TemplateRow key={`${t.id}-${t.revision}`} template={t} />

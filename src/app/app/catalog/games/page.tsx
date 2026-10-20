@@ -106,6 +106,15 @@ export default async function GameCatalogPage({
                 </Link>
               </Button>
             )}
+            {data.selected?.kind === "release" && (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/app/catalog/games/cartridges?releaseId=${data.selected.id}`}
+                >
+                  Manage release cartridges
+                </Link>
+              </Button>
+            )}
             {data.selected && (
               <Button asChild variant="outline">
                 <Link

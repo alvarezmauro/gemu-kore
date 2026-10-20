@@ -39,7 +39,7 @@ export function fitModelCamera(
     ? new Vector3(
         ...(settings.preset === "console"
           ? ([3, 2, 4] as const)
-          : settings.preset === "package"
+          : settings.preset === "package" || settings.preset === "cartridge"
             ? ([3, 2, 6] as const)
             : ([4, 3, 5] as const)),
       )

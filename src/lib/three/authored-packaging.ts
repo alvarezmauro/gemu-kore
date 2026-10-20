@@ -7,7 +7,9 @@ import {
   authoredFamily,
   authoredSlots,
   type AuthoredFamily,
+  type GlbSlotTarget,
 } from "./packaging-contracts";
+import { cartridgeSlots } from "./media-contracts";
 const finite = z.number().finite();
 const index = z.number().int().nonnegative().max(4095);
 const vector = z.tuple([finite, finite, finite]);
@@ -91,10 +93,34 @@ export function inspectAuthoredPackage(
   slotsInput: unknown,
   familyInput: AuthoredFamily = "genesis-clamshell",
 ) {
+  const family = authoredFamily.parse(familyInput);
+  return inspectAuthoredSurfaces(
+    bytes,
+    dimensionsInput,
+    authoredSlots(family).parse(slotsInput),
+    family === "playstation-jewel" || family === "switch-case",
+  );
+}
+export function inspectCartridge(
+  bytes: ArrayBuffer,
+  dimensionsInput: unknown,
+  slotsInput: unknown,
+) {
+  return inspectAuthoredSurfaces(
+    bytes,
+    dimensionsInput,
+    cartridgeSlots.parse(slotsInput),
+    false,
+  );
+}
+function inspectAuthoredSurfaces(
+  bytes: ArrayBuffer,
+  dimensionsInput: unknown,
+  slots: { name: string; target: GlbSlotTarget }[],
+  clearHousing: boolean,
+) {
   const inspection = inspectModel(bytes),
-    dimensions = boxDimensions.parse(dimensionsInput),
-    family = authoredFamily.parse(familyInput),
-    slots = authoredSlots(family).parse(slotsInput);
+    dimensions = boxDimensions.parse(dimensionsInput);
   const view = new DataView(bytes),
     jsonLength = view.getUint32(12, true),
     binOffset = 28 + jsonLength;
@@ -137,7 +163,7 @@ export function inspectAuthoredPackage(
       (m) =>
         (m.alphaMode !== "OPAQUE" &&
           !(
-            (family === "playstation-jewel" || family === "switch-case") &&
+            clearHousing &&
             m.alphaMode === "BLEND" &&
             (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) >= 0.05 &&
             (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) <= 0.8 &&
@@ -347,7 +373,7 @@ export function inspectAuthoredPackage(
     )
       fail();
     const expectedRight = new Vector3(
-        ...(slot.name === "FRONT"
+        ...(slot.name === "FRONT" || slot.name === "FRONT_LABEL"
           ? ([1, 0, 0] as const)
           : slot.name === "BACK"
             ? ([-1, 0, 0] as const)
@@ -356,7 +382,7 @@ export function inspectAuthoredPackage(
               : ([0, 0, 1] as const)),
       ),
       expectedNormal = new Vector3(
-        ...(slot.name === "FRONT"
+        ...(slot.name === "FRONT" || slot.name === "FRONT_LABEL"
           ? ([0, 0, 1] as const)
           : slot.name === "BACK"
             ? ([0, 0, -1] as const)

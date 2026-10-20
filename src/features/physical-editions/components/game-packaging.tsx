@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { ModelViewer } from "@/components/three/model-viewer";
+import { loadGameCartridge } from "@/features/physical-media/actions";
+import type { MediaComponent } from "@/features/physical-media/contracts";
 import { loadGameBox } from "../actions";
 import type { PackagingComponent } from "../contracts";
 import { boxFormatLabels } from "@/lib/three/packaging-contracts";
@@ -13,20 +15,26 @@ export function GamePackaging({
   id: string;
   copyRevision: number;
   releaseRevision: number;
-  components: PackagingComponent[];
+  components: (PackagingComponent | MediaComponent)[];
 }) {
-  const [selected, setSelected] = useState(components[0]?.id ?? "");
+  const [selected, setSelected] = useState(
+    components.find((c) => c.available)?.id ?? components[0]?.id ?? "",
+  );
   const component = components.find((c) => c.id === selected) ?? components[0];
   return (
     <div className="min-w-0 space-y-4">
       <p className="text-sm text-muted-foreground">
-        Expected catalog packaging. Component presence is not tracked; this
-        preview does not show your copy’s condition or confirm that its box is
-        present.
+        Expected catalog packaging and media. Component presence is not tracked;
+        this preview does not show your copy’s condition or confirm that its
+        components are present.
       </p>
       {components.length > 1 && (
         <div className="space-y-2">
-          <label htmlFor="package-component">Expected package to preview</label>
+          <label htmlFor="package-component">
+            {components.some((c) => "media" in c)
+              ? "Expected component to preview"
+              : "Expected package to preview"}
+          </label>
           <select
             id="package-component"
             className="min-h-12 w-full rounded-lg border border-input bg-background px-3"
@@ -47,7 +55,7 @@ export function GamePackaging({
           <p className="text-sm">
             {component.templateName ?? "No template assigned"}
             {component.familyKey
-              ? ` · ${boxFormatLabels[component.familyKey]}`
+              ? ` · ${component.familyKey === "cartridge" ? "Cartridge" : boxFormatLabels[component.familyKey]}`
               : ""}
             {component.synthetic
               ? " · Synthetic demonstration; not retail measurements"
@@ -57,10 +65,14 @@ export function GamePackaging({
           <ModelViewer
             key={`${component.id}:${copyRevision}:${releaseRevision}`}
             title={component.name}
-            source="Expected catalog packaging"
+            source={
+              "media" in component
+                ? "Expected catalog media"
+                : "Expected catalog packaging"
+            }
             available={component.available}
             load={() =>
-              loadGameBox({
+              ("media" in component ? loadGameCartridge : loadGameBox)({
                 collectionItemId: id,
                 componentId: component.id,
                 expectedCopyRevision: copyRevision,
@@ -71,8 +83,8 @@ export function GamePackaging({
         </div>
       ) : (
         <p>
-          No packaging component is recorded. Expected contents remain available
-          below.
+          No packaging or media component is recorded. Expected contents remain
+          available below.
         </p>
       )}
     </div>

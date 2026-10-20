@@ -12,6 +12,7 @@ import { recordScreenshotUpload } from "./catalog/screenshots";
 import {
   findAsset,
   packagingGeometryIdentity,
+  physicalMediaGeometryIdentity,
   hasFamilyUses,
   hasReferences,
   insertAsset,
@@ -46,7 +47,8 @@ import {
 let processing = false;
 function catalogImageSource(target: UploadTarget) {
   const details =
-    target.kind === "packagingGeometry"
+    target.kind === "packagingGeometry" ||
+    target.kind === "physicalMediaGeometry"
       ? target.source
       : target.kind === "catalog"
         ? (target.screenshot ?? target.artwork)
@@ -69,18 +71,30 @@ async function authorizeTarget(
 ) {
   const current = await requirePermission(
     context,
-    target.kind === "catalog" || target.kind === "packagingGeometry"
+    target.kind === "catalog" ||
+      target.kind === "packagingGeometry" ||
+      target.kind === "physicalMediaGeometry"
       ? "catalog.manage"
       : target.kind === "application"
         ? "settings.manage"
         : "media.manage",
     tx,
   );
-  if (target.kind === "packagingGeometry") {
-    const identity = await packagingGeometryIdentity(target.id, tx);
+  if (
+    target.kind === "packagingGeometry" ||
+    target.kind === "physicalMediaGeometry"
+  ) {
+    const identity =
+      target.kind === "physicalMediaGeometry"
+        ? await physicalMediaGeometryIdentity(target.id, tx)
+        : await packagingGeometryIdentity(target.id, tx);
     if (!identity) throw new AssetError("NOT_FOUND");
     if (
-      !authoredFamily.safeParse(identity.familyKey).success ||
+      (target.kind === "physicalMediaGeometry"
+        ? identity.familyKey !== "cartridge" ||
+          !("type" in identity) ||
+          identity.type !== "CARTRIDGE"
+        : !authoredFamily.safeParse(identity.familyKey).success) ||
       identity.geometryType !== "GLB" ||
       kind !== "MODEL_3D"
     )
@@ -180,7 +194,8 @@ export async function uploadAsset(
     (!Number.isSafeInteger(input.declaredSize) ||
       input.declaredSize <= 0 ||
       input.declaredSize >
-        (target.data.kind === "packagingGeometry"
+        (target.data.kind === "packagingGeometry" ||
+        target.data.kind === "physicalMediaGeometry"
           ? 8 * 1024 * 1024
           : description.kind === "IMAGE"
             ? IMAGE_LIMIT
@@ -204,7 +219,8 @@ export async function uploadAsset(
           kind: description.kind,
           scope:
             target.data.kind === "catalog" ||
-            target.data.kind === "packagingGeometry"
+            target.data.kind === "packagingGeometry" ||
+            target.data.kind === "physicalMediaGeometry"
               ? "CATALOG"
               : "COLLECTION",
           ...createObjectLocator(id, description.mimeType),
@@ -222,12 +238,14 @@ export async function uploadAsset(
         description,
         id,
         signal,
-        target.data.kind === "packagingGeometry"
+        target.data.kind === "packagingGeometry" ||
+          target.data.kind === "physicalMediaGeometry"
           ? 8 * 1024 * 1024
           : MODEL_LIMIT,
       );
       if (
-        target.data.kind === "packagingGeometry" &&
+        (target.data.kind === "packagingGeometry" ||
+          target.data.kind === "physicalMediaGeometry") &&
         prepared.artifacts[0].sizeBytes > 8 * 1024 * 1024
       )
         throw new AssetError("TOO_LARGE");
@@ -254,13 +272,15 @@ export async function uploadAsset(
       ...(entry.width ? { width: entry.width, height: entry.height } : {}),
     }));
     if (
-      target.data.kind === "packagingGeometry" &&
+      (target.data.kind === "packagingGeometry" ||
+        target.data.kind === "physicalMediaGeometry") &&
       (artifactEntries.length !== 1 ||
         artifactEntries[0].sizeBytes > 8 * 1024 * 1024)
     )
       throw new AssetError("TOO_LARGE");
     const manifest: UploadManifest =
-      target.data.kind === "packagingGeometry"
+      target.data.kind === "packagingGeometry" ||
+      target.data.kind === "physicalMediaGeometry"
         ? manifestSchema.parse({
             schemaVersion: 2,
             data: { target: target.data, artifacts: artifactEntries },
@@ -270,7 +290,7 @@ export async function uploadAsset(
             data: {
               target: target.data as Exclude<
                 UploadTarget,
-                { kind: "packagingGeometry" }
+                { kind: "packagingGeometry" | "physicalMediaGeometry" }
               >,
               useId: randomUUID(),
               artifacts: prepared.artifacts.map((entry) => ({
@@ -308,7 +328,8 @@ export async function uploadAsset(
               kind: "IMAGE",
               scope:
                 target.data.kind === "catalog" ||
-                target.data.kind === "packagingGeometry"
+                target.data.kind === "packagingGeometry" ||
+                target.data.kind === "physicalMediaGeometry"
                   ? "CATALOG"
                   : "COLLECTION",
               deliveryClass: "DISPLAY",
@@ -421,6 +442,7 @@ export async function completeUpload(
       await lockCollectionItem(manifest.data.target.id, tx);
     if (
       manifest.data.target.kind === "packagingGeometry" ||
+      manifest.data.target.kind === "physicalMediaGeometry" ||
       (manifest.data.target.kind === "catalog" &&
         manifest.data.target.role === "SCREENSHOT" &&
         manifest.data.target.target === "gameRelease")

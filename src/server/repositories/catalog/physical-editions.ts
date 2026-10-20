@@ -197,7 +197,13 @@ export function bumpRelease(id: string, tx: TransactionClient) {
 }
 export function protectedComponents(releaseId: string, tx: TransactionClient) {
   return tx.gameReleaseIncludedItem.findMany({
-    where: { gameReleaseId: releaseId, packagingTemplateId: { not: null } },
+    where: {
+      gameReleaseId: releaseId,
+      OR: [
+        { packagingTemplateId: { not: null } },
+        { physicalMediaTemplateId: { not: null } },
+      ],
+    },
     select: { id: true, kind: true },
     take: 100,
   });

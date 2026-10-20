@@ -12,7 +12,10 @@ export async function lockAssets(ids: string[], tx: TransactionClient) {
     await tx.$queryRaw`SELECT id FROM asset WHERE id = ${id}::uuid FOR UPDATE`;
 }
 export async function targetIdentity(
-  target: Exclude<UploadTarget, { kind: "packagingGeometry" }>,
+  target: Exclude<
+    UploadTarget,
+    { kind: "packagingGeometry" | "physicalMediaGeometry" }
+  >,
   tx: TransactionClient,
 ) {
   if (target.kind === "collection")
@@ -77,10 +80,17 @@ export async function makeReady(
     manifest.data.artifacts.find((a) => a.variant === "display")?.id ??
     original.id;
   if (manifest.schemaVersion === 2) {
-    await tx.packagingTemplate.update({
-      where: { id: manifest.data.target.id },
-      data: { baseModelAssetId: assetId, revision: { increment: 1 } },
-    });
+    const data = { baseModelAssetId: assetId, revision: { increment: 1 } };
+    if (manifest.data.target.kind === "physicalMediaGeometry")
+      await tx.physicalMediaTemplate.update({
+        where: { id: manifest.data.target.id },
+        data,
+      });
+    else
+      await tx.packagingTemplate.update({
+        where: { id: manifest.data.target.id },
+        data,
+      });
     return;
   }
   const target = manifest.data.target;
@@ -126,6 +136,10 @@ export async function makeReady(
 export async function hasReferences(id: string, tx: TransactionClient) {
   const where = { OR: [{ assetId: id }, { publicDisplayAssetId: id }] };
   return Boolean(
+    (await tx.physicalMediaTemplate.count({
+      where: { baseModelAssetId: id },
+    })) ||
+    (await tx.physicalMediaTextureBinding.count({ where: { assetId: id } })) ||
     (await tx.packagingTemplate.count({ where: { baseModelAssetId: id } })) ||
     (await tx.packagingTextureBinding.count({ where: { assetId: id } })) ||
     (await tx.catalogAsset.count({ where })) ||
@@ -152,6 +166,12 @@ export async function hasFamilyUses(id: string, tx: TransactionClient) {
         ],
       };
       if (
+        (await tx.physicalMediaTemplate.count({
+          where: { baseModelAssetId: sibling.derivedAssetId },
+        })) ||
+        (await tx.physicalMediaTextureBinding.count({
+          where: { assetId: sibling.derivedAssetId },
+        })) ||
         (await tx.packagingTemplate.count({
           where: { baseModelAssetId: sibling.derivedAssetId },
         })) ||
@@ -177,6 +197,25 @@ export function packagingGeometryIdentity(id: string, tx: TransactionClient) {
       status: true,
       archivedAt: true,
       familyKey: true,
+      geometryType: true,
+      baseModelAssetId: true,
+    },
+  });
+}
+
+export function physicalMediaGeometryIdentity(
+  id: string,
+  tx: TransactionClient,
+) {
+  return tx.physicalMediaTemplate.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      revision: true,
+      status: true,
+      archivedAt: true,
+      familyKey: true,
+      type: true,
       geometryType: true,
       baseModelAssetId: true,
     },

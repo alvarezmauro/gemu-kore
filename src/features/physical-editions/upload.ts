@@ -31,13 +31,15 @@ export function uploadGeometry(
     progress,
   );
 }
-function uploadPackagingFile(
+export function uploadPackagingFile(
   file: File,
   target: Record<string, unknown>,
   source: z.input<typeof screenshotUpload>,
   progress: (value: number | null) => void,
 ): Promise<{ uploadId: string; useId?: string }> {
-  const geometry = target.kind === "packagingGeometry";
+  const geometry =
+    target.kind === "packagingGeometry" ||
+    target.kind === "physicalMediaGeometry";
   const invalid = geometry
     ? !file.name.toLowerCase().endsWith(".glb") ||
       !file.size ||
@@ -94,7 +96,7 @@ function uploadPackagingFile(
         reject(
           new PhotoUploadError(
             request.status === 403
-              ? "Only administrators can upload packaging files."
+              ? "Only administrators can upload physical-edition files."
               : "The file could not be saved. Check the file and refresh before trying again.",
             data.success ? data.data.uploadId : undefined,
           ),

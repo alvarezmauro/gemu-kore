@@ -237,3 +237,7 @@ Primary implementation references were checked on **2026-10-15**. The linked ups
 - [Next.js lazy loading](https://nextjs.org/docs/app/guides/lazy-loading).
 
 Task 9.1 checks are documentation consistency, referenced-path/link validation, Markdown formatting and diff whitespace. Unit, database and browser suites are not applicable to these documentation-only edits and are not represented as rerun results. No dependency install, schema/data mutation, viewer implementation or physical-device performance test was performed.
+
+## Task 14.4 cartridge implementation
+
+The shared version-2 assembled presentation now admits a strict PHYSICAL_MEDIA / cartridge-v1 branch with one neutral, explicitly mapped front label. Media templates/bindings remain separate from packaging. The resource loader reuses bounded transfers/composites, indexed GLTFLoader associations, per-target material clones and session ownership; console v1 and existing packaging descriptors remain readable. The shared stage adds a cartridge preset and preserves on-demand activation, front/back controls and reduced motion. One expected-component selector switches between packages and media with teardown before reactivation. The first original cartridge study uses synthetic dimensions and no retail labels. See [curation and verification](../operations/CARTRIDGE_AUTHORING.md). Owned presence, alternative media renderers and public delivery are not activated.

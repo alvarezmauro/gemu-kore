@@ -13,6 +13,7 @@ import {
   textureTransform,
   packagingLimits,
 } from "./packaging-contracts";
+import { cartridgeSlots } from "./media-contracts";
 const finite = z.number().finite();
 const point = z.tuple([finite, finite, finite]);
 const privateImage = z
@@ -26,7 +27,9 @@ const privateImage = z
 export type ModelPoster = z.infer<typeof privateImage>;
 export const modelSettings = z
   .object({
-    preset: z.enum(["console", "object", "package"]).default("object"),
+    preset: z
+      .enum(["console", "object", "package", "cartridge"])
+      .default("object"),
     orientation: z
       .tuple([
         finite.min(-Math.PI * 2).max(Math.PI * 2),
@@ -68,7 +71,7 @@ export const modelPresentation = z
   })
   .strict();
 export type ModelPresentation = z.infer<typeof modelPresentation>;
-export const packagingPresentation = z
+export const assembledPresentation = z
   .strictObject({
     schemaVersion: z.literal(2),
     presentationKey: z.string().min(1).max(300),
@@ -102,6 +105,30 @@ export const packagingPresentation = z
         artworkComplete: z.boolean(),
       }),
       z.strictObject({
+        kind: z.literal("PHYSICAL_MEDIA"),
+        rendererVersion: z.literal("cartridge-v1"),
+        familyKey: z.literal("cartridge"),
+        type: z.literal("CARTRIDGE"),
+        componentId: z.uuid(),
+        templateId: z.uuid(),
+        templateRevision: z.number().int().positive(),
+        synthetic: z.boolean(),
+        dimensions: boxDimensions,
+        geometry: packageModelResource,
+        slots: z
+          .array(
+            z.strictObject({
+              name: z.literal("FRONT_LABEL"),
+              required: z.literal(true),
+              target: glbSlotTarget,
+              resource: artworkResource.nullable(),
+              transform: textureTransform,
+            }),
+          )
+          .length(1),
+        artworkComplete: z.boolean(),
+      }),
+      z.strictObject({
         kind: z.literal("PACKAGING"),
         rendererVersion: z.literal("gltf-slots-v1"),
         familyKey: authoredFamily,
@@ -131,7 +158,7 @@ export const packagingPresentation = z
     const slots = p.content.slots,
       resources = new Map<string, string>();
     let bytes =
-        p.content.rendererVersion === "gltf-slots-v1"
+        p.content.rendererVersion !== "box-v1"
           ? p.content.geometry.byteLength
           : 0,
       pixels = 0;
@@ -150,10 +177,17 @@ export const packagingPresentation = z
       const slots = p.content.slots,
         geometryId = p.content.geometry.id;
       if (
-        !authoredSlots(p.content.familyKey).safeParse(
-          slots.map((s) => ({ name: s.name, target: s.target })),
-        ).success ||
-        slots.some((s) => s.required !== requiredAuthoredSlot(s.name)) ||
+        !(
+          p.content.rendererVersion === "cartridge-v1"
+            ? cartridgeSlots
+            : authoredSlots(p.content.familyKey)
+        ).safeParse(slots.map((s) => ({ name: s.name, target: s.target })))
+          .success ||
+        slots.some(
+          (s) =>
+            s.required !==
+            (s.name === "FRONT_LABEL" || requiredAuthoredSlot(s.name)),
+        ) ||
         slots.some((s) => s.resource?.id === geometryId)
       )
         ctx.addIssue({ code: "custom", message: "Invalid authored slots" });
@@ -184,7 +218,31 @@ export const packagingPresentation = z
         message: "Artwork exceeds preview limits or completeness is invalid",
       });
   });
+export type AssembledPresentation = z.infer<typeof assembledPresentation>;
+export const packagingPresentation = assembledPresentation
+  .refine((p) => p.content.kind === "PACKAGING")
+  .transform(
+    (p) =>
+      p as AssembledPresentation & {
+        content: Extract<
+          AssembledPresentation["content"],
+          { kind: "PACKAGING" }
+        >;
+      },
+  );
 export type PackagingPresentation = z.infer<typeof packagingPresentation>;
+export const cartridgePresentation = assembledPresentation
+  .refine((p) => p.content.kind === "PHYSICAL_MEDIA")
+  .transform(
+    (p) =>
+      p as AssembledPresentation & {
+        content: Extract<
+          AssembledPresentation["content"],
+          { kind: "PHYSICAL_MEDIA" }
+        >;
+      },
+  );
+export type CartridgePresentation = z.infer<typeof cartridgePresentation>;
 export type BoxPresentation = PackagingPresentation & {
   content: Extract<
     PackagingPresentation["content"],
@@ -193,7 +251,7 @@ export type BoxPresentation = PackagingPresentation & {
 };
 export const viewerPresentation = z.union([
   modelPresentation,
-  packagingPresentation,
+  assembledPresentation,
 ]);
 export type ViewerPresentation = z.infer<typeof viewerPresentation>;
 export type ModelPresentationResult =

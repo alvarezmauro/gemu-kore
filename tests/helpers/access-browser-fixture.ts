@@ -20,7 +20,45 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-packaging-components") {
+    if (command === "seed-cartridge-components") {
+      await database.gameReleaseIncludedItem.createMany({
+        data: [
+          {
+            gameReleaseId: argument!,
+            name: "Cartridge",
+            kind: "MEDIA",
+            sortOrder: 1,
+          },
+          {
+            gameReleaseId: argument!,
+            name: "Second cartridge",
+            kind: "MEDIA",
+            sortOrder: 2,
+          },
+          {
+            gameReleaseId: argument!,
+            name: "Box",
+            kind: "PACKAGING",
+            sortOrder: 3,
+          },
+        ],
+      });
+      result = { releaseId: argument };
+    } else if (command === "media-state") {
+      result = {
+        uses: await database.catalogAsset.findMany({
+          where: { role: "GALLERY" },
+          select: { assetId: true },
+        }),
+        templates: await database.physicalMediaTemplate.findMany({
+          include: { slots: true },
+        }),
+        bindings: await database.physicalMediaTextureBinding.findMany(),
+        copies: await database.collectionItem.findMany({
+          select: { id: true, hasBox: true },
+        }),
+      };
+    } else if (command === "seed-packaging-components") {
       const releaseId = argument!;
       await database.gameReleaseIncludedItem.createMany({
         data: [

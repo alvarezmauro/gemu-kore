@@ -13,9 +13,10 @@ import {
 import { ModelResources, parseModel } from "./model-resources";
 import {
   ModelError,
-  packagingPresentation,
+  assembledPresentation,
   modelLimits,
   type PackagingPresentation,
+  type AssembledPresentation,
 } from "@/lib/three/contracts";
 import {
   artworkLayout,
@@ -24,7 +25,10 @@ import {
   type ArtworkResource,
   type PackageModelResource,
 } from "@/lib/three/packaging-contracts";
-import { inspectAuthoredPackage } from "@/lib/three/authored-packaging";
+import {
+  inspectAuthoredPackage,
+  inspectCartridge,
+} from "@/lib/three/authored-packaging";
 import { fetchModel } from "@/lib/three/fetch-model";
 import { modelPresentation } from "@/lib/three/contracts";
 import { fetchArtwork } from "@/lib/three/artwork-bytes";
@@ -46,7 +50,15 @@ export async function loadBox(
   progress: (received: number, total: number) => void,
   preparing: () => void,
 ) {
-  const p = packagingPresentation.parse(presentation),
+  return loadAssembled(presentation, signal, progress, preparing);
+}
+export async function loadAssembled(
+  presentation: AssembledPresentation,
+  signal: AbortSignal,
+  progress: (received: number, total: number) => void,
+  preparing: () => void,
+) {
+  const p = assembledPresentation.parse(presentation),
     owner = new ModelResources();
   const dispose = () => owner.dispose();
   signal.addEventListener("abort", dispose, { once: true });
@@ -54,7 +66,7 @@ export async function loadBox(
     signal.throwIfAborted();
     const resources = [
       ...new Map<string, ArtworkResource | PackageModelResource>([
-        ...(p.content.rendererVersion === "gltf-slots-v1"
+        ...(p.content.rendererVersion !== "box-v1"
           ? [[p.content.geometry.id, p.content.geometry] as const]
           : []),
         ...p.content.slots.flatMap((s) =>
@@ -134,7 +146,13 @@ export async function loadBox(
         : [];
     materials.forEach((m) => owner.track(m));
     const textures = new Map<string, Texture>();
-    if (content.rendererVersion === "gltf-slots-v1")
+    if (content.rendererVersion === "cartridge-v1")
+      inspectCartridge(
+        bytes.get(content.geometry.id)!.slice().buffer,
+        content.dimensions,
+        content.slots.map((s) => ({ name: s.name, target: s.target })),
+      );
+    else if (content.rendererVersion === "gltf-slots-v1")
       inspectAuthoredPackage(
         bytes.get(content.geometry.id)!.slice().buffer,
         content.dimensions,
@@ -243,7 +261,7 @@ export async function loadBox(
     }
     signal.throwIfAborted();
     owner.check();
-    if (content.rendererVersion === "gltf-slots-v1") {
+    if (content.rendererVersion !== "box-v1") {
       const loaded = await parseModel(
         bytes.get(content.geometry.id)!.slice().buffer,
         p.settings,

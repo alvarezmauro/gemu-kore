@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
 import { switchFixture } from "../tests/helpers/switch-fixture";
+import { cartridgeFixture } from "../tests/helpers/cartridge-fixture";
 import { dvdFixture } from "../tests/helpers/dvd-fixture";
 import { jewelFixture } from "../tests/helpers/jewel-fixture";
 import { clamshellFixture } from "../tests/helpers/clamshell-fixture";
@@ -9,6 +10,21 @@ import { modelBenchmark } from "../tests/helpers/model-benchmarks";
 async function main() {
   const directory = resolve(process.argv[2] ?? "test-results/three-fixtures");
   await mkdir(directory, { recursive: true });
+  const cartridge = cartridgeFixture();
+  await writeFile(join(directory, "synthetic-cartridge.glb"), cartridge.bytes);
+  await writeFile(
+    join(directory, "synthetic-cartridge-slots.json"),
+    JSON.stringify(cartridge.slots, null, 2) + "\n",
+  );
+  console.log(
+    JSON.stringify({
+      path: join(directory, "synthetic-cartridge.glb"),
+      byteLength: cartridge.bytes.length,
+      dimensions: cartridge.dimensions,
+      source:
+        "Original synthetic cartridge; not retail measurements or catalog data.",
+    }),
+  );
   const switchCase = switchFixture();
   await writeFile(
     join(directory, "synthetic-switch-case.glb"),

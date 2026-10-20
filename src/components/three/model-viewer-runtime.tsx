@@ -21,7 +21,7 @@ import {
 import { drawingDpr } from "@/lib/three/camera";
 import { fitModelCamera, installStudio } from "./model-stage";
 import { parseModel } from "./model-resources";
-import { loadBox } from "./box-resources";
+import { loadAssembled } from "./box-resources";
 import { ModelLoading } from "./model-loading";
 type Loaded = Awaited<ReturnType<typeof parseModel>>;
 type Command =
@@ -218,7 +218,7 @@ export default function ModelViewerRuntime({
     void (async () => {
       try {
         if (presentation.schemaVersion === 2)
-          decoded = await loadBox(
+          decoded = await loadAssembled(
             presentation,
             abort.signal,
             (received, total) =>

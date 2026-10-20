@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GamePackaging } from "@/features/physical-editions/components/game-packaging";
+import type { MediaComponent } from "@/features/physical-media/contracts";
 import type { PackagingComponent } from "@/features/physical-editions/contracts";
 import { GameSources } from "@/features/provenance/components/game-sources";
 import { AssetSource } from "@/features/provenance/components/asset-source";
@@ -30,6 +31,7 @@ export function GameDetail({
   trailer,
   playtime,
   packaging,
+  media = [],
 }: {
   detail: GameCopyDetail;
   provenance: GameProvenance;
@@ -37,6 +39,7 @@ export function GameDetail({
   locations: CopyLocation[];
   screenshots: ScreenshotGalleryData;
   packaging: PackagingComponent[];
+  media?: MediaComponent[];
   playtime: {
     estimates: Playtime | null;
     scope: "game" | "release";
@@ -140,7 +143,10 @@ export function GameDetail({
           ["Trailer", "game-trailer"],
           ["Playtime", "game-playtime"],
           ["Release and contents", "game-release"],
-          ["Physical packaging", "game-packaging"],
+          [
+            media.length ? "Physical edition" : "Physical packaging",
+            "game-packaging",
+          ],
           ["Personal photos", "game-photos"],
           ["Metadata sources", "game-sources"],
         ].map(([label, id]) => (
@@ -272,14 +278,14 @@ export function GameDetail({
         className="scroll-mt-24 space-y-4"
       >
         <h2 id="game-packaging-title" className="font-heading text-2xl">
-          Physical packaging
+          {media.length ? "Physical edition" : "Physical packaging"}
         </h2>
         <GamePackaging
           key={`${d.id}:${d.release.revision}`}
           id={d.id}
           copyRevision={d.revision}
           releaseRevision={d.release.revision}
-          components={packaging}
+          components={[...packaging, ...media]}
         />
         {screenshots.canManage && (
           <Button asChild variant="outline">
@@ -287,6 +293,15 @@ export function GameDetail({
               href={`/app/catalog/games/packaging?releaseId=${d.release.id}`}
             >
               Manage release packaging
+            </Link>
+          </Button>
+        )}
+        {screenshots.canManage && (
+          <Button asChild variant="outline">
+            <Link
+              href={`/app/catalog/games/cartridges?releaseId=${d.release.id}`}
+            >
+              Manage release cartridges
             </Link>
           </Button>
         )}

@@ -74,9 +74,13 @@ export const packagingGeometryTarget = z.strictObject({
   expectedRevision: z.number().int().positive().max(2147483646),
   source: screenshotUpload,
 });
+export const physicalMediaGeometryTarget = packagingGeometryTarget.extend({
+  kind: z.literal("physicalMediaGeometry"),
+});
 export const targetSchema = z.union([
   legacyTargetSchema,
   packagingGeometryTarget,
+  physicalMediaGeometryTarget,
 ]);
 export type UploadTarget = z.infer<typeof targetSchema>;
 export const artifactSchema = z
@@ -117,7 +121,7 @@ export const manifestSchema = z.discriminatedUnion("schemaVersion", [
   z.strictObject({
     schemaVersion: z.literal(2),
     data: z.strictObject({
-      target: packagingGeometryTarget,
+      target: z.union([packagingGeometryTarget, physicalMediaGeometryTarget]),
       artifacts: z
         .array(
           artifactSchema.extend({

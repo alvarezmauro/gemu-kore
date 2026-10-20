@@ -1,4 +1,5 @@
 import "server-only";
+import { readMediaComponents } from "./media-presentation";
 import { readPackagingComponents } from "./game-presentation";
 import { assetAttribution, readGameProvenance } from "../catalog/provenance";
 import { playtimeDto } from "../catalog/playtime";
@@ -161,6 +162,7 @@ export async function getOwnedGame(
         return {
           detail,
           packaging: await readPackagingComponents(selected.id, tx),
+          media: await readMediaComponents(selected.id, tx),
           provenance: await readGameProvenance(
             selected.gameId,
             selected.id,
