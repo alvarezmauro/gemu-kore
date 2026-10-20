@@ -56,6 +56,7 @@ export type EnrichmentReview = {
     status: "PENDING" | "ACCEPTED" | "REJECTED" | "CONFLICT";
   }[];
   unavailable: { field: string; reason: string }[];
+  warnings: string[];
   stages: {
     name: string;
     status: "COMPLETED" | "SKIPPED";

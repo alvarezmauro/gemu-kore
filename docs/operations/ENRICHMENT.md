@@ -64,3 +64,5 @@ The review offers explicit retry, status refresh and cancellation when a retaine
 The page uses the shared warm panels and functional controls, stacked comparisons at narrow widths, explicit status text, visible labels, keyboard actions and focused errors. It adds no animation dependency; reduced motion keeps a complete static experience. Private page metadata is generic and excluded from indexing. It introduces no public run endpoint or provenance displays on public pages.
 
 Task 13.4 adds [current source labels, retained administrator history and private media attribution](PROVENANCE.md). Manual replacement checks also treat a field as unknown when its current value no longer matches the latest recorded source.
+
+Task 13.5's [phase review](../architecture/ENRICHMENT_REVIEW.md) rejects ambiguous candidate/trailer IDs and makes retained evidence limits visible before selection or acceptance. The **Evidence limitations** panel uses fixed explanations for incomplete search/identity context and limited or invalid supported sections; it does not change which facts can be accepted, relax acknowledgements or fetch new evidence on reload.

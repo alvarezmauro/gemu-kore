@@ -5,6 +5,7 @@ import base from "../../../../tests/fixtures/game-metadata/igdb-game.json";
 import cases from "../../../../tests/fixtures/game-metadata/mapping-cases.json";
 import {
   gameMetadataResult,
+  gameSearchPage,
   validateProviderOutput,
   type Section,
 } from "./contracts";
@@ -581,5 +582,35 @@ describe("IGDB optional data, media and provenance boundaries", () => {
     expect(() => validateProviderOutput(gameMetadataResult, large)).toThrow(
       "budget",
     );
+  });
+  it("rejects contradictory candidates with the same selection identity", () => {
+    const result = mapSearch([game()], retrievedAt, null);
+    const other = structuredClone(result.candidates[0]);
+    other.identity.name = "A different game using the same provider ID";
+    result.candidates.push(other);
+    expect(() => validateProviderOutput(gameSearchPage, result)).toThrow();
+  });
+  it("rejects contradictory trailers with the same selection identity", () => {
+    const result = map();
+    const videos = data(result.videos);
+    videos.push({
+      ...structuredClone(videos[0]),
+      value: {
+        ...videos[0].value,
+        title: "A different video using the same provider ID",
+        video: { provider: "YOUTUBE", id: "abcdefghijk" },
+      },
+    });
+    expect(() => validateProviderOutput(gameMetadataResult, result)).toThrow();
+  });
+  it("refuses contradictory raw trailer identities before publishing a normalized result", () => {
+    expect(() =>
+      map({
+        videos: [
+          base.videos[0],
+          { ...base.videos[0], name: "Other trailer", video_id: "abcdefghijk" },
+        ],
+      }),
+    ).toThrow("INVALID_RESPONSE");
   });
 });

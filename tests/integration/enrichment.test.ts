@@ -11,6 +11,7 @@ import {
 } from "@/server/providers/game-metadata/igdb-mapping";
 import type {
   GameMetadataProvider,
+  GameMetadataResult,
   GameSearchPage,
   ProviderResult,
 } from "@/server/providers/game-metadata/contracts";
@@ -748,3 +749,229 @@ it("offers editors a narrow active target and company lookup while denying viewe
     getEnrichmentTarget(f.owner.context, f.input.target),
   ).rejects.toMatchObject({ code: "CONFLICT" });
 });
+
+it.each(["search", "trailer"])(
+  "refuses ambiguous %s selections from an adapter without retaining usable results",
+  async (stage) => {
+    const f = await setup("ADMIN");
+    if (stage === "search") {
+      const malformed = structuredClone(page);
+      malformed.candidates.push({
+        ...structuredClone(malformed.candidates[0]),
+        identity: {
+          ...malformed.candidates[0].identity,
+          name: "Conflicting game",
+        },
+      });
+      f.adapter.search.mockResolvedValue({ ok: true, data: malformed });
+    } else {
+      const malformed: GameMetadataResult = structuredClone(metadata);
+      if (!("data" in malformed.videos))
+        throw new Error("Missing fixture video");
+      malformed.videos.data.push({
+        ...structuredClone(malformed.videos.data[0]),
+        value: {
+          ...malformed.videos.data[0].value,
+          title: "Conflicting video",
+          video: { provider: "YOUTUBE", id: "abcdefghijk" },
+        },
+      });
+      f.adapter.fetch.mockResolvedValue({ ok: true, data: malformed });
+    }
+    const found = await f.runner.start(f.owner.context, f.input);
+    const review =
+      stage === "search"
+        ? found
+        : await f.runner.selectCandidate(f.owner.context, {
+            runId: found.id,
+            expectedRunVersion: found.runVersion,
+            externalId: "42",
+          });
+    expect(review).toMatchObject({
+      fetchStatus: "FAILED",
+      failureCode: "INVALID_RESPONSE",
+      suggestions: [],
+      availableFields: [],
+    });
+    expect(
+      (await db.enrichmentRun.findUniqueOrThrow({ where: { id: review.id } }))
+        .result,
+    ).toBeNull();
+    expect(await db.metadataChange.count()).toBe(0);
+    expect(
+      (await db.game.findUniqueOrThrow({ where: { id: f.game.id } })).revision,
+    ).toBe(1);
+  },
+);
+
+it("retains incomplete-evidence warnings across review and acceptance while preserving manual group entries", async () => {
+  const f = await setup("ADMIN");
+  const existing = await db.company.create({
+    data: { name: "Manual developer", slug: randomUUID() },
+  });
+  const added = await db.company.create({
+    data: { name: "Reviewed developer", slug: randomUUID() },
+  });
+  await db.game.update({
+    where: { id: f.game.id },
+    data: { aliases: ["Manual alias"] },
+  });
+  await db.gameCompany.create({
+    data: {
+      gameId: f.game.id,
+      companyId: existing.id,
+      role: "DEVELOPER",
+      creditLabel: "Manual credit",
+      sortOrder: 0,
+    },
+  });
+  await db.gamePlaytime.create({
+    data: {
+      gameId: f.game.id,
+      mainMinutes: 10,
+      mainExtrasMinutes: 20,
+      completionistMinutes: 30,
+      sourceType: "MANUAL",
+      sourceName: "Manual timing",
+      observedAt: new Date(time),
+    },
+  });
+  const limited = mapGame(
+    {
+      ...base,
+      involved_companies: [...base.involved_companies, null],
+      videos: [...base.videos, null],
+    },
+    [
+      {
+        id: 99,
+        game_id: 42,
+        count: 12,
+        hastily: 1800,
+        normally: 0,
+        completely: 7200,
+      },
+    ],
+    time,
+  );
+  f.adapter.fetch.mockResolvedValue({ ok: true, data: limited });
+  const found = await f.runner.start(f.owner.context, f.input);
+  const fetched = await f.runner.selectCandidate(f.owner.context, {
+    runId: found.id,
+    expectedRunVersion: found.runVersion,
+    externalId: "42",
+  });
+  expect(fetched.warnings).toEqual([
+    "Developer evidence is incomplete; only supplied values or choices are shown.",
+    "Trailer evidence is incomplete; only supplied values or choices are shown.",
+    "Playtime evidence is incomplete; only supplied values or choices are shown.",
+  ]);
+  const review = await prepareEnrichmentReview(f.owner.context, {
+    runId: fetched.id,
+    expectedRunVersion: fetched.runVersion,
+    fields: ["aliases", "developers", "trailer", "playtime"],
+    trailerExternalId: "18",
+    companyBindings: [{ externalId: "7", companyId: added.id }],
+  });
+  expect(review.warnings).toEqual(fetched.warnings);
+  const playtime = review.suggestions.find((s) => s.fieldPath === "playtime")!;
+  expect(playtime.proposed).toMatchObject({
+    mainMinutes: 30,
+    mainExtrasMinutes: null,
+    completionistMinutes: 120,
+  });
+  expect(playtime.manualReplacementRequired).toBe(true);
+  await expect(
+    applyEnrichmentSuggestions(f.owner.context, {
+      ...acceptance(review),
+      manualReplacementIds: [],
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await applyEnrichmentSuggestions(f.owner.context, acceptance(review));
+  expect(
+    (await db.game.findUniqueOrThrow({ where: { id: f.game.id } })).aliases,
+  ).toEqual(["Manual alias", "Orbit Quest International"]);
+  expect(
+    await db.gameCompany.findMany({
+      where: { gameId: f.game.id },
+      select: { companyId: true, creditLabel: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ).toEqual([
+    { companyId: existing.id, creditLabel: "Manual credit" },
+    { companyId: added.id, creditLabel: null },
+  ]);
+  expect(
+    (await getEnrichmentReview(f.owner.context, { runId: review.id })).warnings,
+  ).toEqual(fetched.warnings);
+  expect(await db.metadataChange.count()).toBe(4);
+});
+
+it("returns one receipt for concurrent identical acceptance without duplicating history", async () => {
+  const f = await prepared("ADMIN");
+  const receipts = await Promise.all([
+    applyEnrichmentSuggestions(f.owner.context, acceptance(f.review)),
+    applyEnrichmentSuggestions(f.owner.context, acceptance(f.review)),
+  ]);
+  expect(receipts[0]).toEqual(receipts[1]);
+  expect(await db.metadataChange.count()).toBe(5);
+  expect(
+    (await db.game.findUniqueOrThrow({ where: { id: f.game.id } })).revision,
+  ).toBe(2);
+});
+
+it.each(["game", "platform"])(
+  "invalidates a release reference when its parent %s changes",
+  async (parent) => {
+    const f = await setup("ADMIN");
+    const platform = await db.consolePlatform.create({
+      data: { name: "Platform", slug: randomUUID() },
+    });
+    const release = await db.gameRelease.create({
+      data: {
+        gameId: f.game.id,
+        platformId: platform.id,
+        slug: randomUUID(),
+        editionType: "COLLECTORS",
+        editionName: "Manual edition",
+      },
+    });
+    const found = await f.runner.start(f.owner.context, {
+      ...f.input,
+      target: { kind: "release", id: release.id },
+    });
+    const fetched = await f.runner.selectCandidate(f.owner.context, {
+      runId: found.id,
+      expectedRunVersion: found.runVersion,
+      externalId: "42",
+    });
+    const review = await prepareEnrichmentReview(f.owner.context, {
+      runId: fetched.id,
+      expectedRunVersion: fetched.runVersion,
+      fields: ["references"],
+    });
+    if (parent === "game")
+      await db.game.update({
+        where: { id: f.game.id },
+        data: { revision: { increment: 1 } },
+      });
+    else
+      await db.consolePlatform.update({
+        where: { id: platform.id },
+        data: { revision: { increment: 1 } },
+      });
+    await expect(
+      applyEnrichmentSuggestions(f.owner.context, acceptance(review)),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(await db.externalReference.count()).toBe(0);
+    expect(await db.metadataChange.count()).toBe(0);
+    expect(
+      await db.gameRelease.findUniqueOrThrow({ where: { id: release.id } }),
+    ).toMatchObject({
+      revision: 1,
+      editionType: "COLLECTORS",
+      editionName: "Manual edition",
+      firstReleaseYear: null,
+    });
+  },
+);

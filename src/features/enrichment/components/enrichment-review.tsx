@@ -378,6 +378,25 @@ export function EnrichmentReviewPanel({
               starting another lookup.
             </p>
           )}
+          {review.warnings.length > 0 && (
+            <section
+              aria-labelledby="evidence-limitations"
+              className="space-y-3 rounded-xl bg-muted p-5"
+            >
+              <h2 id="evidence-limitations" className="font-heading text-xl">
+                Evidence limitations
+              </h2>
+              <p className="text-sm">
+                Review the supplied facts carefully. Missing information does
+                not mean an existing value is wrong.
+              </p>
+              <ul className="list-disc space-y-2 pl-5 text-sm">
+                {review.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </section>
+          )}
           {review.fetchStatus === "NEEDS_SELECTION" && (
             <section aria-labelledby="candidate-heading" className="space-y-4">
               <h2 id="candidate-heading" className="font-heading text-2xl">

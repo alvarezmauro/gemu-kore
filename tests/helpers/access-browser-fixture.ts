@@ -21,7 +21,7 @@ async function main() {
   try {
     let result: unknown = null;
     if (command === "seed-enrichment") {
-      const { token, gameId, prepare, apply } = JSON.parse(argument!);
+      const { token, gameId, prepare, apply, limited } = JSON.parse(argument!);
       const { signedSessionCookie } = await import("./access-session");
       const { requirePrivateAccess } =
         await import("../../src/server/auth/access");
@@ -35,6 +35,9 @@ async function main() {
       const { default: raw } =
         await import("../fixtures/game-metadata/igdb-game.json");
       const when = "2026-10-19T12:00:00.000Z";
+      const evidenceInput = limited
+        ? { ...raw, videos: [...raw.videos, null] }
+        : raw;
       const cookie = signedSessionCookie(
         token,
         process.env.BETTER_AUTH_SECRET!,
@@ -47,7 +50,10 @@ async function main() {
       const runner = createEnrichmentRunner(() => ({
         id: "IGDB",
         search: async () => ({ ok: true, data: mapSearch([raw], when, null) }),
-        fetch: async () => ({ ok: true, data: mapGame(raw, [], when) }),
+        fetch: async () => ({
+          ok: true,
+          data: mapGame(evidenceInput, [], when),
+        }),
       }));
       const game = await database.game.findUniqueOrThrow({
         where: { id: gameId },

@@ -38,6 +38,7 @@ import {
 } from "./common";
 import { buildProposals } from "./proposals";
 import { EnrichmentError } from "./errors";
+import { evidenceWarnings } from "./evidence-warnings";
 
 const baseUnavailable = [
   {
@@ -101,9 +102,10 @@ export async function getEnrichmentReview(
     const metadata = run.result
       ? validateProviderOutput(gameMetadataResult, run.result)
       : null;
-    const candidates = run.candidates
-      ? validateProviderOutput(gameSearchPage, run.candidates).candidates
-      : [];
+    const search = run.candidates
+      ? validateProviderOutput(gameSearchPage, run.candidates)
+      : null;
+    const candidates = search?.candidates ?? [];
     const selected = run.selectedCandidate
       ? providerObjectReference.parse(run.selectedCandidate)
       : null;
@@ -192,6 +194,7 @@ export async function getEnrichmentReview(
                 name: company.value.name,
               }))
           : [],
+      warnings: evidenceWarnings(metadata, search),
       suggestions: suggestions.map((suggestion) => ({
         id: suggestion.id,
         fieldPath: suggestion.fieldPath as ProposalField,

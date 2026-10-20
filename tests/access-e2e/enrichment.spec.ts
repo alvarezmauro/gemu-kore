@@ -106,8 +106,12 @@ test("editor prepares a review, admin accepts it, and the original copy draft re
   const fetched = await fixture("seed-enrichment", {
     token: editor.token,
     gameId: catalog.gameId,
+    limited: true,
   });
   await reviewTab.goto(`/app/enrichment?runId=${fetched.id}`);
+  await expect(
+    reviewTab.getByRole("region", { name: "Evidence limitations" }),
+  ).toContainText("Trailer evidence is incomplete");
   await reviewTab.getByLabel("Title", { exact: true }).check();
   await reviewTab.getByLabel("Description", { exact: true }).check();
   await reviewTab.getByLabel("External references", { exact: true }).check();
@@ -137,6 +141,9 @@ test("editor prepares a review, admin accepts it, and the original copy draft re
     await signIn(adminContext, "ADMIN");
     const admin = await adminContext.newPage();
     await admin.goto(`/app/enrichment?runId=${fetched.id}`);
+    await expect(
+      admin.getByRole("region", { name: "Evidence limitations" }),
+    ).toContainText("Trailer evidence is incomplete");
     await expect(
       admin.getByRole("button", { name: "Apply all", exact: true }),
     ).toBeDisabled();

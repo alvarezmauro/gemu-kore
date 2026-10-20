@@ -13,7 +13,8 @@ migrations through the normal database workflow before running the updated appli
 
 Task **12.2** adds optional server-only [IGDB metadata lookup](docs/operations/GAME_METADATA.md),
 with sourced results and bounded requests. Setup is optional; enrichment review and its
-user interface arrive in Phase 13.
+user interface are implemented in Tasks **13.2–13.5**, with [reviewed suggestions,
+guarded acceptance and manual-copy draft recovery](docs/operations/ENRICHMENT.md).
 
 Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. With those installed, run from the repository root:
 
@@ -99,6 +100,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Enrichment workflow, review, provenance and acceptance architecture](docs/architecture/ENRICHMENT_ARCHITECTURE.md)
 - [Enrichment service, preview, limits and draft recovery](docs/operations/ENRICHMENT.md)
 - [Metadata sources, history retention and media attribution](docs/operations/PROVENANCE.md)
+- [Enrichment phase review and corrected findings](docs/architecture/ENRICHMENT_REVIEW.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

@@ -346,6 +346,19 @@ export function validateProviderOutput<T>(
   if (ids.size !== envelope.evidence.length)
     throw new Error("Duplicate evidence identity.");
   const result = parsed as GameMetadataResult | GameSearchPage;
+  // Choices are submitted by provider identity, so one ID must identify one choice.
+  // Existence of evidence IDs alone cannot disambiguate contradictory records.
+  const uniqueChoices = (refs: ProviderObjectRef[]) => {
+    const keys = refs.map((ref) =>
+      JSON.stringify([ref.provider, ref.objectType, ref.externalId]),
+    );
+    if (new Set(keys).size !== keys.length)
+      throw new Error("Ambiguous provider choice identity.");
+  };
+  if ("candidates" in result)
+    uniqueChoices(result.candidates.map((candidate) => candidate.identity.ref));
+  if ("videos" in result && "data" in result.videos)
+    uniqueChoices(result.videos.data.map((video) => video.value.ref));
   const observations =
     "releases" in result && "data" in result.releases
       ? result.releases.data

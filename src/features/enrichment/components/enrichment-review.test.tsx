@@ -61,6 +61,7 @@ const initial: EnrichmentReview = {
   availableFields: ["name", "description", "trailer"],
   trailerChoices: [{ externalId: "18", title: "Official trailer" }],
   companyChoices: [],
+  warnings: [],
   suggestions: [
     {
       id: "33333333-3333-4333-8333-333333333333",
@@ -334,6 +335,32 @@ it("renders untrusted descriptions as text and prevents applying unreadable sour
     screen.getByRole("button", { name: "Apply description" }),
   ).toBeDisabled();
 });
+it.each([false, true])(
+  "keeps evidence limitations visible with a prepared preview: %s",
+  (prepared) => {
+    const review = clone();
+    if (!prepared) {
+      review.reviewToken = null;
+      review.suggestions = [];
+    }
+    review.warnings = [
+      "Trailer evidence is incomplete; only supplied choices are shown.",
+    ];
+    render(
+      <EnrichmentReviewPanel initialTarget={target} initialReview={review} />,
+    );
+    const limitations = screen.getByRole("region", {
+      name: "Evidence limitations",
+    });
+    expect(within(limitations).getByText(review.warnings[0])).toBeVisible();
+    expect(
+      screen.getByRole("button", {
+        name: prepared ? "Apply all" : "Prepare preview",
+      }),
+    ).toBeVisible();
+    expect(actions.applySuggestions).not.toHaveBeenCalled();
+  },
+);
 it("lets an editor explicitly bind a provider developer to an existing company", async () => {
   const review = {
     ...clone(),
