@@ -139,8 +139,9 @@ function NewTemplate() {
                 Enter the authored GLB primitive targets, diagnostic names and
                 physical artwork sizes from the model. See the packaging
                 authoring guide in project documentation. Upload the model after
-                creating this draft. Genesis and PS2 need front/back/spine;
-                jewel cases also need an optional opposite-spine surface.
+                creating this draft. Genesis, PS2 and Switch need
+                front/back/spine; jewel cases also need an optional
+                opposite-spine surface.
               </span>
             </label>
           )}

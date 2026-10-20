@@ -1024,6 +1024,7 @@ it("records UTF-8 screenshot provenance on the image family and advances the rel
   ).toBe(1);
 });
 
+import { switchFixture } from "../helpers/switch-fixture";
 import { dvdFixture } from "../helpers/dvd-fixture";
 import { jewelFixture } from "../helpers/jewel-fixture";
 import {
@@ -1039,11 +1040,13 @@ import {
 async function geometryDraft(familyKey: AuthoredFamily = "genesis-clamshell") {
   const context = await requirePrivateAccess(headers),
     fixture =
-      familyKey === "ps2-dvd"
-        ? dvdFixture()
-        : familyKey === "playstation-jewel"
-          ? jewelFixture()
-          : clamshellFixture();
+      familyKey === "switch-case"
+        ? switchFixture()
+        : familyKey === "ps2-dvd"
+          ? dvdFixture()
+          : familyKey === "playstation-jewel"
+            ? jewelFixture()
+            : clamshellFixture();
   const draft = {
     id: randomUUID(),
     name: `Original synthetic ${familyKey}`,
@@ -1355,4 +1358,32 @@ it("requires opaque DVD housing before approval and preserves a draft after an i
   expect(
     await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
   ).toMatchObject({ status: "DRAFT", revision: 2 });
+});
+
+it("rejects translucent Switch artwork during stored-byte approval and retains the private draft", async () => {
+  const { context, draft, input } = await geometryDraft("switch-case"),
+    f = switchFixture();
+  // Isolate art-material validation from the eight-blended-primitive cap.
+  f.document.materials[3].alphaMode = "OPAQUE";
+  f.document.materials[3].pbrMetallicRoughness.baseColorFactor[3] = 1;
+  f.document.materials[0].alphaMode = "BLEND";
+  f.document.materials[0].pbrMetallicRoughness.baseColorFactor[3] = 0.2;
+  const bytes = buildGlb(f.document, f.binary);
+  await uploadAsset(
+    context,
+    { ...input, body: body(bytes), declaredSize: bytes.length },
+    signal(),
+    storage,
+  );
+  await expect(
+    changePackagingTemplate(context, {
+      id: draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+      reviewedGeometry: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ status: "DRAFT", revision: 2, familyKey: "switch-case" });
 });

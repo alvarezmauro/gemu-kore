@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { switchFixture } from "../helpers/switch-fixture";
 import { dvdFixture } from "../helpers/dvd-fixture";
 import { jewelFixture } from "../helpers/jewel-fixture";
 import { clamshellFixture } from "../helpers/clamshell-fixture";
@@ -18,26 +19,38 @@ for (const family of [
   "genesis-clamshell",
   "playstation-jewel",
   "ps2-dvd",
+  "switch-case",
 ] as const) {
   const genesis = family === "genesis-clamshell";
   const jewel = family === "playstation-jewel";
   const dvd = family === "ps2-dvd";
-  const authored = genesis || jewel || dvd;
-  const geometry = dvd
-    ? dvdFixture()
-    : jewel
-      ? jewelFixture()
-      : clamshellFixture();
-  const shape = dvd ? "DVD case" : jewel ? "jewel case" : "clamshell";
-  const formatName = dvd
-    ? "PS2"
-    : jewel
-      ? "PlayStation"
-      : genesis
-        ? "Genesis"
-        : family === "nes-cardboard"
-          ? "NES"
-          : "SNES";
+  const switchCase = family === "switch-case";
+  const authored = genesis || jewel || dvd || switchCase;
+  const geometry = switchCase
+    ? switchFixture()
+    : dvd
+      ? dvdFixture()
+      : jewel
+        ? jewelFixture()
+        : clamshellFixture();
+  const shape = switchCase
+    ? "Switch case"
+    : dvd
+      ? "DVD case"
+      : jewel
+        ? "jewel case"
+        : "clamshell";
+  const formatName = switchCase
+    ? "Switch"
+    : dvd
+      ? "PS2"
+      : jewel
+        ? "PlayStation"
+        : genesis
+          ? "Genesis"
+          : family === "nes-cardboard"
+            ? "NES"
+            : "SNES";
   test(`curates ${formatName} packaging and private artwork, then lazily renders distinct faces with accessible mobile controls`, async ({
     page,
     context,
@@ -136,7 +149,7 @@ for (const family of [
     await expect(
       page.getByRole("button", { name: "Mark ready", exact: true }),
     ).toHaveCount(0);
-    if (dvd) {
+    if (dvd || switchCase) {
       const neutralState = await fixture("packaging-state");
       const neutralEditor = page.locator("form").filter({
         has: page.getByRole("heading", { name: "Outer box", exact: true }),
@@ -155,7 +168,7 @@ for (const family of [
       const neutralViewer = await openModel(page);
       await neutralViewer
         .locator("canvas")
-        .screenshot({ path: info.outputPath("dvd-neutral.png") });
+        .screenshot({ path: info.outputPath("neutral-case.png") });
       await neutralViewer
         .getByRole("button", { name: "Close 3D preview", exact: true })
         .click();
@@ -258,7 +271,7 @@ for (const family of [
     await page.goto(`/app/games/${copy.id}`);
     await expect(
       page.getByText(
-        `Synthetic ${formatName} demonstration · ${dvd ? "PS2 DVD case" : jewel ? "PlayStation jewel case" : genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
+        `Synthetic ${formatName} demonstration · ${switchCase ? "Switch case" : dvd ? "PS2 DVD case" : jewel ? "PlayStation jewel case" : genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
         { exact: true },
       ),
     ).toBeVisible();

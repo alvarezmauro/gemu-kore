@@ -29,6 +29,11 @@ export const createBoxTemplate = z.discriminatedUnion("familyKey", [
   }),
   z.strictObject({
     ...templateFields,
+    familyKey: z.literal("switch-case"),
+    slots: clamshellSlots,
+  }),
+  z.strictObject({
+    ...templateFields,
     familyKey: z.literal("ps2-dvd"),
     slots: clamshellSlots,
   }),

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
+import { switchFixture } from "../tests/helpers/switch-fixture";
 import { dvdFixture } from "../tests/helpers/dvd-fixture";
 import { jewelFixture } from "../tests/helpers/jewel-fixture";
 import { clamshellFixture } from "../tests/helpers/clamshell-fixture";
@@ -8,6 +9,24 @@ import { modelBenchmark } from "../tests/helpers/model-benchmarks";
 async function main() {
   const directory = resolve(process.argv[2] ?? "test-results/three-fixtures");
   await mkdir(directory, { recursive: true });
+  const switchCase = switchFixture();
+  await writeFile(
+    join(directory, "synthetic-switch-case.glb"),
+    switchCase.bytes,
+  );
+  await writeFile(
+    join(directory, "synthetic-switch-case-slots.json"),
+    JSON.stringify(switchCase.slots, null, 2) + "\n",
+  );
+  console.log(
+    JSON.stringify({
+      path: join(directory, "synthetic-switch-case.glb"),
+      byteLength: switchCase.bytes.length,
+      dimensions: switchCase.dimensions,
+      source:
+        "Original synthetic Switch case; not retail measurements or catalog data.",
+    }),
+  );
   const dvd = dvdFixture();
   await writeFile(join(directory, "synthetic-ps2-dvd.glb"), dvd.bytes);
   await writeFile(

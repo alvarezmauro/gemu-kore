@@ -8,12 +8,14 @@ export const authoredFamily = z.enum([
   "genesis-clamshell",
   "playstation-jewel",
   "ps2-dvd",
+  "switch-case",
 ]);
 export type AuthoredFamily = z.infer<typeof authoredFamily>;
 export const authoredShapeLabels: Record<AuthoredFamily, string> = {
   "genesis-clamshell": "clamshell",
   "playstation-jewel": "jewel case",
   "ps2-dvd": "DVD case",
+  "switch-case": "Switch case",
 };
 export const packagingFamily = z.enum([
   ...boxFamily.options,
@@ -24,6 +26,7 @@ export const boxFormatLabels: Record<PackagingFamily, string> = {
   "genesis-clamshell": "Genesis clamshell",
   "playstation-jewel": "PlayStation jewel case",
   "ps2-dvd": "PS2 DVD case",
+  "switch-case": "Switch case",
   "nes-cardboard": "NES cardboard box",
   "snes-cardboard": "SNES cardboard box",
 };

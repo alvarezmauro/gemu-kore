@@ -1,10 +1,10 @@
 # Private packaging preview
 
-Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells, PlayStation jewel cases and PS2 DVD cases through authored GLB contracts ([Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md), [PS2](PS2_DVD_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell/DVD case maps three art primitives, and a jewel case also maps an optional opposite-spine surface. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
+Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells, PlayStation jewel cases, PS2 DVD cases and Switch cases through authored GLB contracts ([Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md), [PS2](PS2_DVD_AUTHORING.md), [Switch](SWITCH_CASE_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell/DVD/Switch case maps three art primitives, and a jewel case also maps an optional opposite-spine surface. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
 
 ## Curate a release
 
-These steps cover cardboard templates. For authored geometry preparation and approval, use the [Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md) or [PS2](PS2_DVD_AUTHORING.md) authoring guide.
+These steps cover cardboard templates. For authored geometry preparation and approval, use the [Genesis](GENESIS_PACKAGING_AUTHORING.md), [PlayStation](PLAYSTATION_JEWEL_AUTHORING.md), [PS2](PS2_DVD_AUTHORING.md) or [Switch](SWITCH_CASE_AUTHORING.md) authoring guide.
 
 1. As an administrator, open **Game catalog → Game releases → Edit → Manage release packaging**. A release must already contain a `PACKAGING` expected item.
 2. Expand **Create packaging template**, choose **NES cardboard box** or **SNES cardboard box**, and create a draft. Supply width, height and depth in millimeters and a measurement source. Mark synthetic demonstration dimensions explicitly. Choose a unique slug and the next revision number within that format. Different formats can each have revision 1. Put the measured market/edition variant in the name and source; neither format assumes universal retail measurements.
@@ -53,12 +53,18 @@ Current-increment checks: 1,129 unit/component tests, 6 packaging integration te
 
 ## Task 14.3 — Genesis increment
 
-Genesis now uses a distinct `gltf-slots-v1` contract with explicit front/back/spine primitives, physical artwork sizes, authored housing and direct private geometry uploads. The [Genesis authoring guide](GENESIS_PACKAGING_AUTHORING.md) describes export rules, review, synthetic fixtures, revisions and budgets. Existing NES/SNES contracts, old descriptors, manual `hasBox` and expected-component semantics remain supported. PlayStation jewel, PS2 DVD and Switch cases remain pending.
+Genesis now uses a distinct `gltf-slots-v1` contract with explicit front/back/spine primitives, physical artwork sizes, authored housing and direct private geometry uploads. The [Genesis authoring guide](GENESIS_PACKAGING_AUTHORING.md) describes export rules, review, synthetic fixtures, revisions and budgets. Existing NES/SNES contracts, old descriptors, manual `hasBox` and expected-component semantics remain supported. The later PlayStation, PS2 and Switch increments follow below.
 
 ## Task 14.3 — PlayStation jewel increment
 
-`playstation-jewel` now uses the existing private authored upload/review path with required front/back/spine artwork and an independently mapped optional opposite spine. Clear housing uses bounded standard PBR alpha blending; artwork remains opaque and neutral when unbound. See [jewel authoring](PLAYSTATION_JEWEL_AUTHORING.md) for mappings, review, synthetic geometry, restrictions and migration. Legacy boxes and Genesis remain supported. PS2 DVD and Switch cases remain pending.
+`playstation-jewel` now uses the existing private authored upload/review path with required front/back/spine artwork and an independently mapped optional opposite spine. Clear housing uses bounded standard PBR alpha blending; artwork remains opaque and neutral when unbound. See [jewel authoring](PLAYSTATION_JEWEL_AUTHORING.md) for mappings, review, synthetic geometry, restrictions and migration. Legacy boxes and Genesis remain supported. The later PS2 and Switch increments follow below.
 
 ## Task 14.3 — PS2 DVD increment
 
-`ps2-dvd` now uses the reviewed private authored pipeline with three required front/back/spine surfaces and opaque keep-case housing. It retains explicit bindings, geometric/artwork budgets, expected-component semantics and manual `hasBox`. See [DVD authoring](PS2_DVD_AUTHORING.md) for review, synthetic fixtures and migration. Switch remains pending.
+`ps2-dvd` now uses the reviewed private authored pipeline with three required front/back/spine surfaces and opaque keep-case housing. It retains explicit bindings, geometric/artwork budgets, expected-component semantics and manual `hasBox`. See [DVD authoring](PS2_DVD_AUTHORING.md) for review, synthetic fixtures and migration. The Switch increment follows below.
+
+## Task 14.3 — Switch increment and format completion
+
+`switch-case` completes Task 14.3 with a private reviewed slim case, three required front/back/spine art mappings and the bounded clear-housing profile shared with jewel cases. Genesis and PS2 remain opaque; jewel keeps its fourth optional-art mapping. The [Switch authoring guide](SWITCH_CASE_AUTHORING.md) covers synthetic geometry, source/measurement review, restrictions and migration. All six roadmap formats are now supported. Expected-component semantics, private access, explicit bindings and manual `hasBox` remain unchanged. Task 14.4 cartridge rendering is next and has not started.
+
+Final-format verification: 1,179 unit/component, 70 targeted integration, 41 upload and all 28 desktop/mobile packaging/shared-viewer browser checks pass, plus lint, typecheck, schema validation, production build, fixture generation, formatting/whitespace, documentation links and bundle budget (1,010,956 raw / 270,628 gzip bytes). Detailed evidence and existing limitations are recorded in the [Switch guide](SWITCH_CASE_AUTHORING.md#verification). Tests replay migrations in disposable databases/storage; the personal development database is unchanged.

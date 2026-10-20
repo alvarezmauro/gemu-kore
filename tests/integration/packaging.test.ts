@@ -913,3 +913,136 @@ it("curates independent PS2 revisions, preserves existing formats and enforces D
     }),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
 });
+
+import { switchFixture } from "../helpers/switch-fixture";
+it("curates independent Switch revisions, preserves existing formats and enforces Switch bindings and cleanup", async () => {
+  const c = await setup();
+  await c.promote();
+  const retained = await db.packagingTemplate.findUniqueOrThrow({
+    where: { id: c.draft.id },
+    include: { slots: { orderBy: { name: "asc" } } },
+  });
+  const f = switchFixture(),
+    switchCase = {
+      ...c.draft,
+      id: randomUUID(),
+      slug: randomUUID(),
+      name: "Synthetic Switch case",
+      familyKey: "switch-case",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    };
+  await createPackagingTemplate(c.admin.context, switchCase);
+  await createPackagingTemplate(c.admin.context, switchCase);
+  const manager = await c.manager(),
+    t = manager.templates.find((t) => t.id === switchCase.id)!;
+  expect(t.slots).toHaveLength(3);
+  expect(t.slots.every((s) => s.required)).toBe(true);
+  const opposite = jewelFixture().slots[3];
+  await expect(
+    db.packagingTextureSlot.create({
+      data: {
+        packagingTemplateId: switchCase.id,
+        name: opposite.name,
+        required: false,
+        materialName: opposite.target.materialName,
+        target: opposite.target,
+      },
+    }),
+  ).rejects.toThrow();
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: switchCase.id },
+      data: { status: "READY" },
+    }),
+  ).rejects.toThrow();
+  const model = await db.asset.create({
+    data: {
+      kind: "MODEL_3D",
+      scope: "CATALOG",
+      state: "READY",
+      deliveryClass: "ORIGINAL",
+      storageNamespace: "test",
+      objectKey: randomUUID(),
+      mimeType: "model/gltf-binary",
+      sha256: "e".repeat(64),
+      sizeBytes: f.bytes.length,
+    },
+  });
+  // Database guards here; actual stored GLB approval is covered by MinIO checks.
+  await db.packagingTemplate.update({
+    where: { id: switchCase.id },
+    data: { baseModelAssetId: model.id, status: "READY", revision: 2 },
+  });
+  const input = {
+    releaseId: c.release.id,
+    componentId: c.component.id,
+    expectedRevision: 1,
+    templateId: switchCase.id,
+    expectedTemplateRevision: 2,
+    bindings: [] as {
+      slotId: string;
+      assetId: string;
+      transform: typeof fullArtwork;
+    }[],
+  };
+  await assignPackaging(c.admin.context, input);
+  expect((await c.view()).content).toMatchObject({
+    familyKey: "switch-case",
+    rendererVersion: "gltf-slots-v1",
+    artworkComplete: false,
+    geometry: { id: model.id },
+  });
+  input.expectedRevision = 2;
+  input.bindings = t.slots.map((s) => ({
+    slotId: s.id,
+    assetId: c.asset.id,
+    transform: fullArtwork,
+  }));
+  await assignPackaging(c.admin.context, input);
+  const result = await c.view(c.admin.context, c.component.id, 3);
+  expect(result.content).toMatchObject({
+    familyKey: "switch-case",
+    artworkComplete: true,
+    dimensions: f.dimensions,
+  });
+  expect(result.content.slots.filter((s) => s.resource)).toHaveLength(3);
+  await expect(
+    assignPackaging(c.admin.context, {
+      ...input,
+      expectedRevision: 3,
+      bindings: [
+        {
+          slotId: retained.slots[0].id,
+          assetId: c.asset.id,
+          transform: fullArtwork,
+        },
+      ],
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.packagingTemplate.findUnique({
+      where: { id: c.draft.id },
+      include: { slots: { orderBy: { name: "asc" } } },
+    }),
+  ).toEqual(retained);
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: switchCase.id },
+      data: { familyKey: "genesis-clamshell" },
+    }),
+  ).rejects.toThrow();
+  expect(await hasReferences(model.id, db)).toBe(true);
+  await expect(
+    db.asset.update({ where: { id: model.id }, data: { state: "DELETING" } }),
+  ).rejects.toThrow();
+  const editor = await actor("EDITOR");
+  await expect(
+    createPackagingTemplate(editor.context, {
+      ...switchCase,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 2,
+    }),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+});

@@ -107,3 +107,26 @@ it("admits PS2 drafts only with explicit front/back/spine targets and dimension 
     createBoxTemplate.safeParse({ ...draft, measurementNote: "" }).success,
   ).toBe(false);
 });
+
+import { switchFixture } from "../../../tests/helpers/switch-fixture";
+it("admits Switch drafts only with explicit front/back/spine targets and dimension evidence", () => {
+  const f = switchFixture(),
+    draft = {
+      ...input,
+      familyKey: "switch-case",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    };
+  expect(createBoxTemplate.safeParse(draft).success).toBe(true);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, slots: f.slots.slice(0, 2) })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, slots: jewelFixture().slots })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...draft, measurementNote: "" }).success,
+  ).toBe(false);
+});

@@ -137,7 +137,7 @@ export function inspectAuthoredPackage(
       (m) =>
         (m.alphaMode !== "OPAQUE" &&
           !(
-            family === "playstation-jewel" &&
+            (family === "playstation-jewel" || family === "switch-case") &&
             m.alphaMode === "BLEND" &&
             (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) >= 0.05 &&
             (m.pbrMetallicRoughness?.baseColorFactor?.[3] ?? 1) <= 0.8 &&

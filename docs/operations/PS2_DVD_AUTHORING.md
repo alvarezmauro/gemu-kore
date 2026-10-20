@@ -15,7 +15,7 @@ These are expected catalog components. Manual `hasBox`, owned presence and condi
 
 ## Model profile
 
-PS2 uses the existing opaque, single-sided static PBR profile. All housing and artwork must be opaque; the jewel-case alpha-blending exception remains exclusive to that format. A transparent outer sleeve/refraction simulation, opening animation and interiors requiring separate artwork are outside this first DVD profile. The neutral art planes sit slightly outside opaque housing to avoid occlusion and z-fighting.
+PS2 uses the existing opaque, single-sided static PBR profile. All housing and artwork must be opaque; bounded alpha blending is available separately for jewel and Switch housing. A transparent outer sleeve/refraction simulation, opening animation and interiors requiring separate artwork are outside this first DVD profile. The neutral art planes sit slightly outside opaque housing to avoid occlusion and z-fighting.
 
 Use a self-contained GLB with one default scene (index 0), meter units, +Y up, positive finite transforms and normalized quaternions. Bounds must match supplied dimensions within 2% or 1 mm per axis, whichever is larger. Source positions/normals/UV0 use float accessors, triangle indices are unsigned and artwork uses exactly two outward-facing triangles forming a full [0,1] rectangle. Artwork UV (0,0) is top left; +V points down. Front faces +Z with artwork right +X, back faces −Z with artwork right −X, and spine faces −X with artwork right +Z. All art is neutral white, non-emissive and opaque. Indices identify targets; names are matching diagnostics. Nested multi-primitive nodes and shared source materials retain the existing per-target resolution/cloning.
 
@@ -29,7 +29,7 @@ The existing budgets remain: 8 MiB geometry before processing, 12 MiB combined m
 
 Migration `20261020140000_ps2_dvd_packaging` admits the family and prevents opposite-spine slots on DVD templates. Existing three-slot readiness, model foreign keys, freeze guards and cleanup references are retained. Apply normal migrations before using the new format. Tests use disposable PostgreSQL/MinIO; the personal development database is not migrated.
 
-Switch cases remain the last format increment in Task 14.3. Task 14.4 media rendering, owned presence/primary packaging, public presentation and nested containment are not started by this change.
+Switch cases are now implemented as the [final Task 14.3 increment](SWITCH_CASE_AUTHORING.md). Task 14.4 media rendering, owned presence/primary packaging, public presentation and nested containment are not started by this change.
 
 Verified 2026-10-20: 1,167 unit/component cases pass with two workers and unchanged timeouts; 9 packaging + 52 core-schema + 8 game-catalog integration checks and 39 real PostgreSQL/MinIO upload checks pass. All 26 desktop/mobile packaging/console-viewer browser cases pass, including attributed PS2 upload/approval, a labeled geometry-only preview, explicit artwork assignment, preserved invalid-crop entries, distinct front/back views, lazy transfers, fresh reopen, revoked access and 320px/reduced-motion controls. Desktop/mobile neutral and textured screenshots were inspected. Coverage also includes opaque housing enforcement, family-specific slots, immutable ready contracts, cross-template binding rejection, current roles, source-byte validation and cleanup references.
 
