@@ -101,6 +101,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Enrichment service, preview, limits and draft recovery](docs/operations/ENRICHMENT.md)
 - [Metadata sources, history retention and media attribution](docs/operations/PROVENANCE.md)
 - [Enrichment phase review and corrected findings](docs/architecture/ENRICHMENT_REVIEW.md)
+- [Physical packaging/media templates, artwork bindings and owned presence](docs/architecture/PACKAGING_ARCHITECTURE.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

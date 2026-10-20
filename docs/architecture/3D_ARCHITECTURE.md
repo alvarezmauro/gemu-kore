@@ -139,6 +139,8 @@ Prefer the native Fullscreen API following a user gesture, preserving the same C
 
 ## 7. Packaging, physical media and textures — extension contract
 
+Task 14.1 now finalizes this extension in [Packaging architecture](PACKAGING_ARCHITECTURE.md): concrete template/slot/binding constraints, primary-package presence reconciliation, procedural face and authored GLB targets, prepared WebP artwork, assembled presentation contracts, combined admission and staged implementation. The historical Task 9.1 contract below remains the shared-viewer foundation; no packaging runtime is introduced by that design document.
+
 Keep **PackagingTemplate** and **PhysicalMediaTemplate** separate, as already accepted in [DOMAIN_MODEL.md §7](DOMAIN_MODEL.md). They share stage/helpers, not a new universal template table. Packaging can be a dimensioned procedural box or a GLB; physical media initially uses an authored GLB for CARTRIDGE/DISC/CARD/OTHER. Start with a few actual collection formats in Phase 14.
 
 A flat `GameReleaseIncludedItem` of the right kind selects one template revision. Its explicit PackagingTextureBinding or PhysicalMediaTextureBinding chooses an IMAGE asset for one slot belonging to that exact template. At most one binding exists per component/slot. Do not put competing template FKs on GameRelease, infer templates from platform names or turn one cover image into a complete box wrap.

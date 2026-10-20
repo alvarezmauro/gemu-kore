@@ -1832,6 +1832,8 @@ Chrono Trigger SNES Box
 
 Use the flat expected release-component and owned-presence contracts from Task 0.2. Define explicit component/slot/asset bindings for both packaging and physical media. Support multiple independently illustrated packages/discs without a nested containment hierarchy. Finalize implementation mechanics, not a new product model.
 
+Status: **Completed 2026-10-19 (design only).** Finalized the four separate template/slot contracts and dedicated component artwork bindings, composite same-template/same-release constraints, immutable READY revisions, draft/archived behavior, explicit reassignment and retained provenance. Defined owned presence, primary-package migration/reconciliation and the atomic hasBox summary, preserving existing manual answers before activation. Specified all six procedural faces, authored GLB index/material/UV targets, units/orientation, explicit crop/contain, prepared WebP artwork, isolated resources, bounded assembled presentation/loading and private/public gates. Recorded required upload/reference-check extensions, first-format curation and the staged Tasks 14.2–14.6 handoff without adding runtime implementation. Documentation: [Packaging architecture](docs/architecture/PACKAGING_ARCHITECTURE.md). Verification: approved-document/current-code consistency, official upstream references, six face normals/artwork axes checked against installed Three.js 0.186.1, local links/fences, formatting, whitespace and documentation-only scope pass. Runtime suites are not applicable to this design-only task. No schema, assets, dependencies, environment or application behavior changed. Next: Task 14.2, only when requested.
+
 ---
 
 ## TASK 14.2 — 3D Box Renderer
