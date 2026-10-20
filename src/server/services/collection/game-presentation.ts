@@ -60,6 +60,7 @@ function content(c: Component) {
   return {
     kind: "PACKAGING" as const,
     rendererVersion: "box-v1" as const,
+    familyKey: template.familyKey,
     componentId: c.id,
     templateId: template.id,
     templateRevision: template.revision,
@@ -99,6 +100,7 @@ export async function readPackagingComponents(
         name: c.name,
         quantity: c.quantity,
         templateName: c.packagingTemplate?.name ?? null,
+        familyKey: value?.familyKey ?? null,
         synthetic: value?.synthetic ?? false,
         available: Boolean(value && within),
         artworkComplete: value?.artworkComplete ?? false,

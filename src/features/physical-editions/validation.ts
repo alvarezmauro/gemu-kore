@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   boxDimensions,
+  boxFamily,
   textureTransform,
 } from "@/lib/three/packaging-contracts";
 const revision = z.number().int().positive().max(2147483646);
@@ -12,7 +13,7 @@ export const createBoxTemplate = z.strictObject({
     .string()
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  familyKey: z.literal("snes-cardboard"),
+  familyKey: boxFamily,
   revisionNumber: revision,
   dimensions: boxDimensions,
   synthetic: z.boolean(),

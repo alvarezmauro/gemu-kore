@@ -21,6 +21,7 @@ import {
 } from "@/features/physical-editions/validation";
 import {
   boxDimensions,
+  boxFamily,
   boxFaces,
   textureTransform,
   artworkLayout,
@@ -71,6 +72,7 @@ export function boxTemplateDto(
   row: NonNullable<Awaited<ReturnType<typeof repository.template>>>,
 ): BoxTemplate {
   const m = metadata.parse(row.metadata);
+  const familyKey = boxFamily.parse(row.familyKey);
   const slots = row.slots.map((s) => ({
     id: s.id,
     name: s.name,
@@ -78,7 +80,6 @@ export function boxTemplateDto(
     face: slotTarget.parse(s.target).face,
   }));
   if (
-    row.familyKey !== "snes-cardboard" ||
     row.geometryType !== "PROCEDURAL_BOX" ||
     slots.length !== 6 ||
     new Set(slots.map((s) => s.face)).size !== 6 ||
@@ -93,6 +94,7 @@ export function boxTemplateDto(
     id: row.id,
     name: row.name,
     slug: row.slug,
+    familyKey,
     revision: row.revision,
     revisionNumber: row.revisionNumber,
     status: row.status,
@@ -125,6 +127,7 @@ export async function createPackagingTemplate(
       if (
         dto.name !== d.name ||
         dto.slug !== d.slug ||
+        dto.familyKey !== d.familyKey ||
         dto.revisionNumber !== d.revisionNumber ||
         JSON.stringify(dto.dimensions) !== JSON.stringify(d.dimensions) ||
         dto.synthetic !== d.synthetic ||
@@ -317,17 +320,21 @@ export async function getPackagingManager(
       await requirePermission(context, "catalog.manage", tx);
       const release = await repository.packagingRelease(releaseId, tx);
       if (!release) throw new PackagingError("NOT_FOUND");
-      const rows = await repository.templates(tx),
-        selected = await repository.selectedTemplates(
-          release.includedItems.flatMap((c) =>
-            c.packagingTemplateId ? [c.packagingTemplateId] : [],
-          ),
-          tx,
-        );
+      const rows: Awaited<ReturnType<typeof repository.templates>> = [];
+      let moreTemplates = false;
+      for (const familyKey of boxFamily.options) {
+        const familyRows = await repository.templates(familyKey, tx);
+        rows.push(...familyRows.slice(0, 50));
+        moreTemplates ||= familyRows.length > 50;
+      }
+      const selected = await repository.selectedTemplates(
+        release.includedItems.flatMap((c) =>
+          c.packagingTemplateId ? [c.packagingTemplateId] : [],
+        ),
+        tx,
+      );
       const templates = [
-        ...new Map(
-          [...rows.slice(0, 50), ...selected].map((t) => [t.id, t]),
-        ).values(),
+        ...new Map([...rows, ...selected].map((t) => [t.id, t])).values(),
       ].map(boxTemplateDto);
       const choices = await repository.artworkChoices(releaseId, tx);
       const art = [
@@ -359,7 +366,7 @@ export async function getPackagingManager(
           ),
         },
         templates,
-        moreTemplates: rows.length > 50,
+        moreTemplates,
         moreArtwork: choices.length > 50,
         components: release.includedItems
           .filter((c) => c.kind === "PACKAGING")

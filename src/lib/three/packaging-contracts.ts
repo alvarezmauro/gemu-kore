@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// Explicit supported contracts, never inferred from a release/platform name.
+// Dimensions and variant suitability still require curator evidence.
+export const boxFamily = z.enum(["nes-cardboard", "snes-cardboard"]);
+export type BoxFamily = z.infer<typeof boxFamily>;
+export const boxFormatLabels: Record<BoxFamily, string> = {
+  "nes-cardboard": "NES cardboard box",
+  "snes-cardboard": "SNES cardboard box",
+};
+
 export const boxFaces = [
   { face: 0, name: "EDGE_POS_X", label: "Opposite edge", required: false },
   { face: 1, name: "SPINE", label: "Spine", required: true },

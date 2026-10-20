@@ -1,4 +1,9 @@
 import { randomUUID } from "node:crypto";
+import type { Prisma } from "@/server/db/generated/client";
+const fixtureJson = (value: Prisma.JsonValue): Prisma.InputJsonValue => {
+  if (value === null) throw new Error("Fixture requires non-null JSON");
+  return value;
+};
 import { afterAll, beforeEach, expect, it, vi } from "vitest";
 import { requirePrivateAccess } from "@/server/auth/access";
 import { getDatabase, disconnectDatabase } from "@/server/db/client";
@@ -61,9 +66,9 @@ import {
   getPackagingManager,
 } from "@/server/services/catalog/physical-editions";
 import { getGamePackagingPresentation } from "@/server/services/collection/game-presentation";
-import { fullArtwork } from "@/lib/three/packaging-contracts";
+import { fullArtwork, type BoxFamily } from "@/lib/three/packaging-contracts";
 import { hasReferences, hasFamilyUses } from "@/server/repositories/assets";
-async function setup() {
+async function setup(familyKey: BoxFamily = "snes-cardboard") {
   const admin = await actor("ADMIN");
   const platform = await db.consolePlatform.create({
     data: { name: "SNES", slug: randomUUID() },
@@ -102,7 +107,7 @@ async function setup() {
     id: randomUUID(),
     name: "Synthetic SNES box",
     slug: randomUUID(),
-    familyKey: "snes-cardboard",
+    familyKey,
     revisionNumber: 1,
     dimensions: { schemaVersion: 1, widthMm: 180, heightMm: 125, depthMm: 30 },
     synthetic: true,
@@ -174,8 +179,9 @@ async function setup() {
     expectedRevision: 1,
     templateId: draft.id,
     expectedTemplateRevision: 2,
-    bindings: (await manager()).templates[0].slots
-      .filter((s) => s.required)
+    bindings: (await manager()).templates
+      .find((t) => t.id === draft.id)!
+      .slots.filter((s) => s.required)
       .map((s) => ({
         slotId: s.id,
         assetId: asset.id,
@@ -400,4 +406,175 @@ it("preserves assigned packaging in ordinary catalog edits and blocks accidental
       },
     }),
   ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+});
+it("adds a separately versioned NES family without changing ready SNES contracts or inferring a format from the platform", async () => {
+  const c = await setup();
+  await c.promote();
+  await assignPackaging(c.admin.context, await c.input());
+  const inner = c.release.includedItems.find(
+    (item) => item.name === "Inner box",
+  )!;
+  const before = await db.packagingTemplate.findUniqueOrThrow({
+    where: { id: c.draft.id },
+    include: { slots: { orderBy: { name: "asc" } } },
+  });
+  const nes = {
+    ...c.draft,
+    id: randomUUID(),
+    slug: randomUUID(),
+    familyKey: "nes-cardboard",
+    name: "Synthetic NES market variant",
+    dimensions: { schemaVersion: 1, widthMm: 110, heightMm: 160, depthMm: 25 },
+  };
+  await createPackagingTemplate(c.admin.context, nes);
+  await createPackagingTemplate(c.admin.context, nes);
+  await changePackagingTemplate(c.admin.context, {
+    id: nes.id,
+    expectedRevision: 1,
+    operation: "ready",
+  });
+  const manager = await c.manager(),
+    template = manager.templates.find((t) => t.id === nes.id)!;
+  expect(manager.templates.map((t) => [t.familyKey, t.revisionNumber])).toEqual(
+    expect.arrayContaining([
+      ["nes-cardboard", 1],
+      ["snes-cardboard", 1],
+    ]),
+  );
+  await expect(
+    createPackagingTemplate(c.admin.context, {
+      ...nes,
+      familyKey: "snes-cardboard",
+    }),
+  ).rejects.toMatchObject({ code: "STALE" });
+  const old = {
+    ...(await c.input()),
+    componentId: inner.id,
+    expectedRevision: 2,
+  };
+  await expect(
+    assignPackaging(c.admin.context, { ...old, templateId: nes.id }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    (await db.gameRelease.findUniqueOrThrow({ where: { id: c.release.id } }))
+      .revision,
+  ).toBe(2);
+  await assignPackaging(c.admin.context, {
+    ...old,
+    templateId: nes.id,
+    bindings: template.slots
+      .filter((s) => s.required)
+      .map((s) => ({
+        slotId: s.id,
+        assetId: c.asset.id,
+        transform: fullArtwork,
+      })),
+  });
+  const result = await c.view(c.admin.context, inner.id, 3);
+  expect(
+    (await c.view(c.admin.context, c.component.id, 3)).content,
+  ).toMatchObject({ familyKey: "snes-cardboard", artworkComplete: true });
+  expect(result.content).toMatchObject({
+    familyKey: "nes-cardboard",
+    dimensions: nes.dimensions,
+    artworkComplete: true,
+  });
+  expect(
+    (await getOwnedGame(c.admin.context, { id: c.copyId })).packaging.find(
+      (p) => p.id === inner.id,
+    ),
+  ).toMatchObject({ familyKey: "nes-cardboard", available: true });
+  const after = await db.packagingTemplate.findUniqueOrThrow({
+    where: { id: c.draft.id },
+    include: { slots: { orderBy: { name: "asc" } } },
+  });
+  expect(after).toEqual(before);
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: c.draft.id },
+      data: { familyKey: "nes-cardboard", revisionNumber: 2 },
+    }),
+  ).rejects.toThrow();
+  const editor = await actor("EDITOR");
+  await expect(
+    createPackagingTemplate(editor.context, {
+      ...nes,
+      id: randomUUID(),
+      slug: randomUUID(),
+      revisionNumber: 2,
+    }),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  const { id, ...unsupported } = before;
+  void id;
+  await expect(
+    db.packagingTemplate.create({
+      data: {
+        ...unsupported,
+        dimensions: fixtureJson(unsupported.dimensions),
+        materialSettings: fixtureJson(unsupported.materialSettings),
+        cameraSettings: fixtureJson(unsupported.cameraSettings),
+        metadata: fixtureJson(unsupported.metadata),
+        id: randomUUID(),
+        slug: randomUUID(),
+        familyKey: "genesis-clamshell",
+        slots: undefined,
+        status: "DRAFT",
+      },
+    }),
+  ).rejects.toThrow();
+});
+it("bounds template choices per family so many NES revisions cannot hide SNES or a retained assignment", async () => {
+  const c = await setup("nes-cardboard");
+  await c.promote();
+  await assignPackaging(c.admin.context, await c.input());
+  const base = await db.packagingTemplate.findUniqueOrThrow({
+      where: { id: c.draft.id },
+    }),
+    slots = await db.packagingTextureSlot.findMany({
+      where: { packagingTemplateId: c.draft.id },
+    });
+  const ids = Array.from({ length: 51 }, () => randomUUID());
+  await db.packagingTemplate.createMany({
+    data: ids.map((id, i) => ({
+      ...base,
+      dimensions: fixtureJson(base.dimensions),
+      materialSettings: fixtureJson(base.materialSettings),
+      cameraSettings: fixtureJson(base.cameraSettings),
+      metadata: fixtureJson(base.metadata),
+      id,
+      slug: randomUUID(),
+      revisionNumber: i + 2,
+      status: "DRAFT" as const,
+    })),
+  });
+  await db.packagingTextureSlot.createMany({
+    data: ids.flatMap((id) =>
+      slots.map((s) => ({
+        ...s,
+        target: fixtureJson(s.target),
+        id: randomUUID(),
+        packagingTemplateId: id,
+      })),
+    ),
+  });
+  const snes = {
+    ...c.draft,
+    id: randomUUID(),
+    slug: randomUUID(),
+    familyKey: "snes-cardboard",
+  };
+  await createPackagingTemplate(c.admin.context, snes);
+  const manager = await c.manager();
+  expect(manager.moreTemplates).toBe(true);
+  expect(
+    manager.templates.filter((t) => t.familyKey === "nes-cardboard"),
+  ).toHaveLength(51);
+  expect(manager.templates.find((t) => t.id === snes.id)).toMatchObject({
+    familyKey: "snes-cardboard",
+    revisionNumber: 1,
+  });
+  expect(manager.templates.find((t) => t.id === c.draft.id)).toMatchObject({
+    familyKey: "nes-cardboard",
+    status: "READY",
+  });
 });

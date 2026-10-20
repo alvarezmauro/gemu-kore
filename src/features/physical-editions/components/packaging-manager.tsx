@@ -9,7 +9,11 @@ import {
   PhotoUploadError,
   checkCollectionUpload,
 } from "@/features/media/upload";
-import { fullArtwork } from "@/lib/three/packaging-contracts";
+import {
+  boxFamily,
+  boxFormatLabels,
+  fullArtwork,
+} from "@/lib/three/packaging-contracts";
 import { createTemplate, changeTemplate, savePackaging } from "../actions";
 import { uploadArtwork } from "../upload";
 import type { PackagingManager as Manager, BoxTemplate } from "../contracts";
@@ -44,7 +48,7 @@ function NewTemplate() {
   return (
     <details className="rounded-xl border p-4">
       <summary className="min-h-11 cursor-pointer py-3">
-        Create SNES cardboard template
+        Create packaging template
       </summary>
       <p className="my-3 text-sm">
         Enter measured dimensions and their source. A ready revision is
@@ -62,7 +66,7 @@ function NewTemplate() {
               id: id.current,
               name: text(form, "name"),
               slug: text(form, "slug"),
-              familyKey: "snes-cardboard",
+              familyKey: text(form, "family"),
               revisionNumber: Number(form.get("revision")),
               dimensions: {
                 schemaVersion: 1,
@@ -79,6 +83,26 @@ function NewTemplate() {
         }}
       >
         <fieldset disabled={mutation.pending} className="space-y-4">
+          <label className="block">
+            Packaging format
+            <select
+              aria-label="Packaging format"
+              name="family"
+              className={selectClass}
+              defaultValue="snes-cardboard"
+            >
+              {boxFamily.options.map((key) => (
+                <option key={key} value={key}>
+                  {boxFormatLabels[key]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="text-sm text-muted-foreground">
+            These are closed cardboard boxes. Record the measured market/edition
+            variant in the template name and source; no universal retail
+            dimensions are supplied.
+          </p>
           <label className="block">
             Template name
             <Input name="name" required maxLength={200} />
@@ -138,7 +162,8 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
   return (
     <li className="space-y-3 rounded-xl border p-4">
       <p>
-        {t.name} · Revision {t.revisionNumber} · {t.status}
+        {t.name} · {boxFormatLabels[t.familyKey]} · Revision {t.revisionNumber}{" "}
+        · {t.status}
         {t.archived ? " · Archived" : ""}
       </p>
       <p className="text-sm">
@@ -259,7 +284,8 @@ function ComponentEditor({
               )
               .map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} · r{t.revisionNumber}
+                  {t.name} · {boxFormatLabels[t.familyKey]} · r
+                  {t.revisionNumber}
                   {t.archived ? " · Archived" : ""}
                 </option>
               ))}
@@ -522,7 +548,7 @@ export function PackagingManager({ data }: { data: Manager }) {
       </section>
       <section aria-labelledby="packaging-templates" className="space-y-4">
         <h2 id="packaging-templates" className="font-heading text-2xl">
-          SNES cardboard templates
+          Cardboard box templates
         </h2>
         <NewTemplate />
         <ul className="space-y-4">
@@ -531,7 +557,10 @@ export function PackagingManager({ data }: { data: Manager }) {
           ))}
         </ul>
         {data.moreTemplates && (
-          <p>Showing the latest 50 templates and all assigned templates.</p>
+          <p>
+            Showing the latest 50 templates per format and all assigned
+            templates.
+          </p>
         )}
       </section>
       <section aria-labelledby="packaging-artwork" className="space-y-4">

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ModelViewer } from "@/components/three/model-viewer";
 import { loadGameBox } from "../actions";
 import type { PackagingComponent } from "../contracts";
+import { boxFormatLabels } from "@/lib/three/packaging-contracts";
 export function GamePackaging({
   id,
   copyRevision,
@@ -45,6 +46,9 @@ export function GamePackaging({
           <h3 className="font-heading text-xl">{component.name}</h3>
           <p className="text-sm">
             {component.templateName ?? "No template assigned"}
+            {component.familyKey
+              ? ` · ${boxFormatLabels[component.familyKey]}`
+              : ""}
             {component.synthetic
               ? " · Synthetic demonstration; not retail measurements"
               : ""}

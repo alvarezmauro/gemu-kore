@@ -1,9 +1,13 @@
 import type { AssetAttribution } from "@/features/provenance/contracts";
-import type { TextureTransform } from "@/lib/three/packaging-contracts";
+import type {
+  BoxFamily,
+  TextureTransform,
+} from "@/lib/three/packaging-contracts";
 export type BoxTemplate = {
   id: string;
   name: string;
   slug: string;
+  familyKey: BoxFamily;
   revisionNumber: number;
   revision: number;
   status: "DRAFT" | "READY";
@@ -23,6 +27,7 @@ export type PackagingComponent = {
   name: string;
   quantity: number;
   templateName: string | null;
+  familyKey: BoxFamily | null;
   synthetic: boolean;
   available: boolean;
   artworkComplete: boolean;

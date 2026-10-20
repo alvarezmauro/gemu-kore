@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/server/db/generated/client";
 import type { TransactionClient } from "@/server/db/transaction";
+import type { BoxFamily } from "@/lib/three/packaging-contracts";
 import { assetSourceSelect } from "./provenance";
 const asset = {
   id: true,
@@ -93,8 +94,9 @@ export function template(id: string, tx: TransactionClient) {
     select: templateSelect,
   });
 }
-export function templates(tx: TransactionClient) {
+export function templates(familyKey: BoxFamily, tx: TransactionClient) {
   return tx.packagingTemplate.findMany({
+    where: { familyKey },
     select: templateSelect,
     orderBy: [{ familyKey: "asc" }, { revisionNumber: "desc" }],
     take: 51,

@@ -63,3 +63,42 @@ it("rejects invalid face contracts, misleading completeness, foreign URLs and co
   };
   expect(packagingPresentation.safeParse(a).success).toBe(false);
 });
+it("keeps legacy SNES descriptors readable while requiring explicit supported families for new formats", () => {
+  const legacy = packagingFixture();
+  const { familyKey, ...legacyContent } = legacy.content;
+  expect(familyKey).toBe("snes-cardboard");
+  expect(
+    packagingPresentation.parse({ ...legacy, content: legacyContent }).content
+      .familyKey,
+  ).toBe("snes-cardboard");
+  const nes = packagingFixture("nes-cardboard");
+  expect(packagingPresentation.parse(nes).content).toMatchObject({
+    familyKey: "nes-cardboard",
+    dimensions: nes.content.dimensions,
+  });
+  expect(
+    packagingPresentation.safeParse({
+      ...nes,
+      content: { ...nes.content, familyKey: "genesis-clamshell" },
+    }).success,
+  ).toBe(false);
+});
+it.each(["nes-cardboard", "snes-cardboard"] as const)(
+  "keeps aggregate artwork admission bounded for %s",
+  (familyKey) => {
+    const p = packagingFixture(familyKey);
+    for (const slot of p.content.slots) {
+      const id = crypto.randomUUID();
+      slot.resource = {
+        id,
+        url: `/api/media/private/${id}`,
+        mimeType: "image/webp",
+        byteLength: 2 * 1024 * 1024,
+        width: 2048,
+        height: 2048,
+      };
+    }
+    p.content.artworkComplete = true;
+    expect(packagingPresentation.safeParse(p).success).toBe(false);
+  },
+);

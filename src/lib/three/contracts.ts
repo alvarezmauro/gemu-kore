@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   artworkResource,
   boxDimensions,
+  boxFamily,
   boxFaces,
   textureTransform,
   packagingLimits,
@@ -73,6 +74,8 @@ export const packagingPresentation = z
     content: z.strictObject({
       kind: z.literal("PACKAGING"),
       rendererVersion: z.literal("box-v1"),
+      // Version-2 SNES descriptors predating format expansion remain readable.
+      familyKey: boxFamily.default("snes-cardboard"),
       componentId: z.uuid(),
       templateId: z.uuid(),
       templateRevision: z.number().int().positive(),

@@ -1880,6 +1880,9 @@ Add:
 
 Do them incrementally.
 
+
+Status: **In progress — NES increment implemented 2026-10-20.** Added explicit NES cardboard curation and private previews, retaining SNES support through the existing bounded six-face renderer. Family selection and labels are validated end to end; revision numbering and bounded template choices are per format. Existing ready SNES contracts and bindings remain intact, old SNES descriptors are compatible, and cross-template/family slot reuse is rejected. Measurements remain curator-supplied; fixture dimensions and artwork are synthetic. Documentation: [Private packaging preview](docs/operations/PACKAGING_PREVIEW.md#task-143--nes-increment). Verification: lint, typecheck, production build, schema validation, deferred bundle budget, formatting/whitespace, 1,129 unit/component tests, 6 packaging + 52 core-schema + 8 catalog integration checks, and 4 desktop/mobile packaging flows pass. Migration is replay-tested on disposable databases; no personal database was migrated. Remaining in this task: Genesis clamshell, PlayStation jewel, PS2 DVD and Switch case formats, incrementally with suitable geometry. Task 14.4 is not started.
+
 ---
 
 ## TASK 14.4 — Cartridge Renderer
