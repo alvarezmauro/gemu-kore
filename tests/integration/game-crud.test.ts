@@ -147,6 +147,16 @@ it("returns safe, bounded private details with scoped credits, cover precedence 
       regionId: c.region.id,
     },
   });
+  await db.productIdentifier.createMany({
+    data: Array.from({ length: 21 }, (_, i) => ({
+      gameReleaseId: c.release.id,
+      scheme: "PRODUCT_CODE" as const,
+      value: `TEST-${String(i).padStart(2, "0")}`,
+      normalizedValue: `test-${i}`,
+      issuer: "Synthetic issuer",
+      marketNote: "North America",
+    })),
+  });
   await db.game.update({
     where: { id: c.game.id },
     data: { description: "Game description", archivedAt: new Date() },
@@ -203,6 +213,14 @@ it("returns safe, bounded private details with scoped credits, cover precedence 
     })),
   });
   const result = await getOwnedGame(viewer.context, { id: c.id });
+  expect(result.detail.productIdentifiers).toHaveLength(20);
+  expect(result.detail.productIdentifiers[0]).toEqual({
+    scheme: "PRODUCT_CODE",
+    value: "TEST-00",
+    issuer: "Synthetic issuer",
+    marketNote: "North America",
+  });
+  expect(result.detail.moreProductIdentifiers).toBe(true);
   expect(result).toMatchObject({
     canManage: false,
     locations: [],

@@ -1996,6 +1996,10 @@ Edition Contents
 Trailer
 ```
 
+Status: **Completed 2026-10-20.** Built a cover-led, responsive private game detail page with a single title, scoped release identity and all six sections in the planned order. Personal photos sit under My Copy; sourced playtime sits under About. Existing management controls, source attribution, section links and lazy media/3D behavior remain available. Added contained cover failure/absence states, precision-preserving market dates and a bounded catalog product-identifier read that stays separate from copy observations. Rating displays “Not recorded” because typed rating storage/acceptance remains deferred in the accepted enrichment architecture. See the [implementation notes](docs/operations/GAME_DETAIL.md).
+
+Verification: lint, typecheck, production build, formatting/whitespace, unchanged deferred 3D bundle budget, 1,221 unit/component cases, 34 disposable-PostgreSQL game integration cases and 20 distinct desktop/mobile browser cases pass. Browser coverage includes the new detail layout, 320px reflow, desktop 200% zoom, themes, reduced motion, cover precedence/failures, section navigation, scoped access and existing copy CRUD, galleries, trailers, playtime and physical previews. Light desktop and dark mobile screenshots were visually reviewed. No schema, dependency or public-delivery changes. Task 15.2 — Game UX Polish is next and has not started.
+
 ---
 
 ## TASK 15.2 — Game UX Polish

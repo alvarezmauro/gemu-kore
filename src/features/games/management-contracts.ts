@@ -20,6 +20,13 @@ export type GameCopyDetail = {
   platform: PlatformChoice & { archived: boolean };
   release: ReleaseChoice & { archived: boolean };
   firstReleaseYear: number | null;
+  productIdentifiers: {
+    scheme: string;
+    value: string;
+    issuer: string | null;
+    marketNote: string | null;
+  }[];
+  moreProductIdentifiers: boolean;
   developers: string[];
   credits: {
     company: string;

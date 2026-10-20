@@ -13,15 +13,20 @@ import type { TrailerReference } from "../trailer-validation";
 import { ScreenshotGallery } from "./screenshot-gallery";
 import type { ScreenshotGalleryData } from "../screenshot-contracts";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MagicCard } from "@/components/magic/magic-card";
-import { BlurFade } from "@/components/magic/blur-fade";
 import { ConsoleImage } from "@/features/consoles/components/console-image";
 import { severityLabels, statusLabels } from "@/features/defects/contracts";
 import type { GameCopyDetail } from "../management-contracts";
 import type { CopyLocation } from "../creation-contracts";
 import { GameReleaseSummary } from "./game-release-summary";
 import { GameControls } from "./game-controls";
+import { GameDetailHero } from "./game-detail-hero";
+import { gameDetailPresentation } from "../detail-presentation";
+const identifierLabels: Record<string, string> = {
+  PRODUCT_CODE: "Product code",
+  UPC: "UPC",
+  EAN: "EAN",
+  OTHER: "Other identifier",
+};
 export function GameDetail({
   detail: d,
   provenance,
@@ -47,117 +52,63 @@ export function GameDetail({
   };
   trailer: { reference: TrailerReference | null; scope: "game" | "release" };
 }) {
+  const presentation = gameDetailPresentation(d);
   return (
     <div className="min-w-0 space-y-8">
-      <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">
-          {d.publicationStatus === "PRIVATE"
-            ? "Private copy"
-            : "Published copy"}
-        </Badge>
-        {(d.game.archived || d.release.archived || d.platform.archived) && (
-          <Badge variant="outline">Catalog identity archived</Badge>
-        )}
-      </div>
-      {canManage && (
-        <GameControls
-          key={d.id}
-          detail={{
-            id: d.id,
-            revision: d.revision,
-            fields: d.fields,
-            game: d.game,
-            platform: d.platform,
-            release: d.release,
-          }}
-          locations={locations}
-        />
-      )}
-      {canManage &&
-        !d.game.archived &&
-        !d.release.archived &&
-        !d.platform.archived && (
-          <EnrichmentLinks gameId={d.game.id} releaseId={d.release.id} />
-        )}
-      <section
-        aria-label="Game identity"
-        className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
-      >
-        <div className="min-w-0">
-          {d.cover ? (
-            <>
-              <ConsoleImage
-                url={d.cover.url}
-                alt={d.cover.alt}
-                width={d.cover.width}
-                height={d.cover.height}
-              />
-              <p className="mt-2 text-sm text-muted-foreground">
-                Catalog cover ·{" "}
-                {d.cover.scope === "release"
-                  ? "Release cover"
-                  : "Game default; no release cover recorded"}
-                {d.cover.caption ? ` · ${d.cover.caption}` : ""}
-              </p>
-              <details className="mt-3 rounded-lg bg-muted p-3">
-                <summary className="min-h-11 cursor-pointer py-3 text-sm">
-                  Cover source details
-                </summary>
-                <AssetSource source={d.cover.source} />
-              </details>
-            </>
-          ) : (
-            <div className="flex aspect-[3/2] items-center justify-center rounded-xl bg-stone p-6 text-center text-muted-foreground">
-              No catalog cover available
-            </div>
-          )}
+      <GameDetailHero
+        detail={d}
+        presentation={presentation}
+        actions={
+          canManage ? (
+            <GameControls
+              key={d.id}
+              detail={{
+                id: d.id,
+                revision: d.revision,
+                fields: d.fields,
+                game: d.game,
+                platform: d.platform,
+                release: d.release,
+              }}
+              locations={locations}
+            />
+          ) : undefined
+        }
+      />
+      <nav aria-label="Game sections" className="space-y-2">
+        <div className="flex flex-wrap gap-2 text-sm">
+          {[
+            ["My copy", "my-copy"],
+            ["About", "about-game"],
+            ["Screenshots", "screenshots"],
+            ["Physical edition", "game-packaging"],
+            ["Edition contents", "game-release"],
+            ["Trailer", "game-trailer"],
+          ].map(([label, id]) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className="inline-flex min-h-11 items-center rounded-full bg-secondary px-4 text-secondary-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {label}
+            </a>
+          ))}
         </div>
-        <MagicCard className="space-y-4 p-5 [overflow-wrap:anywhere]">
-          <BlurFade>
-            <p className="text-sm text-muted-foreground">{d.platform.name}</p>
-            <h2 className="mt-1 font-heading text-2xl">{d.game.name}</h2>
-            <p className="mt-2">{d.release.name}</p>
-          </BlurFade>
-          <p className="text-sm">
-            Markets:{" "}
-            {d.release.markets.map((m) => m.name).join(", ") || "Unknown"}
-          </p>
-          <p className="text-sm">
-            Publisher:{" "}
-            {d.credits
-              .filter((c) => c.role === "PUBLISHER")
-              .map((c) => `${c.company}${c.market ? ` (${c.market})` : ""}`)
-              .join(", ") || "Unknown"}
-          </p>
-          <p className="text-sm">
-            First release year (market unknown):{" "}
-            {d.firstReleaseYear ?? "Unknown"}
-          </p>
-        </MagicCard>
-      </section>
-      <nav aria-label="Game sections" className="flex flex-wrap gap-3 text-sm">
-        {[
-          ["My copy", "my-copy"],
-          ["About", "about-game"],
-          ["Screenshots", "screenshots"],
-          ["Trailer", "game-trailer"],
-          ["Playtime", "game-playtime"],
-          ["Release and contents", "game-release"],
-          [
-            media.length ? "Physical edition" : "Physical packaging",
-            "game-packaging",
-          ],
-          ["Personal photos", "game-photos"],
-          ["Metadata sources", "game-sources"],
-        ].map(([label, id]) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            className="inline-flex min-h-11 items-center rounded-full bg-secondary px-4 text-secondary-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {label}
-          </a>
-        ))}
+        <div className="flex flex-wrap gap-x-5 text-sm">
+          {[
+            ["Playtime", "game-playtime"],
+            ["Personal photos", "game-photos"],
+            ["Metadata sources", "game-sources"],
+          ].map(([label, id]) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className="inline-flex min-h-11 items-center text-link underline underline-offset-4"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
       </nav>
       <section
         id="my-copy"
@@ -169,6 +120,8 @@ export function GameDetail({
         </h2>
         <dl className="grid min-w-0 gap-5 sm:grid-cols-2">
           {[
+            ["Edition", presentation.edition],
+            ["Release markets", presentation.markets],
             ["Serial number", d.fields.serialNumber || "Not recorded"],
             ["Observed markings", d.fields.observedMarkings || "Not recorded"],
             ["Location", d.location || "Unassigned"],
@@ -228,6 +181,52 @@ export function GameDetail({
             {canManage ? "Manage defects" : "View defects"}
           </Link>
         </Button>
+        <section
+          id="game-photos"
+          className="scroll-mt-24 space-y-4 border-t border-border pt-6"
+          aria-labelledby="game-photos-title"
+        >
+          <h3 id="game-photos-title" className="font-heading text-2xl">
+            Personal photos
+          </h3>
+          {d.photos.length ? (
+            <ul className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {d.photos.map((photo, i) => (
+                <li key={`${photo.url}:${i}`} className="min-w-0">
+                  <ConsoleImage
+                    url={photo.url}
+                    alt={photo.alt}
+                    width={photo.width}
+                    height={photo.height}
+                  />
+                  <details className="mt-3 rounded-lg bg-muted p-3">
+                    <summary className="min-h-11 cursor-pointer py-3 text-sm">
+                      Photo {i + 1} source details
+                    </summary>
+                    <AssetSource source={photo.source} />
+                  </details>
+                  {photo.caption && (
+                    <p className="mt-2 text-sm [overflow-wrap:anywhere]">
+                      {photo.caption}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No personal photos recorded.
+            </p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Showing up to 12 personal photos.
+          </p>
+          <Button asChild variant="outline">
+            <Link href={`/app/media?itemId=${d.id}`}>
+              {canManage ? "Manage photos" : "View photos"}
+            </Link>
+          </Button>
+        </section>
       </section>
       <section
         id="about-game"
@@ -238,14 +237,78 @@ export function GameDetail({
           About
         </h2>
         <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">
-          {d.release.description ??
-            d.game.description ??
-            "No description recorded."}
+          {presentation.description}
         </p>
         <p className="[overflow-wrap:anywhere]">
-          Developer: {d.developers.join(", ") || "Unknown"}
+          Game developers: {presentation.developers}
         </p>
-        <h3 className="font-medium">Release company credits</h3>
+        <dl className="grid min-w-0 gap-5 sm:grid-cols-2">
+          <div className="min-w-0">
+            <dt className="text-sm text-muted-foreground">Publisher</dt>
+            <dd className="mt-1 [overflow-wrap:anywhere]">
+              {presentation.publishers}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">Rating</dt>
+            <dd className="mt-1">Not recorded</dd>
+          </div>
+        </dl>
+        <div className="space-y-3">
+          <h3 className="font-heading text-xl">Release dates</h3>
+          {presentation.dates.length ? (
+            <dl className="grid gap-4 sm:grid-cols-2">
+              {presentation.dates.map((date) => (
+                <div key={date.id}>
+                  <dt className="text-sm text-muted-foreground">
+                    {date.label}
+                  </dt>
+                  <dd className="mt-1">{date.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No market dates recorded.
+            </p>
+          )}
+          {presentation.yearLabel === "First release year (market unknown)" && (
+            <p className="text-sm">
+              {presentation.yearLabel}: {presentation.year}
+            </p>
+          )}
+        </div>
+        <div className="space-y-3">
+          <h3 className="font-heading text-xl">Catalog product identifiers</h3>
+          <p className="text-sm text-muted-foreground">
+            Identifiers for the selected release. Your copy’s serial number and
+            observed markings are recorded under My copy.
+          </p>
+          {d.productIdentifiers.length ? (
+            <ul className="space-y-2 text-sm [overflow-wrap:anywhere]">
+              {d.productIdentifiers.map((identifier, i) => (
+                <li key={i}>
+                  <span className="font-medium">
+                    {identifierLabels[identifier.scheme] ?? "Identifier"}:{" "}
+                    {identifier.value}
+                  </span>
+                  {identifier.issuer && ` · ${identifier.issuer}`}
+                  {identifier.marketNote && ` · ${identifier.marketNote}`}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No product identifiers recorded.
+            </p>
+          )}
+          {d.moreProductIdentifiers && (
+            <p className="text-sm text-muted-foreground">
+              Showing the first 20 catalog identifiers.
+            </p>
+          )}
+        </div>
+        <h3 className="font-heading text-xl">Release company credits</h3>
         {d.credits.length ? (
           <ul className="space-y-2 text-sm [overflow-wrap:anywhere]">
             {d.credits.map((c, i) => (
@@ -261,50 +324,33 @@ export function GameDetail({
             No company credits recorded.
           </p>
         )}
-      </section>
-      <section
-        id="game-release"
-        className="scroll-mt-24 space-y-4"
-        aria-labelledby="game-release-title"
-      >
-        <h2 id="game-release-title" className="font-heading text-2xl">
-          Release and expected contents
-        </h2>
-        <GameReleaseSummary release={d.release} />
-      </section>
-      <section
-        id="game-packaging"
-        aria-labelledby="game-packaging-title"
-        className="scroll-mt-24 space-y-4"
-      >
-        <h2 id="game-packaging-title" className="font-heading text-2xl">
-          {media.length ? "Physical edition" : "Physical packaging"}
-        </h2>
-        <GamePackaging
-          key={`${d.id}:${d.release.revision}`}
-          id={d.id}
-          copyRevision={d.revision}
-          releaseRevision={d.release.revision}
-          components={[...packaging, ...media]}
-        />
-        {screenshots.canManage && (
-          <Button asChild variant="outline">
-            <Link
-              href={`/app/catalog/games/packaging?releaseId=${d.release.id}`}
-            >
-              Manage release packaging
-            </Link>
-          </Button>
-        )}
-        {screenshots.canManage && (
-          <Button asChild variant="outline">
-            <Link
-              href={`/app/catalog/games/cartridges?releaseId=${d.release.id}`}
-            >
-              Manage release cartridges
-            </Link>
-          </Button>
-        )}
+        <section
+          id="game-playtime"
+          className="scroll-mt-24 space-y-4"
+          aria-labelledby="game-playtime-title"
+        >
+          <h3 id="game-playtime-title" className="font-heading text-2xl">
+            Playtime
+          </h3>
+          {playtime.estimates && (
+            <p className="text-sm text-muted-foreground">
+              {playtime.scope === "release"
+                ? "Estimates for this release."
+                : "Game default estimates; this release has no playtime override."}{" "}
+              Blank durations are unknown.
+            </p>
+          )}
+          <PlaytimeSummary estimates={playtime.estimates} />
+          {playtime.canManage && (
+            <Button asChild variant="outline">
+              <Link
+                href={`/app/catalog/games/playtime?kind=release&id=${d.release.id}`}
+              >
+                Manage release playtime
+              </Link>
+            </Button>
+          )}
+        </section>
       </section>
       <section
         id="screenshots"
@@ -338,6 +384,50 @@ export function GameDetail({
         )}
       </section>
       <section
+        id="game-packaging"
+        aria-labelledby="game-packaging-title"
+        className="scroll-mt-24 space-y-4"
+      >
+        <h2 id="game-packaging-title" className="font-heading text-2xl">
+          Physical edition
+        </h2>
+        <GamePackaging
+          key={`${d.id}:${d.release.revision}`}
+          id={d.id}
+          copyRevision={d.revision}
+          releaseRevision={d.release.revision}
+          components={[...packaging, ...media]}
+        />
+        {screenshots.canManage && (
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link
+                href={`/app/catalog/games/packaging?releaseId=${d.release.id}`}
+              >
+                Manage release packaging
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link
+                href={`/app/catalog/games/cartridges?releaseId=${d.release.id}`}
+              >
+                Manage release cartridges
+              </Link>
+            </Button>
+          </div>
+        )}
+      </section>
+      <section
+        id="game-release"
+        className="scroll-mt-24 space-y-4"
+        aria-labelledby="game-release-title"
+      >
+        <h2 id="game-release-title" className="font-heading text-2xl">
+          Edition contents
+        </h2>
+        <GameReleaseSummary release={d.release} />
+      </section>
+      <section
         id="game-trailer"
         className="scroll-mt-24 space-y-4"
         aria-labelledby="game-trailer-title"
@@ -367,80 +457,13 @@ export function GameDetail({
           </Button>
         )}
       </section>
-      <section
-        id="game-playtime"
-        className="scroll-mt-24 space-y-4"
-        aria-labelledby="game-playtime-title"
-      >
-        <h2 id="game-playtime-title" className="font-heading text-2xl">
-          Playtime
-        </h2>
-        {playtime.estimates && (
-          <p className="text-sm text-muted-foreground">
-            {playtime.scope === "release"
-              ? "Estimates for this release."
-              : "Game default estimates; this release has no playtime override."}{" "}
-            Blank durations are unknown.
-          </p>
-        )}
-        <PlaytimeSummary estimates={playtime.estimates} />
-        {playtime.canManage && (
-          <Button asChild variant="outline">
-            <Link
-              href={`/app/catalog/games/playtime?kind=release&id=${d.release.id}`}
-            >
-              Manage release playtime
-            </Link>
-          </Button>
-        )}
-      </section>
-      <section
-        id="game-photos"
-        className="scroll-mt-24 space-y-4"
-        aria-labelledby="game-photos-title"
-      >
-        <h2 id="game-photos-title" className="font-heading text-2xl">
-          Personal photos
-        </h2>
-        {d.photos.length ? (
-          <ul className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {d.photos.map((photo, i) => (
-              <li key={`${photo.url}:${i}`} className="min-w-0">
-                <ConsoleImage
-                  url={photo.url}
-                  alt={photo.alt}
-                  width={photo.width}
-                  height={photo.height}
-                />
-                <details className="mt-3 rounded-lg bg-muted p-3">
-                  <summary className="min-h-11 cursor-pointer py-3 text-sm">
-                    Photo {i + 1} source details
-                  </summary>
-                  <AssetSource source={photo.source} />
-                </details>
-                {photo.caption && (
-                  <p className="mt-2 text-sm [overflow-wrap:anywhere]">
-                    {photo.caption}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No personal photos recorded.
-          </p>
-        )}
-        <p className="text-sm text-muted-foreground">
-          Showing up to 12 personal photos.
-        </p>
-        <Button asChild variant="outline">
-          <Link href={`/app/media?itemId=${d.id}`}>
-            {canManage ? "Manage photos" : "View photos"}
-          </Link>
-        </Button>
-      </section>
       <GameSources provenance={provenance} />
+      {canManage &&
+        !d.game.archived &&
+        !d.release.archived &&
+        !d.platform.archived && (
+          <EnrichmentLinks gameId={d.game.id} releaseId={d.release.id} />
+        )}
     </div>
   );
 }

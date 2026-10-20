@@ -141,6 +141,8 @@ export async function getOwnedGame(
             archived: selected.archivedAt !== null,
           },
           firstReleaseYear: selected.firstReleaseYear,
+          productIdentifiers: selected.identifiers.slice(0, 20),
+          moreProductIdentifiers: selected.identifiers.length > 20,
           developers: selected.game.companies.map((c) => c.company.name),
           credits: selected.companies.map((c) => ({
             company: c.company.name,

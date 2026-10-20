@@ -20,7 +20,21 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-cartridge-components") {
+    if (command === "seed-game-detail") {
+      const { seedGameDetail } = await import("./game-detail-fixture");
+      result = await seedGameDetail(database, JSON.parse(argument!));
+    } else if (command === "remove-detail-covers") {
+      const { gameId, releaseId, scope } = JSON.parse(argument!);
+      await database.catalogAsset.deleteMany({
+        where: {
+          role: "COVER",
+          OR: [
+            { gameReleaseId: releaseId },
+            ...(scope === "all" ? [{ gameId }] : []),
+          ],
+        },
+      });
+    } else if (command === "seed-cartridge-components") {
       await database.gameReleaseIncludedItem.createMany({
         data: [
           {

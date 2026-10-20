@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { ApplicationShell } from "@/components/layout/application-shell";
 import { PageContainer } from "@/components/layout/page-container";
-import { PageHeader } from "@/components/layout/page-header";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { PaletteTrigger } from "@/features/search/components/command-palette";
@@ -64,12 +63,6 @@ export default async function GamePage({
       ]}
     >
       <PageContainer>
-        <div className="[overflow-wrap:anywhere]">
-          <PageHeader
-            title={result.detail.game.name}
-            description={`${result.detail.platform.name} · ${result.detail.release.name} · Copy ${id.slice(0, 8)}`}
-          />
-        </div>
         <GameDetail
           detail={result.detail}
           packaging={result.packaging}

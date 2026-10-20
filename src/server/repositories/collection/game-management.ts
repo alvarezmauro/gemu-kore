@@ -33,6 +33,16 @@ export function ownedGame(id: string, tx: TransactionClient) {
               ...trailerSelect,
               playtime: { select: playtimeSelect },
               firstReleaseYear: true,
+              identifiers: {
+                select: {
+                  scheme: true,
+                  value: true,
+                  issuer: true,
+                  marketNote: true,
+                },
+                orderBy: [{ scheme: "asc" }, { value: "asc" }, { id: "asc" }],
+                take: 21,
+              },
               game: {
                 select: {
                   ...gameSelect,
