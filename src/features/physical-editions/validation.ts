@@ -2,27 +2,36 @@ import { z } from "zod";
 import {
   boxDimensions,
   boxFamily,
+  clamshellSlots,
   textureTransform,
 } from "@/lib/three/packaging-contracts";
 const revision = z.number().int().positive().max(2147483646);
 export const packagingPage = z.strictObject({ releaseId: z.uuid() });
-export const createBoxTemplate = z.strictObject({
+const templateFields = {
   id: z.uuid(),
   name: z.string().trim().min(1).max(200),
   slug: z
     .string()
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  familyKey: boxFamily,
   revisionNumber: revision,
   dimensions: boxDimensions,
   synthetic: z.boolean(),
   measurementNote: z.string().trim().min(1).max(1000),
-});
+};
+export const createBoxTemplate = z.discriminatedUnion("familyKey", [
+  z.strictObject({ ...templateFields, familyKey: boxFamily }),
+  z.strictObject({
+    ...templateFields,
+    familyKey: z.literal("genesis-clamshell"),
+    slots: clamshellSlots,
+  }),
+]);
 export const templateCommand = z.strictObject({
   id: z.uuid(),
   expectedRevision: revision,
   operation: z.enum(["ready", "archive", "restore"]),
+  reviewedGeometry: z.literal(true).optional(),
 });
 export const assignBox = z
   .strictObject({

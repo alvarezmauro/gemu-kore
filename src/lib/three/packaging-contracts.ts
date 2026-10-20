@@ -4,7 +4,13 @@ import { z } from "zod";
 // Dimensions and variant suitability still require curator evidence.
 export const boxFamily = z.enum(["nes-cardboard", "snes-cardboard"]);
 export type BoxFamily = z.infer<typeof boxFamily>;
-export const boxFormatLabels: Record<BoxFamily, string> = {
+export const packagingFamily = z.enum([
+  ...boxFamily.options,
+  "genesis-clamshell",
+]);
+export type PackagingFamily = z.infer<typeof packagingFamily>;
+export const boxFormatLabels: Record<PackagingFamily, string> = {
+  "genesis-clamshell": "Genesis clamshell",
   "nes-cardboard": "NES cardboard box",
   "snes-cardboard": "SNES cardboard box",
 };
@@ -116,3 +122,52 @@ export function faceSize(
       ? [d.widthMm, d.depthMm]
       : [d.widthMm, d.heightMm];
 }
+
+const glbIndex = z.number().int().min(0).max(4095);
+export const glbSlotTarget = z.strictObject({
+  schemaVersion: z.literal(1),
+  kind: z.literal("GLB_PRIMITIVE"),
+  sceneIndex: z.literal(0),
+  nodeIndex: glbIndex,
+  meshIndex: glbIndex,
+  primitiveIndex: glbIndex,
+  materialIndex: glbIndex,
+  uvChannel: z.literal(0),
+  nodeName: z.string().min(1).max(200),
+  materialName: z.string().min(1).max(200),
+  artWidthMm: mm,
+  artHeightMm: mm,
+});
+export type GlbSlotTarget = z.infer<typeof glbSlotTarget>;
+export const clamshellSlot = z.strictObject({
+  name: z.enum(["FRONT", "BACK", "SPINE"]),
+  target: glbSlotTarget,
+});
+export const clamshellSlots = z
+  .array(clamshellSlot)
+  .length(3)
+  .refine(
+    (slots) =>
+      new Set(slots.map((s) => s.name)).size === 3 &&
+      new Set(
+        slots.map(
+          (s) =>
+            `${s.target.nodeIndex}:${s.target.meshIndex}:${s.target.primitiveIndex}`,
+        ),
+      ).size === 3,
+    "Choose three distinct front, back and spine primitives.",
+  );
+export const packageModelResource = z
+  .strictObject({
+    id: z.uuid(),
+    url: z.string(),
+    mimeType: z.literal("model/gltf-binary"),
+    byteLength: z
+      .number()
+      .int()
+      .positive()
+      .max(8 * 1024 * 1024),
+  })
+  .refine((r) => r.url === `/api/media/private/${r.id}`);
+
+export type PackageModelResource = z.infer<typeof packageModelResource>;

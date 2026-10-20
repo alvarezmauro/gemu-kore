@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@/server/db/generated/client";
 import type { TransactionClient } from "@/server/db/transaction";
-import type { BoxFamily } from "@/lib/three/packaging-contracts";
+import type { PackagingFamily } from "@/lib/three/packaging-contracts";
 import { assetSourceSelect } from "./provenance";
 const asset = {
   id: true,
@@ -24,6 +24,8 @@ export const templateSelect = {
   revision: true,
   status: true,
   geometryType: true,
+  baseModelAssetId: true,
+  baseModelAsset: { select: asset },
   dimensions: true,
   materialSettings: true,
   cameraSettings: true,
@@ -94,7 +96,7 @@ export function template(id: string, tx: TransactionClient) {
     select: templateSelect,
   });
 }
-export function templates(familyKey: BoxFamily, tx: TransactionClient) {
+export function templates(familyKey: PackagingFamily, tx: TransactionClient) {
   return tx.packagingTemplate.findMany({
     where: { familyKey },
     select: templateSelect,
@@ -198,5 +200,12 @@ export function protectedComponents(releaseId: string, tx: TransactionClient) {
     where: { gameReleaseId: releaseId, packagingTemplateId: { not: null } },
     select: { id: true, kind: true },
     take: 100,
+  });
+}
+
+export function templateGeometryAsset(id: string, tx: TransactionClient) {
+  return tx.asset.findUnique({
+    where: { id },
+    select: { ...asset, objectKey: true, storageNamespace: true, sha256: true },
   });
 }

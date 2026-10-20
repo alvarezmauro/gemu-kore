@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { screenshotUpload } from "@/features/games/screenshot-validation";
 
-export const targetSchema = z.discriminatedUnion("kind", [
+export const legacyTargetSchema = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("collection"),
@@ -68,6 +68,16 @@ export const targetSchema = z.discriminatedUnion("kind", [
     })
     .strict(),
 ]);
+export const packagingGeometryTarget = z.strictObject({
+  kind: z.literal("packagingGeometry"),
+  id: z.uuid(),
+  expectedRevision: z.number().int().positive().max(2147483646),
+  source: screenshotUpload,
+});
+export const targetSchema = z.union([
+  legacyTargetSchema,
+  packagingGeometryTarget,
+]);
 export type UploadTarget = z.infer<typeof targetSchema>;
 export const artifactSchema = z
   .object({
@@ -90,18 +100,40 @@ export const artifactSchema = z
     variant: z.enum(["original", "thumbnail", "display"]),
   })
   .strict();
-export const manifestSchema = z
+const legacyManifest = z
   .object({
     schemaVersion: z.literal(1),
     data: z
       .object({
-        target: targetSchema,
+        target: legacyTargetSchema,
         useId: z.uuid(),
         artifacts: z.array(artifactSchema).min(1).max(3),
       })
       .strict(),
   })
   .strict();
+export const manifestSchema = z.discriminatedUnion("schemaVersion", [
+  legacyManifest,
+  z.strictObject({
+    schemaVersion: z.literal(2),
+    data: z.strictObject({
+      target: packagingGeometryTarget,
+      artifacts: z
+        .array(
+          artifactSchema.extend({
+            mimeType: z.literal("model/gltf-binary"),
+            variant: z.literal("original"),
+            sizeBytes: z
+              .number()
+              .int()
+              .positive()
+              .max(8 * 1024 * 1024),
+          }),
+        )
+        .length(1),
+    }),
+  }),
+]);
 export type UploadManifest = z.infer<typeof manifestSchema>;
 export type Artifact = z.infer<typeof artifactSchema>;
 export class AssetError extends Error {

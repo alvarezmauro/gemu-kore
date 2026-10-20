@@ -23,7 +23,7 @@ function content(c: Component) {
   if (!c.packagingTemplate || c.packagingTemplate.status !== "READY")
     return null;
   const template = boxTemplateDto(c.packagingTemplate);
-  const slots = template.slots.map((s) => {
+  function artwork(s: (typeof template.slots)[number]) {
     const binding = c.packagingBindings.find(
         (b) => b.packagingTextureSlotId === s.id,
       ),
@@ -44,9 +44,6 @@ function content(c: Component) {
           })
         : null;
     return {
-      face: s.face,
-      name: s.name,
-      required: s.required,
       resource: parsed?.success ? parsed.data : null,
       transform: textureTransform.parse(
         binding?.transform ?? {
@@ -56,16 +53,42 @@ function content(c: Component) {
         },
       ),
     };
-  });
-  return {
+  }
+  const identity = {
     kind: "PACKAGING" as const,
-    rendererVersion: "box-v1" as const,
-    familyKey: template.familyKey,
     componentId: c.id,
     templateId: template.id,
     templateRevision: template.revision,
     synthetic: template.synthetic,
     dimensions: template.dimensions,
+  };
+  if (template.familyKey === "genesis-clamshell") {
+    if (!template.baseModel) return null;
+    const slots = template.slots.map((s) => ({
+      name: s.name as "FRONT" | "BACK" | "SPINE",
+      required: true as const,
+      target: s.target!,
+      ...artwork(s),
+    }));
+    return {
+      ...identity,
+      rendererVersion: "gltf-slots-v1" as const,
+      familyKey: "genesis-clamshell" as const,
+      geometry: template.baseModel,
+      slots,
+      artworkComplete: slots.every((s) => s.resource !== null),
+    };
+  }
+  const slots = template.slots.map((s) => ({
+    face: s.face!,
+    name: s.name,
+    required: s.required,
+    ...artwork(s),
+  }));
+  return {
+    ...identity,
+    rendererVersion: "box-v1" as const,
+    familyKey: template.familyKey,
     slots,
     artworkComplete: slots.every((s) => !s.required || s.resource !== null),
   };
@@ -91,8 +114,12 @@ export async function readPackagingComponents(
         ),
       );
       const within =
-        [...unique.values()].reduce((n, r) => n + r.byteLength, 0) <=
-          packagingLimits.bytes &&
+        [...unique.values()].reduce(
+          (n, r) => n + r.byteLength,
+          value?.rendererVersion === "gltf-slots-v1"
+            ? value.geometry.byteLength
+            : 0,
+        ) <= packagingLimits.bytes &&
         [...unique.values()].reduce((n, r) => n + r.width * r.height, 0) <=
           packagingLimits.pixels;
       return {

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { clamshellFixture } from "../helpers/clamshell-fixture";
 import { fixture, openModel, signIn } from "../helpers/model-browser";
 test.beforeEach(async () => {
   await fixture("reset-search");
@@ -9,8 +10,17 @@ test.afterAll(async () => {
   await fixture("reset-search");
   await fixture("reset");
 });
-for (const family of ["snes-cardboard", "nes-cardboard"] as const) {
-  const formatName = family === "nes-cardboard" ? "NES" : "SNES";
+for (const family of [
+  "snes-cardboard",
+  "nes-cardboard",
+  "genesis-clamshell",
+] as const) {
+  const genesis = family === "genesis-clamshell";
+  const formatName = genesis
+    ? "Genesis"
+    : family === "nes-cardboard"
+      ? "NES"
+      : "SNES";
   test(`curates ${formatName} packaging and private artwork, then lazily renders distinct faces with accessible mobile controls`, async ({
     page,
     context,
@@ -39,21 +49,65 @@ for (const family of ["snes-cardboard", "nes-cardboard"] as const) {
       .getByLabel("Unique slug")
       .fill(`synthetic-${formatName.toLowerCase()}-box`);
     for (const [name, value] of [
-      ["width", family === "nes-cardboard" ? "110" : "180"],
-      ["height", family === "nes-cardboard" ? "160" : "125"],
-      ["depth", family === "nes-cardboard" ? "25" : "30"],
+      ["width", genesis ? "120" : family === "nes-cardboard" ? "110" : "180"],
+      ["height", genesis ? "180" : family === "nes-cardboard" ? "160" : "125"],
+      ["depth", genesis ? "28" : family === "nes-cardboard" ? "25" : "30"],
     ])
       await page.getByLabel(`${name} (mm)`, { exact: true }).fill(value);
     await page
       .getByLabel("Measurement source or synthetic fixture note")
       .fill("Synthetic dimensions for testing only.");
     await page.getByLabel("Synthetic demonstration dimensions").check();
+    if (genesis)
+      await page
+        .getByLabel("Front, back and spine mappings (JSON)", { exact: true })
+        .fill(JSON.stringify(clamshellFixture().slots));
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
     await page
       .getByRole("button", { name: "Create draft template", exact: true })
       .click();
     await expect(
       page.getByRole("button", { name: "Mark ready", exact: true }),
     ).toBeVisible();
+    if (genesis) {
+      await expect(
+        page.getByRole("button", { name: "Mark ready", exact: true }),
+      ).toBeDisabled();
+      const upload = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Upload clamshell geometry",
+          exact: true,
+        }),
+      });
+      await upload
+        .getByLabel("Clamshell GLB file (up to 8 MiB)", { exact: true })
+        .setInputFiles({
+          name: "synthetic-clamshell.glb",
+          mimeType: "model/gltf-binary",
+          buffer: clamshellFixture().bytes,
+        });
+      await upload
+        .getByLabel("License name", { exact: true })
+        .fill("Original synthetic clamshell");
+      await upload
+        .getByRole("button", { name: "Upload geometry", exact: true })
+        .click();
+      await expect(
+        page.getByRole("link", {
+          name: "Download private clamshell model for review",
+        }),
+      ).toBeVisible({ timeout: 25000 });
+      await page
+        .getByLabel(
+          "I reviewed this model’s clamshell shape, measured dimensions, source and front/back/spine mappings.",
+          { exact: true },
+        )
+        .check();
+    }
     await page.getByRole("button", { name: "Mark ready", exact: true }).click();
     await expect(
       page.getByRole("button", { name: "Mark ready", exact: true }),
@@ -136,24 +190,37 @@ for (const family of ["snes-cardboard", "nes-cardboard"] as const) {
       ),
     ).toBe(true);
     expect(saved.copies[0].hasBox).toBeNull();
-    let transfers = 0;
+    let transfers = 0,
+      geometryTransfers = 0;
+    const modelId = genesis ? state.templates[0].baseModelAssetId : null;
     page.on("request", (r) => {
       if (new URL(r.url()).pathname === `/api/media/private/${assetId}`)
         transfers++;
+      if (
+        modelId &&
+        new URL(r.url()).pathname === `/api/media/private/${modelId}`
+      )
+        geometryTransfers++;
     });
     await page.setViewportSize({ width: 320, height: 720 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`/app/games/${copy.id}`);
     await expect(
       page.getByText(
-        `Synthetic ${formatName} demonstration · ${formatName} cardboard box · Synthetic demonstration; not retail measurements`,
+        `Synthetic ${formatName} demonstration · ${genesis ? "Genesis clamshell" : `${formatName} cardboard box`} · Synthetic demonstration; not retail measurements`,
         { exact: true },
       ),
     ).toBeVisible();
     await expect(page.locator("canvas")).toHaveCount(0);
     expect(transfers).toBe(0);
+    expect(geometryTransfers).toBe(0);
     const viewer = await openModel(page);
     expect(transfers).toBe(1);
+    if (genesis) expect(geometryTransfers).toBe(1);
+    if (genesis)
+      await viewer
+        .locator("canvas")
+        .screenshot({ path: info.outputPath("clamshell-angle.png") });
     await viewer
       .getByRole("button", { name: "Front view", exact: true })
       .click();
@@ -192,6 +259,7 @@ for (const family of ["snes-cardboard", "nes-cardboard"] as const) {
       .selectOption({ label: "Outer box" });
     await openModel(page);
     expect(transfers).toBe(2);
+    if (genesis) expect(geometryTransfers).toBe(2);
     await viewer
       .getByRole("button", { name: "Close 3D preview", exact: true })
       .click();
@@ -209,5 +277,9 @@ for (const family of ["snes-cardboard", "nes-cardboard"] as const) {
     await fixture("update", JSON.stringify({ enabled: false }));
     const denied = await context.request.get(`/api/media/private/${assetId}`);
     expect(denied.status()).toBe(403);
+    if (modelId)
+      expect(
+        (await context.request.get(`/api/media/private/${modelId}`)).status(),
+      ).toBe(403);
   });
 }

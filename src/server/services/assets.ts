@@ -10,6 +10,7 @@ import { screenshotRelease } from "../repositories/catalog/screenshots";
 import { recordScreenshotUpload } from "./catalog/screenshots";
 import {
   findAsset,
+  packagingGeometryIdentity,
   hasFamilyUses,
   hasReferences,
   insertAsset,
@@ -43,8 +44,12 @@ import {
 } from "../repositories/collection/items";
 let processing = false;
 function catalogImageSource(target: UploadTarget) {
-  if (target.kind !== "catalog") return {};
-  const details = target.screenshot ?? target.artwork;
+  const details =
+    target.kind === "packagingGeometry"
+      ? target.source
+      : target.kind === "catalog"
+        ? (target.screenshot ?? target.artwork)
+        : null;
   if (!details) return {};
   const { caption, altText, retrievedAt, ...source } = details;
   void caption;
@@ -59,16 +64,40 @@ async function authorizeTarget(
   target: UploadTarget,
   kind: "IMAGE" | "MODEL_3D",
   tx: TransactionClient,
+  completingId?: string,
 ) {
   const current = await requirePermission(
     context,
-    target.kind === "catalog"
+    target.kind === "catalog" || target.kind === "packagingGeometry"
       ? "catalog.manage"
       : target.kind === "application"
         ? "settings.manage"
         : "media.manage",
     tx,
   );
+  if (target.kind === "packagingGeometry") {
+    const identity = await packagingGeometryIdentity(target.id, tx);
+    if (!identity) throw new AssetError("NOT_FOUND");
+    if (
+      identity.familyKey !== "genesis-clamshell" ||
+      identity.geometryType !== "GLB" ||
+      kind !== "MODEL_3D"
+    )
+      throw new AssetError("INVALID_INPUT");
+    const repeated =
+      completingId &&
+      identity.baseModelAssetId === completingId &&
+      (await findAsset(completingId, tx))?.state === "READY";
+    if (
+      !repeated &&
+      (identity.status !== "DRAFT" ||
+        identity.archivedAt ||
+        identity.revision !== target.expectedRevision)
+    )
+      throw new AssetError("CONFLICT");
+    return current;
+  }
+
   const identity = await targetIdentity(target, tx);
   if (!identity) throw new AssetError("NOT_FOUND");
   if (
@@ -97,7 +126,10 @@ async function authorizeTarget(
 function result(manifest: UploadManifest) {
   return {
     uploadId: manifest.data.artifacts[0].id,
-    useId: manifest.data.useId,
+    useId: manifest.schemaVersion === 1 ? manifest.data.useId : undefined,
+    ...(manifest.schemaVersion === 2
+      ? { templateId: manifest.data.target.id }
+      : {}),
     files: manifest.data.artifacts.map((a) => ({
       id: a.id,
       variant: a.variant,
@@ -147,7 +179,11 @@ export async function uploadAsset(
     (!Number.isSafeInteger(input.declaredSize) ||
       input.declaredSize <= 0 ||
       input.declaredSize >
-        (description.kind === "IMAGE" ? IMAGE_LIMIT : MODEL_LIMIT))
+        (target.data.kind === "packagingGeometry"
+          ? 8 * 1024 * 1024
+          : description.kind === "IMAGE"
+            ? IMAGE_LIMIT
+            : MODEL_LIMIT))
   )
     throw new AssetError("TOO_LARGE");
   const actor = await withTransaction((tx) =>
@@ -165,7 +201,11 @@ export async function uploadAsset(
         {
           id,
           kind: description.kind,
-          scope: target.data.kind === "catalog" ? "CATALOG" : "COLLECTION",
+          scope:
+            target.data.kind === "catalog" ||
+            target.data.kind === "packagingGeometry"
+              ? "CATALOG"
+              : "COLLECTION",
           ...createObjectLocator(id, description.mimeType),
           originalFilename: description.filename,
           uploadedById: actor.userId,
@@ -176,7 +216,20 @@ export async function uploadAsset(
     });
     reserved = true;
     try {
-      prepared = await prepareUpload(input.body, description, id, signal);
+      prepared = await prepareUpload(
+        input.body,
+        description,
+        id,
+        signal,
+        target.data.kind === "packagingGeometry"
+          ? 8 * 1024 * 1024
+          : MODEL_LIMIT,
+      );
+      if (
+        target.data.kind === "packagingGeometry" &&
+        prepared.artifacts[0].sizeBytes > 8 * 1024 * 1024
+      )
+        throw new AssetError("TOO_LARGE");
       if (
         input.declaredSize !== undefined &&
         input.declaredSize !== prepared.artifacts[0].sizeBytes
@@ -191,21 +244,46 @@ export async function uploadAsset(
       });
       throw error;
     }
-    const manifest: UploadManifest = {
-      schemaVersion: 1,
-      data: {
-        target: target.data,
-        useId: randomUUID(),
-        artifacts: prepared.artifacts.map((entry) => ({
-          id: entry.id,
-          variant: entry.variant,
-          mimeType: entry.mimeType,
-          sizeBytes: entry.sizeBytes,
-          sha256: entry.sha256,
-          ...(entry.width ? { width: entry.width, height: entry.height } : {}),
-        })),
-      },
-    };
+    const artifactEntries = prepared.artifacts.map((entry) => ({
+      id: entry.id,
+      variant: entry.variant,
+      mimeType: entry.mimeType,
+      sizeBytes: entry.sizeBytes,
+      sha256: entry.sha256,
+      ...(entry.width ? { width: entry.width, height: entry.height } : {}),
+    }));
+    if (
+      target.data.kind === "packagingGeometry" &&
+      (artifactEntries.length !== 1 ||
+        artifactEntries[0].sizeBytes > 8 * 1024 * 1024)
+    )
+      throw new AssetError("TOO_LARGE");
+    const manifest: UploadManifest =
+      target.data.kind === "packagingGeometry"
+        ? manifestSchema.parse({
+            schemaVersion: 2,
+            data: { target: target.data, artifacts: artifactEntries },
+          })
+        : {
+            schemaVersion: 1,
+            data: {
+              target: target.data as Exclude<
+                UploadTarget,
+                { kind: "packagingGeometry" }
+              >,
+              useId: randomUUID(),
+              artifacts: prepared.artifacts.map((entry) => ({
+                id: entry.id,
+                variant: entry.variant,
+                mimeType: entry.mimeType,
+                sizeBytes: entry.sizeBytes,
+                sha256: entry.sha256,
+                ...(entry.width
+                  ? { width: entry.width, height: entry.height }
+                  : {}),
+              })),
+            },
+          };
     await withTransaction(async (tx) => {
       await authorizeTarget(context, target.data, description.kind, tx);
       await lockAssets([id], tx);
@@ -227,7 +305,11 @@ export async function uploadAsset(
               ...data,
               id: artifact.id,
               kind: "IMAGE",
-              scope: target.data.kind === "catalog" ? "CATALOG" : "COLLECTION",
+              scope:
+                target.data.kind === "catalog" ||
+                target.data.kind === "packagingGeometry"
+                  ? "CATALOG"
+                  : "COLLECTION",
               deliveryClass: "DISPLAY",
               ...createObjectLocator(artifact.id, artifact.mimeType),
               uploadedById: actor.userId,
@@ -295,6 +377,7 @@ export async function completeUpload(
       manifest.data.target,
       original.kind === "IMAGE" ? "IMAGE" : "MODEL_3D",
       tx,
+      original.state === "READY" ? id : undefined,
     ),
   );
   if (original.state === "READY") return result(manifest);
@@ -336,9 +419,10 @@ export async function completeUpload(
     if (manifest.data.target.kind === "collection")
       await lockCollectionItem(manifest.data.target.id, tx);
     if (
-      manifest.data.target.kind === "catalog" &&
-      manifest.data.target.role === "SCREENSHOT" &&
-      manifest.data.target.target === "gameRelease"
+      manifest.data.target.kind === "packagingGeometry" ||
+      (manifest.data.target.kind === "catalog" &&
+        manifest.data.target.role === "SCREENSHOT" &&
+        manifest.data.target.target === "gameRelease")
     )
       await lockCatalogWrites(tx);
     const actor = await authorizeTarget(
@@ -346,6 +430,7 @@ export async function completeUpload(
       manifest.data.target,
       original.kind === "IMAGE" ? "IMAGE" : "MODEL_3D",
       tx,
+      id,
     );
     await lockAssets(
       manifest.data.artifacts.map((a) => a.id),
@@ -369,7 +454,7 @@ export async function completeUpload(
     )
       await recordScreenshotUpload(
         manifest.data.target.id,
-        manifest.data.useId,
+        manifest.schemaVersion === 1 ? manifest.data.useId : "",
         actor.userId,
         tx,
       );

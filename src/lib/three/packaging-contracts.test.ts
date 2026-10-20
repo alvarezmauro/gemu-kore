@@ -102,3 +102,46 @@ it.each(["nes-cardboard", "snes-cardboard"] as const)(
     expect(packagingPresentation.safeParse(p).success).toBe(false);
   },
 );
+import { clamshellPresentation } from "../../../tests/helpers/clamshell-fixture";
+it("admits authored descriptors while rejecting mismatched renderer contracts, ambiguous targets and foreign geometry", () => {
+  const p = clamshellPresentation();
+  expect(packagingPresentation.safeParse(p).success).toBe(true);
+  expect(
+    packagingPresentation.safeParse({
+      ...p,
+      content: { ...p.content, familyKey: "snes-cardboard" },
+    }).success,
+  ).toBe(false);
+  const duplicate = structuredClone(p);
+  duplicate.content.slots[1].target = { ...duplicate.content.slots[0].target };
+  expect(packagingPresentation.safeParse(duplicate).success).toBe(false);
+  p.content.geometry.url = "https://example.com/model.glb";
+  expect(packagingPresentation.safeParse(p).success).toBe(false);
+});
+it("includes model bytes in the shared artwork budget and rejects model/image identity collisions", () => {
+  const p = clamshellPresentation();
+  p.content.geometry.byteLength = 8 * 1024 * 1024;
+  for (const s of p.content.slots) {
+    const id = crypto.randomUUID();
+    s.resource = {
+      id,
+      url: `/api/media/private/${id}`,
+      mimeType: "image/png",
+      byteLength: 2 * 1024 * 1024,
+      width: 32,
+      height: 32,
+    };
+  }
+  p.content.artworkComplete = true;
+  expect(packagingPresentation.safeParse(p).success).toBe(false);
+  const q = clamshellPresentation();
+  q.content.slots[0].resource = {
+    id: q.content.geometry.id,
+    url: q.content.geometry.url,
+    mimeType: "image/png",
+    byteLength: 32,
+    width: 2,
+    height: 2,
+  };
+  expect(packagingPresentation.safeParse(q).success).toBe(false);
+});

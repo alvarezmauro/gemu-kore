@@ -12,7 +12,7 @@ export async function lockAssets(ids: string[], tx: TransactionClient) {
     await tx.$queryRaw`SELECT id FROM asset WHERE id = ${id}::uuid FOR UPDATE`;
 }
 export async function targetIdentity(
-  target: UploadTarget,
+  target: Exclude<UploadTarget, { kind: "packagingGeometry" }>,
   tx: TransactionClient,
 ) {
   if (target.kind === "collection")
@@ -76,6 +76,13 @@ export async function makeReady(
   const assetId =
     manifest.data.artifacts.find((a) => a.variant === "display")?.id ??
     original.id;
+  if (manifest.schemaVersion === 2) {
+    await tx.packagingTemplate.update({
+      where: { id: manifest.data.target.id },
+      data: { baseModelAssetId: assetId, revision: { increment: 1 } },
+    });
+    return;
+  }
   const target = manifest.data.target;
   const base = { id: manifest.data.useId, assetId };
   if (target.kind === "collection")
@@ -119,6 +126,7 @@ export async function makeReady(
 export async function hasReferences(id: string, tx: TransactionClient) {
   const where = { OR: [{ assetId: id }, { publicDisplayAssetId: id }] };
   return Boolean(
+    (await tx.packagingTemplate.count({ where: { baseModelAssetId: id } })) ||
     (await tx.packagingTextureBinding.count({ where: { assetId: id } })) ||
     (await tx.catalogAsset.count({ where })) ||
     (await tx.collectionItemMedia.count({ where })) ||
@@ -144,6 +152,9 @@ export async function hasFamilyUses(id: string, tx: TransactionClient) {
         ],
       };
       if (
+        (await tx.packagingTemplate.count({
+          where: { baseModelAssetId: sibling.derivedAssetId },
+        })) ||
         (await tx.packagingTextureBinding.count({
           where: { assetId: sibling.derivedAssetId },
         })) ||
@@ -155,4 +166,19 @@ export async function hasFamilyUses(id: string, tx: TransactionClient) {
     }
   }
   return false;
+}
+
+export function packagingGeometryIdentity(id: string, tx: TransactionClient) {
+  return tx.packagingTemplate.findUnique({
+    where: { id: id },
+    select: {
+      id: true,
+      revision: true,
+      status: true,
+      archivedAt: true,
+      familyKey: true,
+      geometryType: true,
+      baseModelAssetId: true,
+    },
+  });
 }

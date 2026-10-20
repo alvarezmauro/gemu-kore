@@ -1,13 +1,22 @@
 import type { AssetAttribution } from "@/features/provenance/contracts";
 import type {
-  BoxFamily,
+  PackagingFamily,
+  GlbSlotTarget,
   TextureTransform,
 } from "@/lib/three/packaging-contracts";
 export type BoxTemplate = {
   id: string;
   name: string;
   slug: string;
-  familyKey: BoxFamily;
+  familyKey: PackagingFamily;
+  geometryType: "PROCEDURAL_BOX" | "GLB";
+  baseModel: {
+    id: string;
+    url: string;
+    mimeType: "model/gltf-binary";
+    byteLength: number;
+  } | null;
+  modelSource: AssetAttribution | null;
   revisionNumber: number;
   revision: number;
   status: "DRAFT" | "READY";
@@ -20,14 +29,20 @@ export type BoxTemplate = {
   };
   synthetic: boolean;
   measurementNote: string;
-  slots: { id: string; name: string; face: number; required: boolean }[];
+  slots: {
+    id: string;
+    name: string;
+    face: number | null;
+    target: GlbSlotTarget | null;
+    required: boolean;
+  }[];
 };
 export type PackagingComponent = {
   id: string;
   name: string;
   quantity: number;
   templateName: string | null;
-  familyKey: BoxFamily | null;
+  familyKey: PackagingFamily | null;
   synthetic: boolean;
   available: boolean;
   artworkComplete: boolean;

@@ -2,6 +2,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { AssetSource } from "@/features/provenance/components/asset-source";
 import { emptyScreenshotUpload } from "@/features/games/screenshot-validation";
@@ -10,12 +11,12 @@ import {
   checkCollectionUpload,
 } from "@/features/media/upload";
 import {
-  boxFamily,
+  packagingFamily,
   boxFormatLabels,
   fullArtwork,
 } from "@/lib/three/packaging-contracts";
 import { createTemplate, changeTemplate, savePackaging } from "../actions";
-import { uploadArtwork } from "../upload";
+import { uploadArtwork, uploadGeometry } from "../upload";
 import type { PackagingManager as Manager, BoxTemplate } from "../contracts";
 const selectClass =
   "block min-h-12 w-full min-w-0 rounded-lg border border-input bg-background px-3";
@@ -45,8 +46,9 @@ function useMutation(onSaved?: () => void) {
 function NewTemplate() {
   const mutation = useMutation(),
     id = useRef<string | null>(null);
+  const [family, setFamily] = useState("snes-cardboard");
   return (
-    <details className="rounded-xl border p-4">
+    <details className="min-w-0 rounded-xl border p-4">
       <summary className="min-h-11 cursor-pointer py-3">
         Create packaging template
       </summary>
@@ -56,12 +58,24 @@ function NewTemplate() {
         must be labeled.
       </p>
       <form
-        className="space-y-4"
+        className="min-w-0 space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
           id.current ??= crypto.randomUUID();
           mutation.run(async () => {
+            let slots: unknown;
+            if (family === "genesis-clamshell") {
+              try {
+                slots = JSON.parse(text(form, "slots"));
+              } catch {
+                return {
+                  status: "error" as const,
+                  message:
+                    "Enter valid JSON for the three artwork surface mappings.",
+                };
+              }
+            }
             const result = await createTemplate({
               id: id.current,
               name: text(form, "name"),
@@ -76,22 +90,24 @@ function NewTemplate() {
               },
               synthetic: form.get("synthetic") === "on",
               measurementNote: text(form, "source"),
+              ...(family === "genesis-clamshell" ? { slots } : {}),
             });
             if (result.status === "success") id.current = null;
             return result;
           });
         }}
       >
-        <fieldset disabled={mutation.pending} className="space-y-4">
+        <fieldset disabled={mutation.pending} className="min-w-0 space-y-4">
           <label className="block">
             Packaging format
             <select
               aria-label="Packaging format"
               name="family"
               className={selectClass}
-              defaultValue="snes-cardboard"
+              value={family}
+              onChange={(e) => setFamily(e.target.value)}
             >
-              {boxFamily.options.map((key) => (
+              {packagingFamily.options.map((key) => (
                 <option key={key} value={key}>
                   {boxFormatLabels[key]}
                 </option>
@@ -99,10 +115,32 @@ function NewTemplate() {
             </select>
           </label>
           <p className="text-sm text-muted-foreground">
-            These are closed cardboard boxes. Record the measured market/edition
-            variant in the template name and source; no universal retail
-            dimensions are supplied.
+            Record the measured market/edition variant in the template name and
+            source; no universal retail dimensions are supplied.
           </p>
+          {family === "genesis-clamshell" && (
+            <label className="block">
+              Front, back and spine mappings (JSON)
+              <Textarea
+                name="slots"
+                aria-label="Front, back and spine mappings (JSON)"
+                aria-describedby="slot-guide"
+                required
+                maxLength={6000}
+                rows={10}
+                className="mt-2 h-64 w-full min-w-0 max-w-full field-sizing-fixed resize-y font-mono text-sm"
+              />
+              <span
+                id="slot-guide"
+                className="block text-sm text-muted-foreground"
+              >
+                Enter the three authored GLB primitive targets, diagnostic names
+                and physical artwork sizes from the model. See the packaging
+                authoring guide in project documentation. Upload the model after
+                creating this draft.
+              </span>
+            </label>
+          )}
           <label className="block">
             Template name
             <Input name="name" required maxLength={200} />
@@ -159,8 +197,10 @@ function NewTemplate() {
 }
 function TemplateRow({ template: t }: { template: BoxTemplate }) {
   const mutation = useMutation();
+  const [reviewed, setReviewed] = useState(false);
+  const authored = t.geometryType === "GLB";
   return (
-    <li className="space-y-3 rounded-xl border p-4">
+    <li className="min-w-0 space-y-3 rounded-xl border p-4">
       <p>
         {t.name} · {boxFormatLabels[t.familyKey]} · Revision {t.revisionNumber}{" "}
         · {t.status}
@@ -174,16 +214,63 @@ function TemplateRow({ template: t }: { template: BoxTemplate }) {
       <p className="text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">
         {t.measurementNote}
       </p>
+      {authored && (
+        <>
+          <details>
+            <summary className="min-h-11 cursor-pointer py-3">
+              Review artwork surface mappings
+            </summary>
+            <pre className="max-h-80 overflow-auto rounded-lg bg-muted p-3 text-xs">
+              {JSON.stringify(
+                t.slots.map((s) => ({ name: s.name, target: s.target })),
+                null,
+                2,
+              )}
+            </pre>
+          </details>
+          {t.baseModel ? (
+            <>
+              <a
+                href={t.baseModel.url}
+                className="block min-h-11 py-3 underline"
+              >
+                Download private clamshell model for review
+              </a>
+              {t.modelSource && <AssetSource source={t.modelSource} />}
+            </>
+          ) : (
+            <p>No clamshell model uploaded.</p>
+          )}
+          {t.status === "DRAFT" && !t.archived && (
+            <>
+              <PackagingUpload template={t} disabled={mutation.pending} />
+              <label className="flex min-h-11 items-start gap-3">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={reviewed}
+                  onChange={(e) => setReviewed(e.target.checked)}
+                />
+                I reviewed this model’s clamshell shape, measured dimensions,
+                source and front/back/spine mappings.
+              </label>
+            </>
+          )}
+        </>
+      )}
       <div className="flex flex-wrap gap-3">
         {t.status === "DRAFT" && !t.archived && (
           <Button
-            disabled={mutation.pending}
+            disabled={
+              mutation.pending || (authored && (!t.baseModel || !reviewed))
+            }
             onClick={() =>
               mutation.run(() =>
                 changeTemplate({
                   id: t.id,
                   expectedRevision: t.revision,
                   operation: "ready",
+                  ...(authored ? { reviewedGeometry: true } : {}),
                 }),
               )
             }
@@ -374,13 +461,16 @@ function ComponentEditor({
     </form>
   );
 }
-function ArtworkUpload({
+function PackagingUpload({
+  template,
   releaseId,
   disabled,
 }: {
-  releaseId: string;
+  template?: BoxTemplate;
+  releaseId?: string;
   disabled: boolean;
 }) {
+  const geometry = !!template;
   const router = useRouter(),
     [pending, start] = useTransition(),
     [message, setMessage] = useState(""),
@@ -398,23 +488,23 @@ function ArtworkUpload({
           setMessage("");
           setUncertain(undefined);
           try {
-            await uploadArtwork(
-              file,
-              releaseId,
-              {
-                ...emptyScreenshotUpload,
-                ...Object.fromEntries(
-                  Object.keys(emptyScreenshotUpload).map((k) => [
-                    k,
-                    text(form, k),
-                  ]),
-                ),
-                sourceType: "USER_UPLOAD",
-              },
-              setProgress,
-            );
+            const source = {
+              ...emptyScreenshotUpload,
+              ...Object.fromEntries(
+                Object.keys(emptyScreenshotUpload).map((k) => [
+                  k,
+                  text(form, k),
+                ]),
+              ),
+              sourceType: "USER_UPLOAD" as const,
+            };
+            if (template)
+              await uploadGeometry(file, template, source, setProgress);
+            else await uploadArtwork(file, releaseId!, source, setProgress);
             setMessage(
-              "Artwork uploaded. Choose it in a face and save the assignment.",
+              geometry
+                ? "Model uploaded. Review it before marking the template ready."
+                : "Artwork uploaded. Choose it in a face and save the assignment.",
             );
             router.refresh();
           } catch (error) {
@@ -428,14 +518,20 @@ function ArtworkUpload({
         });
       }}
     >
-      <h3 className="font-heading text-xl">Upload release artwork</h3>
-      <fieldset disabled={pending || disabled} className="space-y-4">
+      <h3 className="font-heading text-xl">
+        {geometry ? "Upload clamshell geometry" : "Upload release artwork"}
+      </h3>
+      <fieldset disabled={pending || disabled} className="min-w-0 space-y-4">
         <label className="block">
-          Artwork file
+          {geometry ? "Clamshell GLB file (up to 8 MiB)" : "Artwork file"}
           <Input
             type="file"
             name="file"
-            accept="image/png,image/jpeg,image/webp,image/avif"
+            accept={
+              geometry
+                ? ".glb,model/gltf-binary"
+                : "image/png,image/jpeg,image/webp,image/avif"
+            }
             required
           />
         </label>
@@ -452,36 +548,44 @@ function ArtworkUpload({
             ["usageRestrictions", "Usage restrictions"],
             ["retrievedAt", "Retrieved date"],
           ] as const
-        ).map(([name, label]) => (
-          <label className="block" key={name}>
-            {label}
-            <Input
-              name={name}
-              type={name === "retrievedAt" ? "date" : "text"}
-              maxLength={
-                name === "caption" || name === "altText"
-                  ? 1000
-                  : name === "provider"
-                    ? 100
-                    : name === "author" || name === "licenseName"
-                      ? 160
-                      : name === "attribution" || name === "usageRestrictions"
-                        ? 500
-                        : 512
-              }
-            />
-          </label>
-        ))}
+        )
+          .filter(
+            ([name]) => !geometry || (name !== "caption" && name !== "altText"),
+          )
+          .map(([name, label]) => (
+            <label className="block" key={name}>
+              {label}
+              <Input
+                name={name}
+                type={name === "retrievedAt" ? "date" : "text"}
+                maxLength={
+                  name === "caption" || name === "altText"
+                    ? 1000
+                    : name === "provider"
+                      ? 100
+                      : name === "author" || name === "licenseName"
+                        ? 160
+                        : name === "attribution" || name === "usageRestrictions"
+                          ? 500
+                          : 512
+                }
+              />
+            </label>
+          ))}
         <p className="text-sm">
           Uploads remain private. Source and license information does not grant
-          publication permission. Original files are preserved; previews use
-          prepared display images.
+          publication permission.{" "}
+          {geometry
+            ? "The original model is preserved. Review it before marking the template ready."
+            : "Original files are preserved; previews use prepared display images."}
         </p>
-        <Button type="submit">Upload artwork</Button>
+        <Button type="submit">
+          {geometry ? "Upload geometry" : "Upload artwork"}
+        </Button>
       </fieldset>
       {pending && (
         <progress
-          aria-label="Artwork upload"
+          aria-label={geometry ? "Geometry upload" : "Artwork upload"}
           max={100}
           value={progress ?? undefined}
         />
@@ -497,7 +601,7 @@ function ArtworkUpload({
               try {
                 await checkCollectionUpload(uncertain);
                 setUncertain(undefined);
-                setMessage("Upload completed. Refreshing artwork choices.");
+                setMessage("Upload completed. Refreshing packaging.");
                 router.refresh();
               } catch (error) {
                 setMessage(
@@ -530,7 +634,10 @@ export function PackagingManager({ data }: { data: Manager }) {
         </p>
       )}
       <p role="status">{saved}</p>
-      <section aria-labelledby="packaging-components" className="space-y-4">
+      <section
+        aria-labelledby="packaging-components"
+        className="min-w-0 space-y-4"
+      >
         <h2 id="packaging-components" className="font-heading text-2xl">
           Expected packaging components
         </h2>
@@ -546,14 +653,17 @@ export function PackagingManager({ data }: { data: Manager }) {
           />
         ))}
       </section>
-      <section aria-labelledby="packaging-templates" className="space-y-4">
+      <section
+        aria-labelledby="packaging-templates"
+        className="min-w-0 space-y-4"
+      >
         <h2 id="packaging-templates" className="font-heading text-2xl">
-          Cardboard box templates
+          Packaging templates
         </h2>
         <NewTemplate />
-        <ul className="space-y-4">
+        <ul className="min-w-0 space-y-4">
           {data.templates.map((t) => (
-            <TemplateRow key={t.id} template={t} />
+            <TemplateRow key={`${t.id}-${t.revision}`} template={t} />
           ))}
         </ul>
         {data.moreTemplates && (
@@ -563,11 +673,14 @@ export function PackagingManager({ data }: { data: Manager }) {
           </p>
         )}
       </section>
-      <section aria-labelledby="packaging-artwork" className="space-y-4">
+      <section
+        aria-labelledby="packaging-artwork"
+        className="min-w-0 space-y-4"
+      >
         <h2 id="packaging-artwork" className="font-heading text-2xl">
           Release artwork
         </h2>
-        <ArtworkUpload
+        <PackagingUpload
           releaseId={data.release.id}
           disabled={data.release.archived}
         />

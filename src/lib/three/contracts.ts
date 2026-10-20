@@ -3,6 +3,8 @@ import {
   artworkResource,
   boxDimensions,
   boxFamily,
+  glbSlotTarget,
+  packageModelResource,
   boxFaces,
   textureTransform,
   packagingLimits,
@@ -71,43 +73,89 @@ export const packagingPresentation = z
     description: z.string().max(1000),
     poster: privateImage.nullable(),
     settings: modelSettings,
-    content: z.strictObject({
-      kind: z.literal("PACKAGING"),
-      rendererVersion: z.literal("box-v1"),
-      // Version-2 SNES descriptors predating format expansion remain readable.
-      familyKey: boxFamily.default("snes-cardboard"),
-      componentId: z.uuid(),
-      templateId: z.uuid(),
-      templateRevision: z.number().int().positive(),
-      synthetic: z.boolean(),
-      dimensions: boxDimensions,
-      slots: z
-        .array(
-          z.strictObject({
-            face: z.number().int().min(0).max(5),
-            name: z.string(),
-            required: z.boolean(),
-            resource: artworkResource.nullable(),
-            transform: textureTransform,
-          }),
-        )
-        .length(6),
-      artworkComplete: z.boolean(),
-    }),
+    content: z.discriminatedUnion("rendererVersion", [
+      z.strictObject({
+        kind: z.literal("PACKAGING"),
+        rendererVersion: z.literal("box-v1"),
+        // Version-2 SNES descriptors predating format expansion remain readable.
+        familyKey: boxFamily.default("snes-cardboard"),
+        componentId: z.uuid(),
+        templateId: z.uuid(),
+        templateRevision: z.number().int().positive(),
+        synthetic: z.boolean(),
+        dimensions: boxDimensions,
+        slots: z
+          .array(
+            z.strictObject({
+              face: z.number().int().min(0).max(5),
+              name: z.string(),
+              required: z.boolean(),
+              resource: artworkResource.nullable(),
+              transform: textureTransform,
+            }),
+          )
+          .length(6),
+        artworkComplete: z.boolean(),
+      }),
+      z.strictObject({
+        kind: z.literal("PACKAGING"),
+        rendererVersion: z.literal("gltf-slots-v1"),
+        familyKey: z.literal("genesis-clamshell"),
+        componentId: z.uuid(),
+        templateId: z.uuid(),
+        templateRevision: z.number().int().positive(),
+        synthetic: z.boolean(),
+        dimensions: boxDimensions,
+        geometry: packageModelResource,
+        slots: z
+          .array(
+            z.strictObject({
+              name: z.enum(["FRONT", "BACK", "SPINE"]),
+              required: z.literal(true),
+              target: glbSlotTarget,
+              resource: artworkResource.nullable(),
+              transform: textureTransform,
+            }),
+          )
+          .length(3),
+        artworkComplete: z.boolean(),
+      }),
+    ]),
   })
   .superRefine((p, ctx) => {
     const slots = p.content.slots,
       resources = new Map<string, string>();
-    let bytes = 0,
+    let bytes =
+        p.content.rendererVersion === "gltf-slots-v1"
+          ? p.content.geometry.byteLength
+          : 0,
       pixels = 0;
-    if (
-      new Set(slots.map((s) => s.face)).size !== 6 ||
-      slots.some((s) => {
-        const face = boxFaces[s.face];
-        return face.name !== s.name || face.required !== s.required;
-      })
-    )
-      ctx.addIssue({ code: "custom", message: "Invalid box faces" });
+    if (p.content.rendererVersion === "box-v1") {
+      const slots = p.content.slots;
+      if (
+        new Set(slots.map((s) => s.face)).size !== 6 ||
+        slots.some(
+          (s) =>
+            boxFaces[s.face].name !== s.name ||
+            boxFaces[s.face].required !== s.required,
+        )
+      )
+        ctx.addIssue({ code: "custom", message: "Invalid box faces" });
+    } else {
+      const slots = p.content.slots,
+        geometryId = p.content.geometry.id;
+      if (
+        new Set(slots.map((s) => s.name)).size !== 3 ||
+        new Set(
+          slots.map(
+            (s) =>
+              `${s.target.nodeIndex}:${s.target.meshIndex}:${s.target.primitiveIndex}`,
+          ),
+        ).size !== 3 ||
+        slots.some((s) => s.resource?.id === geometryId)
+      )
+        ctx.addIssue({ code: "custom", message: "Invalid authored slots" });
+    }
     for (const slot of slots)
       if (slot.resource) {
         const r = slot.resource,
@@ -135,6 +183,12 @@ export const packagingPresentation = z
       });
   });
 export type PackagingPresentation = z.infer<typeof packagingPresentation>;
+export type BoxPresentation = PackagingPresentation & {
+  content: Extract<
+    PackagingPresentation["content"],
+    { rendererVersion: "box-v1" }
+  >;
+};
 export const viewerPresentation = z.union([
   modelPresentation,
   packagingPresentation,

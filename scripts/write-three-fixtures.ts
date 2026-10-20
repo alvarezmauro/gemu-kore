@@ -1,10 +1,29 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
+import { clamshellFixture } from "../tests/helpers/clamshell-fixture";
 import { modelBenchmark } from "../tests/helpers/model-benchmarks";
 async function main() {
   const directory = resolve(process.argv[2] ?? "test-results/three-fixtures");
   await mkdir(directory, { recursive: true });
+  const clamshell = clamshellFixture();
+  await writeFile(
+    join(directory, "synthetic-genesis-clamshell.glb"),
+    clamshell.bytes,
+  );
+  await writeFile(
+    join(directory, "synthetic-genesis-clamshell-slots.json"),
+    JSON.stringify(clamshell.slots, null, 2) + "\n",
+  );
+  console.log(
+    JSON.stringify({
+      path: join(directory, "synthetic-genesis-clamshell.glb"),
+      byteLength: clamshell.bytes.length,
+      dimensions: clamshell.dimensions,
+      source:
+        "Original synthetic clamshell; not retail measurements or catalog data.",
+    }),
+  );
   for (const kind of ["plain", "shiny", "textured"] as const) {
     const model = modelBenchmark(kind),
       path = join(directory, `${kind}.glb`);

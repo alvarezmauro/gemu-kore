@@ -8,8 +8,9 @@ import {
   Vector3,
   Box3,
   ClampToEdgeWrapping,
+  type Texture,
 } from "three";
-import { ModelResources } from "./model-resources";
+import { ModelResources, parseModel } from "./model-resources";
 import {
   ModelError,
   packagingPresentation,
@@ -20,7 +21,12 @@ import {
   artworkLayout,
   faceSize,
   packagingLimits,
+  type ArtworkResource,
+  type PackageModelResource,
 } from "@/lib/three/packaging-contracts";
+import { inspectAuthoredPackage } from "@/lib/three/authored-packaging";
+import { fetchModel } from "@/lib/three/fetch-model";
+import { modelPresentation } from "@/lib/three/contracts";
 import { fetchArtwork } from "@/lib/three/artwork-bytes";
 export function boxGeometry(
   dimensions: PackagingPresentation["content"]["dimensions"],
@@ -47,11 +53,14 @@ export async function loadBox(
   try {
     signal.throwIfAborted();
     const resources = [
-      ...new Map(
-        p.content.slots.flatMap((s) =>
+      ...new Map<string, ArtworkResource | PackageModelResource>([
+        ...(p.content.rendererVersion === "gltf-slots-v1"
+          ? [[p.content.geometry.id, p.content.geometry] as const]
+          : []),
+        ...p.content.slots.flatMap((s) =>
           s.resource ? [[s.resource.id, s.resource] as const] : [],
         ),
-      ).values(),
+      ]).values(),
     ];
     const total = resources.reduce((n, r) => n + r.byteLength, 0),
       bytes = new Map<string, Uint8Array>();
@@ -68,13 +77,35 @@ export async function loadBox(
         Array.from({ length: Math.min(2, resources.length) }, async () => {
           while (next < resources.length) {
             const resource = resources[next++];
-            bytes.set(
-              resource.id,
-              await fetchArtwork(resource, transferSignal, (chunk) => {
-                received += chunk;
-                progress(received, total);
-              }),
-            );
+            if (resource.mimeType === "model/gltf-binary") {
+              let seen = 0;
+              const buffer = await fetchModel(
+                modelPresentation.parse({
+                  schemaVersion: 1,
+                  presentationKey: p.presentationKey,
+                  title: p.title,
+                  source: p.source,
+                  description: p.description,
+                  poster: null,
+                  settings: p.settings,
+                  resource,
+                }),
+                transferSignal,
+                (count) => {
+                  received += count - seen;
+                  seen = count;
+                  progress(received, total);
+                },
+              );
+              bytes.set(resource.id, new Uint8Array(buffer));
+            } else
+              bytes.set(
+                resource.id,
+                await fetchArtwork(resource, transferSignal, (chunk) => {
+                  received += chunk;
+                  progress(received, total);
+                }),
+              );
           }
         }),
       );
@@ -84,17 +115,31 @@ export async function loadBox(
     }
     preparing();
     signal.throwIfAborted();
-    const geometry = boxGeometry(p.content.dimensions);
-    owner.track(geometry);
-    const materials = p.content.slots.map(
-      () =>
-        new MeshStandardMaterial({
-          color: "#e8e2d6",
-          roughness: 0.85,
-          metalness: 0,
-        }),
-    );
+    const content = p.content;
+    const geometry =
+      content.rendererVersion === "box-v1"
+        ? boxGeometry(content.dimensions)
+        : null;
+    if (geometry) owner.track(geometry);
+    const materials =
+      content.rendererVersion === "box-v1"
+        ? content.slots.map(
+            () =>
+              new MeshStandardMaterial({
+                color: "#e8e2d6",
+                roughness: 0.85,
+                metalness: 0,
+              }),
+          )
+        : [];
     materials.forEach((m) => owner.track(m));
+    const textures = new Map<string, Texture>();
+    if (content.rendererVersion === "gltf-slots-v1")
+      inspectAuthoredPackage(
+        bytes.get(content.geometry.id)!.slice().buffer,
+        content.dimensions,
+        content.slots.map((s) => ({ name: s.name, target: s.target })),
+      );
     let outputPixels = 0;
     const deadline = performance.now() + 10000;
     const decodeSignal = AbortSignal.any([signal, AbortSignal.timeout(10000)]);
@@ -107,7 +152,12 @@ export async function loadBox(
             layout = artworkLayout(
               r.width,
               r.height,
-              ...faceSize(slot.face, p.content.dimensions),
+              ...("target" in slot
+                ? ([slot.target.artWidthMm, slot.target.artHeightMm] as [
+                    number,
+                    number,
+                  ])
+                : faceSize(slot.face, p.content.dimensions)),
               slot.transform,
             );
           const pixels = layout.outputWidth * layout.outputHeight;
@@ -177,9 +227,12 @@ export async function loadBox(
           texture.wrapS = ClampToEdgeWrapping;
           texture.wrapT = ClampToEdgeWrapping;
           owner.track(texture);
-          materials[slot.face].map = texture;
-          materials[slot.face].color.set("white");
-          materials[slot.face].needsUpdate = true;
+          textures.set(slot.name, texture);
+          if ("face" in slot) {
+            materials[slot.face].map = texture;
+            materials[slot.face].color.set("white");
+            materials[slot.face].needsUpdate = true;
+          }
           outputPixels += pixels;
         }
       decodeSignal.throwIfAborted();
@@ -189,11 +242,68 @@ export async function loadBox(
     }
     signal.throwIfAborted();
     owner.check();
+    if (content.rendererVersion === "gltf-slots-v1") {
+      const loaded = await parseModel(
+        bytes.get(content.geometry.id)!.slice().buffer,
+        p.settings,
+        decodeSignal,
+        {
+          owner,
+          configure: (gltf) => {
+            for (const slot of content.slots) {
+              const matches: Mesh[] = [];
+              gltf.scene.traverse((object) => {
+                if (!(object instanceof Mesh)) return;
+                const association = gltf.parser.associations.get(object);
+                if (
+                  association?.meshes !== slot.target.meshIndex ||
+                  association.primitives !== slot.target.primitiveIndex
+                )
+                  return;
+                let current: import("three").Object3D | null = object,
+                  nodeIndex: number | undefined;
+                while (current && current !== gltf.scene) {
+                  const node = gltf.parser.associations.get(current)?.nodes;
+                  if (node !== undefined) {
+                    nodeIndex = node;
+                    break;
+                  }
+                  current = current.parent;
+                }
+                if (nodeIndex === slot.target.nodeIndex) matches.push(object);
+              });
+              if (
+                matches.length !== 1 ||
+                Array.isArray(matches[0].material) ||
+                !(matches[0].material instanceof MeshStandardMaterial)
+              )
+                throw new ModelError();
+              const original = matches[0].material,
+                association = gltf.parser.associations.get(original);
+              if (association?.materials !== slot.target.materialIndex)
+                throw new ModelError();
+              const material = original.clone();
+              material.map = textures.get(slot.name) ?? null;
+              material.color.set(material.map ? "white" : "#e8e2d6");
+              material.roughness = 0.65;
+              material.metalness = 0;
+              material.vertexColors = false;
+              material.needsUpdate = true;
+              owner.track(material);
+              matches[0].material = material;
+            }
+          },
+        },
+      );
+      decodeSignal.throwIfAborted();
+      if (performance.now() > deadline) throw new ModelError();
+      return loaded;
+    }
     const root = new Group(),
       oriented = new Group();
     oriented.rotation.set(...p.settings.orientation);
     oriented.scale.setScalar(p.settings.scale);
-    oriented.add(new Mesh(geometry, materials));
+    oriented.add(new Mesh(geometry!, materials));
     root.add(oriented);
     root.updateMatrixWorld(true);
     const bounds = new Box3().setFromObject(root),

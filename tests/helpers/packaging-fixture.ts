@@ -6,11 +6,11 @@ import {
 } from "../../src/lib/three/packaging-contracts";
 import {
   modelSettings,
-  type PackagingPresentation,
+  type BoxPresentation,
 } from "../../src/lib/three/contracts";
 export function packagingFixture(
   familyKey: BoxFamily = "snes-cardboard",
-): PackagingPresentation {
+): BoxPresentation {
   return {
     schemaVersion: 2,
     presentationKey: "synthetic-box",

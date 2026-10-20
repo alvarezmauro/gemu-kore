@@ -1023,3 +1023,259 @@ it("records UTF-8 screenshot provenance on the image family and advances the rel
     await db.metadataChange.count({ where: { gameReleaseId: release.id } }),
   ).toBe(1);
 });
+
+import { clamshellFixture } from "../helpers/clamshell-fixture";
+import { emptyScreenshotUpload } from "@/features/games/screenshot-validation";
+import {
+  createPackagingTemplate,
+  changePackagingTemplate,
+} from "@/server/services/catalog/physical-editions";
+async function geometryDraft() {
+  const context = await requirePrivateAccess(headers),
+    fixture = clamshellFixture();
+  const draft = {
+    id: randomUUID(),
+    name: "Original synthetic Genesis clamshell",
+    slug: randomUUID(),
+    familyKey: "genesis-clamshell",
+    revisionNumber: 1,
+    synthetic: true,
+    measurementNote: "Original synthetic fixture; no retail measurements",
+    dimensions: fixture.dimensions,
+    slots: fixture.slots,
+  };
+  await createPackagingTemplate(context, draft);
+  const target = {
+    kind: "packagingGeometry",
+    id: draft.id,
+    expectedRevision: 1,
+    source: {
+      ...emptyScreenshotUpload,
+      provider: "Original test fixture",
+      licenseName: "Test author permission",
+    },
+  };
+  const input = {
+    target,
+    mimeType: "model/gltf-binary",
+    filename: "original-clamshell.glb",
+    body: body(fixture.bytes),
+    declaredSize: fixture.bytes.length,
+  };
+  return { context, fixture, draft, target, input };
+}
+it("attaches v2 geometry directly, preserves source, retries once, approves and protects the ready model", async () => {
+  const { context, draft, input } = await geometryDraft();
+  const result = await uploadAsset(context, input, signal(), storage);
+  expect(result.useId).toBeUndefined();
+  expect(result.templateId).toBe(draft.id);
+  const model = await db.asset.findUniqueOrThrow({
+    where: { id: result.uploadId },
+  });
+  expect(model).toMatchObject({
+    state: "READY",
+    kind: "MODEL_3D",
+    scope: "CATALOG",
+    publicSafe: false,
+    rightsStatus: "UNKNOWN",
+    provider: "Original test fixture",
+    licenseName: "Test author permission",
+    metadata: { schemaVersion: 2 },
+  });
+  expect(await db.catalogAsset.count()).toBe(0);
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({
+    baseModelAssetId: result.uploadId,
+    revision: 2,
+    status: "DRAFT",
+  });
+  await Promise.all([
+    completeUpload(context, result.uploadId, signal(), storage),
+    completeUpload(context, result.uploadId, signal(), storage),
+  ]);
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ revision: 2 });
+  await expect(
+    changePackagingTemplate(context, {
+      id: draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await changePackagingTemplate(context, {
+    id: draft.id,
+    expectedRevision: 2,
+    operation: "ready",
+    reviewedGeometry: true,
+  });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ revision: 3, status: "READY" });
+  await expect(
+    deleteUnusedAsset(context, result.uploadId, storage),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await expect(
+    db.asset.update({
+      where: { id: result.uploadId },
+      data: { state: "DELETING" },
+    }),
+  ).rejects.toThrow();
+  await expect(
+    db.packagingTemplate.update({
+      where: { id: draft.id },
+      data: { baseModelAssetId: null },
+    }),
+  ).rejects.toThrow();
+  await completeUpload(context, result.uploadId, signal(), storage);
+  await expect(
+    uploadAsset(
+      context,
+      {
+        ...input,
+        body: body(clamshellFixture().bytes),
+        target: { ...input.target, expectedRevision: 3 },
+      },
+      signal(),
+      storage,
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+});
+it("completes a stored but unconfirmed model concurrently without duplicate attachments", async () => {
+  const { context, draft, input } = await geometryDraft();
+  let id = "";
+  const interrupted = {
+    ...storage,
+    put: async (value: Parameters<typeof storage.put>[0]) => {
+      await storage.put(value);
+      throw new StorageError("UNAVAILABLE");
+    },
+  };
+  try {
+    await uploadAsset(context, input, signal(), interrupted);
+  } catch (error) {
+    id = (error as { uploadId: string }).uploadId;
+  }
+  expect(id).toBeTruthy();
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ revision: 1, baseModelAssetId: null });
+  const results = await Promise.all([
+    completeUpload(context, id, signal(), storage),
+    completeUpload(context, id, signal(), storage),
+  ]);
+  expect(results[0]).toEqual(results[1]);
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ revision: 2, baseModelAssetId: id });
+});
+it("rechecks draft revision and current authority after storage, and supports deliberate draft replacement", async () => {
+  const { context, draft, input } = await geometryDraft();
+  let id = "";
+  try {
+    await uploadAsset(context, input, signal(), {
+      ...storage,
+      put: async (value: Parameters<typeof storage.put>[0]) => {
+        await storage.put(value);
+        throw new StorageError("UNAVAILABLE");
+      },
+    });
+  } catch (error) {
+    id = (error as { uploadId: string }).uploadId;
+  }
+  await db.accessGrant.update({
+    where: { id: grantId },
+    data: { role: "EDITOR" },
+  });
+  await expect(
+    completeUpload(context, id, signal(), storage),
+  ).rejects.toThrow();
+  await db.accessGrant.update({
+    where: { id: grantId },
+    data: { role: "ADMIN" },
+  });
+  await changePackagingTemplate(context, {
+    id: draft.id,
+    expectedRevision: 1,
+    operation: "archive",
+  });
+  await expect(
+    completeUpload(context, id, signal(), storage),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await changePackagingTemplate(context, {
+    id: draft.id,
+    expectedRevision: 2,
+    operation: "restore",
+  });
+  await expect(
+    completeUpload(context, id, signal(), storage),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  const a = await uploadAsset(
+    context,
+    {
+      ...input,
+      body: body(clamshellFixture().bytes),
+      target: { ...input.target, expectedRevision: 3 },
+    },
+    signal(),
+    storage,
+  );
+  const b = await uploadAsset(
+    context,
+    {
+      ...input,
+      body: body(clamshellFixture().bytes),
+      target: { ...input.target, expectedRevision: 4 },
+    },
+    signal(),
+    storage,
+  );
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ revision: 5, baseModelAssetId: b.uploadId });
+  await deleteUnusedAsset(context, a.uploadId, storage);
+});
+it("rejects geometry dimensions/UV drift before readiness and actual oversize streams before decoding", async () => {
+  const { context, draft, input, fixture } = await geometryDraft();
+  const bad = buildGlb(
+    {
+      ...fixture.document,
+      nodes: fixture.document.nodes.map((n, i) =>
+        i === 0 ? { ...n, name: "drift" } : n,
+      ),
+    },
+    fixture.binary,
+  );
+  await uploadAsset(
+    context,
+    { ...input, body: body(bad), declaredSize: bad.length },
+    signal(),
+    storage,
+  );
+  await expect(
+    changePackagingTemplate(context, {
+      id: draft.id,
+      expectedRevision: 2,
+      operation: "ready",
+      reviewedGeometry: true,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  expect(
+    await db.packagingTemplate.findUnique({ where: { id: draft.id } }),
+  ).toMatchObject({ status: "DRAFT", revision: 2 });
+  await expect(
+    uploadAsset(
+      context,
+      {
+        ...input,
+        target: { ...input.target, expectedRevision: 2 },
+        declaredSize: undefined,
+        body: body(Buffer.alloc(8 * 1024 * 1024 + 1)),
+      },
+      signal(),
+      storage,
+    ),
+  ).rejects.toMatchObject({ code: "TOO_LARGE" });
+});
+import { buildGlb } from "../helpers/model-fixture";

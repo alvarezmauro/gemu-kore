@@ -187,3 +187,62 @@ describe("normalized asset metadata", () => {
       expect(targetSchema.safeParse(input).success).toBe(false);
   });
 });
+import { emptyScreenshotUpload } from "@/features/games/screenshot-validation";
+it("keeps v1 manifests readable and admits direct v2 geometry without a fabricated catalog use", () => {
+  expect(manifestSchema.safeParse(manifest()).success).toBe(true);
+  const input = {
+    schemaVersion: 2,
+    data: {
+      target: {
+        kind: "packagingGeometry",
+        id: randomUUID(),
+        expectedRevision: 1,
+        source: emptyScreenshotUpload,
+      },
+      artifacts: [
+        {
+          id: randomUUID(),
+          mimeType: "model/gltf-binary",
+          variant: "original",
+          sizeBytes: 200,
+          sha256: "a".repeat(64),
+        },
+      ],
+    },
+  };
+  expect(manifestSchema.safeParse(input).success).toBe(true);
+  expect(
+    manifestSchema.safeParse({
+      ...input,
+      data: { ...input.data, useId: randomUUID() },
+    }).success,
+  ).toBe(false);
+  for (const value of [0, 2])
+    expect(
+      manifestSchema.safeParse({
+        ...input,
+        data: {
+          ...input.data,
+          artifacts: Array.from(
+            { length: value },
+            () => input.data.artifacts[0],
+          ),
+        },
+      }).success,
+    ).toBe(false);
+  expect(
+    manifestSchema.safeParse({
+      ...input,
+      data: {
+        ...input.data,
+        artifacts: [
+          { ...input.data.artifacts[0], sizeBytes: 8 * 1024 * 1024 + 1 },
+        ],
+      },
+    }).success,
+  ).toBe(false);
+  expect(
+    targetSchema.safeParse({ ...input.data.target, publicApproved: true })
+      .success,
+  ).toBe(false);
+});

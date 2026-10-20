@@ -7,7 +7,44 @@ export function uploadArtwork(
   source: z.input<typeof screenshotUpload>,
   progress: (value: number | null) => void,
 ): Promise<{ uploadId: string; useId?: string }> {
-  const invalid = validatePhoto(file);
+  return uploadPackagingFile(
+    file,
+    { kind: "catalog", target: "gameRelease", id: releaseId, role: "GALLERY" },
+    source,
+    progress,
+  );
+}
+export function uploadGeometry(
+  file: File,
+  template: { id: string; revision: number },
+  source: z.input<typeof screenshotUpload>,
+  progress: (value: number | null) => void,
+) {
+  return uploadPackagingFile(
+    file,
+    {
+      kind: "packagingGeometry",
+      id: template.id,
+      expectedRevision: template.revision,
+    },
+    source,
+    progress,
+  );
+}
+function uploadPackagingFile(
+  file: File,
+  target: Record<string, unknown>,
+  source: z.input<typeof screenshotUpload>,
+  progress: (value: number | null) => void,
+): Promise<{ uploadId: string; useId?: string }> {
+  const geometry = target.kind === "packagingGeometry";
+  const invalid = geometry
+    ? !file.name.toLowerCase().endsWith(".glb") ||
+      !file.size ||
+      file.size > 8 * 1024 * 1024
+      ? "Choose a GLB file up to 8 MiB."
+      : null
+    : validatePhoto(file);
   if (invalid) return Promise.reject(new Error(invalid));
   const parsed = screenshotUpload.safeParse(source);
   if (!parsed.success)
@@ -16,17 +53,17 @@ export function uploadArtwork(
     const request = new XMLHttpRequest();
     request.open("POST", "/api/uploads");
     request.timeout = 190000;
-    request.setRequestHeader("Content-Type", file.type);
+    request.setRequestHeader(
+      "Content-Type",
+      geometry ? "model/gltf-binary" : file.type,
+    );
     request.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
     request.setRequestHeader(
       "X-GemuKore-Target",
       encodeURIComponent(
         JSON.stringify({
-          kind: "catalog",
-          target: "gameRelease",
-          id: releaseId,
-          role: "GALLERY",
-          artwork: parsed.data,
+          ...target,
+          [geometry ? "source" : "artwork"]: parsed.data,
         }),
       ),
     );
@@ -39,7 +76,7 @@ export function uploadArtwork(
     const unknown = () =>
       reject(
         new PhotoUploadError(
-          "We couldn't confirm the upload. Refresh the gallery before uploading this file again.",
+          "We couldn't confirm the upload. Refresh before uploading this file again.",
         ),
       );
     request.onerror = unknown;
@@ -57,8 +94,8 @@ export function uploadArtwork(
         reject(
           new PhotoUploadError(
             request.status === 403
-              ? "Only administrators can upload artwork."
-              : "The artwork could not be saved. Check the file and gallery before trying again.",
+              ? "Only administrators can upload packaging files."
+              : "The file could not be saved. Check the file and refresh before trying again.",
             data.success ? data.data.uploadId : undefined,
           ),
         );

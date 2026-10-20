@@ -9,7 +9,7 @@ import {
   Vector3,
   type Object3D,
 } from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import {
   ModelError,
   modelLimits,
@@ -135,10 +135,11 @@ export async function parseModel(
   bytes: ArrayBuffer,
   settings: ModelSettings,
   signal: AbortSignal,
+  options: { owner?: ModelResources; configure?: (gltf: GLTF) => void } = {},
 ) {
   inspectModel(bytes);
   signal.throwIfAborted();
-  const owner = new ModelResources();
+  const owner = options.owner ?? new ModelResources();
   const manager = new LoadingManager();
   manager.setURLModifier((url) => {
     if (!url.startsWith("blob:")) throw new ModelError();
@@ -171,6 +172,7 @@ export async function parseModel(
     ]);
     gltf.scenes.forEach((scene) => owner.track(scene));
     signal.throwIfAborted();
+    options.configure?.(gltf);
     owner.check();
     const root = new Group(),
       orientation = new Group();

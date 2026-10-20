@@ -1,5 +1,8 @@
 import "server-only";
 import { z } from "zod";
+import { createHash } from "node:crypto";
+import { getObjectStorage } from "@/server/storage";
+import { inspectAuthoredPackage } from "@/lib/three/authored-packaging";
 import { Prisma } from "@/server/db/generated/client";
 import type { PrivateAccessContext } from "@/server/auth/access";
 import { requirePermission } from "@/server/auth/permissions";
@@ -21,7 +24,10 @@ import {
 } from "@/features/physical-editions/validation";
 import {
   boxDimensions,
-  boxFamily,
+  packagingFamily,
+  glbSlotTarget,
+  clamshellSlots,
+  packageModelResource,
   boxFaces,
   textureTransform,
   artworkLayout,
@@ -72,29 +78,64 @@ export function boxTemplateDto(
   row: NonNullable<Awaited<ReturnType<typeof repository.template>>>,
 ): BoxTemplate {
   const m = metadata.parse(row.metadata);
-  const familyKey = boxFamily.parse(row.familyKey);
+  const familyKey = packagingFamily.parse(row.familyKey);
+  const authored = familyKey === "genesis-clamshell";
   const slots = row.slots.map((s) => ({
     id: s.id,
     name: s.name,
     required: s.required,
-    face: slotTarget.parse(s.target).face,
+    face: authored ? null : slotTarget.parse(s.target).face,
+    target: authored ? glbSlotTarget.parse(s.target) : null,
   }));
-  if (
+  if (authored) {
+    if (
+      row.geometryType !== "GLB" ||
+      slots.some(
+        (s) =>
+          !s.required ||
+          s.target?.materialName !==
+            row.slots.find((r) => r.id === s.id)?.materialName,
+      )
+    )
+      throw new PackagingError("UNAVAILABLE");
+    clamshellSlots.parse(
+      slots.map((s) => ({ name: s.name, target: s.target })),
+    );
+  } else if (
     row.geometryType !== "PROCEDURAL_BOX" ||
+    row.baseModelAssetId ||
     slots.length !== 6 ||
     new Set(slots.map((s) => s.face)).size !== 6 ||
     slots.some(
       (s) =>
+        s.face === null ||
         s.name !== boxFaces[s.face].name ||
         s.required !== boxFaces[s.face].required,
     )
   )
     throw new PackagingError("UNAVAILABLE");
+  const asset = row.baseModelAsset;
+  const model =
+    asset &&
+    asset.state === "READY" &&
+    asset.scope === "CATALOG" &&
+    asset.kind === "MODEL_3D" &&
+    asset.deliveryClass === "ORIGINAL"
+      ? packageModelResource.safeParse({
+          id: asset.id,
+          url: `/api/media/private/${asset.id}`,
+          mimeType: asset.mimeType,
+          byteLength: Number(asset.sizeBytes),
+        })
+      : null;
   return {
     id: row.id,
     name: row.name,
     slug: row.slug,
     familyKey,
+    geometryType: authored ? "GLB" : "PROCEDURAL_BOX",
+    baseModel: model?.success ? model.data : null,
+    modelSource: asset ? assetAttribution(asset) : null,
     revision: row.revision,
     revisionNumber: row.revisionNumber,
     status: row.status,
@@ -102,7 +143,9 @@ export function boxTemplateDto(
     dimensions: boxDimensions.parse(row.dimensions),
     synthetic: m.synthetic,
     measurementNote: m.measurementNote,
-    slots: slots.sort((a, b) => a.face - b.face),
+    slots: slots.sort(
+      (a, b) => (a.face ?? 0) - (b.face ?? 0) || a.name.localeCompare(b.name),
+    ),
   };
 }
 async function guarded<T>(
@@ -131,7 +174,16 @@ export async function createPackagingTemplate(
         dto.revisionNumber !== d.revisionNumber ||
         JSON.stringify(dto.dimensions) !== JSON.stringify(d.dimensions) ||
         dto.synthetic !== d.synthetic ||
-        dto.measurementNote !== d.measurementNote
+        dto.measurementNote !== d.measurementNote ||
+        (d.familyKey === "genesis-clamshell" &&
+          JSON.stringify(
+            dto.slots
+              .map((s) => ({ name: s.name, target: s.target }))
+              .sort((a, b) => a.name.localeCompare(b.name)),
+          ) !==
+            JSON.stringify(
+              [...d.slots].sort((a, b) => a.name.localeCompare(b.name)),
+            ))
       )
         throw new PackagingError("STALE");
       return d.id;
@@ -144,7 +196,13 @@ export async function createPackagingTemplate(
         familyKey: d.familyKey,
         revisionNumber: d.revisionNumber,
         dimensions: json(d.dimensions),
-        materialSettings: { schemaVersion: 1, profile: "cardboard-v1" },
+        geometryType:
+          d.familyKey === "genesis-clamshell" ? "GLB" : "PROCEDURAL_BOX",
+        materialSettings: {
+          schemaVersion: 1,
+          profile:
+            d.familyKey === "genesis-clamshell" ? "plastic-v1" : "cardboard-v1",
+        },
         cameraSettings: json(modelSettings.parse({ preset: "package" })),
         metadata: {
           schemaVersion: 1,
@@ -156,13 +214,21 @@ export async function createPackagingTemplate(
       tx,
     );
     await repository.createSlots(
-      boxFaces.map((f) => ({
-        packagingTemplateId: d.id,
-        name: f.name,
-        required: f.required,
-        materialName: `box:${f.name}`,
-        target: { schemaVersion: 1, kind: "PROCEDURAL_FACE", face: f.face },
-      })),
+      d.familyKey === "genesis-clamshell"
+        ? d.slots.map((s) => ({
+            packagingTemplateId: d.id,
+            name: s.name,
+            required: true,
+            materialName: s.target.materialName,
+            target: json(s.target),
+          }))
+        : boxFaces.map((f) => ({
+            packagingTemplateId: d.id,
+            name: f.name,
+            required: f.required,
+            materialName: `box:${f.name}`,
+            target: { schemaVersion: 1, kind: "PROCEDURAL_FACE", face: f.face },
+          })),
       tx,
     );
     return d.id;
@@ -173,6 +239,72 @@ export async function changePackagingTemplate(
   input: unknown,
 ) {
   const d = parse(templateCommand, input);
+  let validatedModelId: string | undefined;
+  if (d.operation === "ready") {
+    const snapshot = await withTransaction(async (tx) => {
+      await requirePermission(context, "catalog.manage", tx);
+      const row = await repository.template(d.id, tx);
+      if (!row) throw new PackagingError("NOT_FOUND");
+      const asset = row.baseModelAssetId
+        ? await repository.templateGeometryAsset(row.baseModelAssetId, tx)
+        : null;
+      return { row, asset };
+    });
+    if (
+      snapshot.row.geometryType === "GLB" &&
+      snapshot.row.status === "DRAFT"
+    ) {
+      const dto = boxTemplateDto(snapshot.row),
+        asset = snapshot.asset;
+      if (
+        !d.reviewedGeometry ||
+        !dto.baseModel ||
+        !asset ||
+        snapshot.row.revision !== d.expectedRevision
+      )
+        throw new PackagingError("INVALID_INPUT");
+      const object = await getObjectStorage().get(asset, {
+        signal: AbortSignal.timeout(10000),
+      });
+      try {
+        if (
+          object.contentType !== "model/gltf-binary" ||
+          object.sizeBytes !== dto.baseModel.byteLength
+        )
+          throw new PackagingError("INVALID_INPUT");
+        const parts: Uint8Array[] = [];
+        let size = 0;
+        const hash = createHash("sha256");
+        for await (const chunk of object.body) {
+          size += chunk.length;
+          if (size > dto.baseModel.byteLength)
+            throw new PackagingError("INVALID_INPUT");
+          parts.push(chunk);
+          hash.update(chunk);
+        }
+        if (
+          size !== dto.baseModel.byteLength ||
+          hash.digest("hex") !== asset.sha256
+        )
+          throw new PackagingError("INVALID_INPUT");
+        const bytes = Buffer.concat(parts);
+        inspectAuthoredPackage(
+          bytes.buffer.slice(
+            bytes.byteOffset,
+            bytes.byteOffset + bytes.byteLength,
+          ),
+          dto.dimensions,
+          dto.slots.map((s) => ({ name: s.name, target: s.target })),
+        );
+        validatedModelId = asset.id;
+      } catch (error) {
+        if (error instanceof PackagingError) throw error;
+        throw new PackagingError("INVALID_INPUT");
+      } finally {
+        object.body.destroy();
+      }
+    }
+  }
   return guarded(context, async (_actor, tx) => {
     const row = await repository.template(d.id, tx);
     if (!row) throw new PackagingError("NOT_FOUND");
@@ -184,6 +316,11 @@ export async function changePackagingTemplate(
       return;
     if (row.revision !== d.expectedRevision) throw new PackagingError("STALE");
     if (d.operation === "ready") {
+      if (
+        row.geometryType === "GLB" &&
+        (!validatedModelId || row.baseModelAssetId !== validatedModelId)
+      )
+        throw new PackagingError("STALE");
       if (dto.archived) throw new PackagingError("INVALID_INPUT");
       await repository.updateTemplate(d.id, { status: "READY" }, tx);
     } else
@@ -279,7 +416,12 @@ export async function assignPackaging(
           artworkLayout(
             a.width,
             a.height,
-            ...faceSize(slot.face, template.dimensions),
+            ...(slot.target
+              ? ([slot.target.artWidthMm, slot.target.artHeightMm] as [
+                  number,
+                  number,
+                ])
+              : faceSize(slot.face!, template.dimensions)),
             b.transform,
           );
         } catch {
@@ -322,7 +464,7 @@ export async function getPackagingManager(
       if (!release) throw new PackagingError("NOT_FOUND");
       const rows: Awaited<ReturnType<typeof repository.templates>> = [];
       let moreTemplates = false;
-      for (const familyKey of boxFamily.options) {
+      for (const familyKey of packagingFamily.options) {
         const familyRows = await repository.templates(familyKey, tx);
         rows.push(...familyRows.slice(0, 50));
         moreTemplates ||= familyRows.length > 50;

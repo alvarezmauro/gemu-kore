@@ -1,8 +1,10 @@
 # Private packaging preview
 
-Task 14.2 introduced the procedural SNES cardboard box family. The first increment of Task 14.3 adds NES cardboard boxes through the same six-face renderer. A template describes dimensions and six fixed surfaces; each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
+Task 14.2 introduced the procedural SNES cardboard box family. Task 14.3 adds NES cardboard boxes through the same six-face renderer and Genesis clamshells through an authored GLB contract ([authoring guide](GENESIS_PACKAGING_AUTHORING.md)). A cardboard template describes dimensions and six fixed surfaces; an authored clamshell maps three art primitives. Each expected release component owns its artwork bindings. The renderer is reusable across releases without sharing mutable materials or textures. No retail dimensions or copyrighted artwork ship as seeds.
 
 ## Curate a release
+
+These steps cover cardboard templates. For Genesis geometry preparation and approval, use the [authoring guide](GENESIS_PACKAGING_AUTHORING.md).
 
 1. As an administrator, open **Game catalog → Game releases → Edit → Manage release packaging**. A release must already contain a `PACKAGING` expected item.
 2. Expand **Create packaging template**, choose **NES cardboard box** or **SNES cardboard box**, and create a draft. Supply width, height and depth in millimeters and a measurement source. Mark synthetic demonstration dimensions explicitly. Choose a unique slug and the next revision number within that format. Different formats can each have revision 1. Put the measured market/edition variant in the name and source; neither format assumes universal retail measurements.
@@ -15,7 +17,7 @@ These are **expected catalog components**. Their quantity is catalog information
 
 ## Saving and authorization
 
-Only current administrators curate templates or bindings and upload catalog artwork. Current private readers can load the assembled descriptor and private images; neither grants public publication. Descriptors omit storage keys, measurement notes and curator identity. `presentationApproved` stays false at the database boundary.
+Only current administrators curate templates or bindings and upload catalog artwork. Current private readers can load the assembled descriptor and private images/models; neither grants public publication. Descriptors omit storage keys, measurement notes and curator identity. `presentationApproved` stays false at the database boundary.
 
 Assignment, detach, release revision increment and manual metadata history commit together. Retrying an identical saved snapshot does not duplicate history. Stale, conflicting saves retain the form entries and require a refresh. Regular release edits preserve template assignments and reject removing an assigned component or changing its kind until it is explicitly detached. Database composite foreign keys enforce matching component/template/slot identities. Binding references participate in asset-family cleanup checks.
 
@@ -23,7 +25,7 @@ The upload form exposes an explicit completion check when an upload ID is known 
 
 ## Viewer limits and fallback
 
-The lightweight page adds no canvas or 3D artwork transfers until activation. The version-2 packaging descriptor coexists with the unchanged version-1 console GLB contract. Each session generates twelve triangles, six independent materials and at most six textures. Physical dimensions set aspect ratios; the shared stage normalizes scale and fits the camera.
+The lightweight page adds no canvas or 3D artwork transfers until activation. The version-2 packaging descriptor coexists with the unchanged version-1 console GLB contract. Each procedural box session generates twelve triangles, six independent materials and at most six textures. Genesis sessions load their bounded authored housing and three independent art materials. Physical dimensions set aspect ratios; the shared stage normalizes scale and fits the camera.
 
 Only exact same-origin private PNG/JPEG/WebP resources are accepted: at most 2 MiB each, 12 MiB combined, 2,048 pixels per source edge and 8 million unique source pixels. Actual streamed lengths, MIME types and encoded dimensions are checked before decoding. PNG/WebP animation is rejected. Two transfer workers share a 60-second deadline; composition has a 10-second deadline. Output canvases are at most 1,024 pixels per edge, are not enlarged beyond source resolution, and satisfy a separate cumulative pixel/texture budget while a source bitmap is live.
 
@@ -43,8 +45,12 @@ NES (`nes-cardboard`) and SNES (`snes-cardboard`) are explicit closed-cardboard 
 
 Template choices include the latest 50 revisions **per format** plus every assigned template, so a large NES catalog cannot hide SNES choices or a retained older revision. No binding transfers automatically between templates or formats. The same release may explicitly select different supported packaging templates for independent expected components; this does not imply physical containment or owned presence.
 
-This is the first incremental addition in Task 14.3. Genesis clamshell, PlayStation jewel, PS2 DVD and Switch case support remains pending. Their geometry must represent their housing accurately; they are not offered as differently named cardboard cuboids. No opening animation, authored-case ingestion, media renderer, primary-package controls or public presentation is added here.
+This is the first incremental addition in Task 14.3. At completion of the NES increment, Genesis clamshell, PlayStation jewel, PS2 DVD and Switch case support remained pending. See the Genesis increment below for the current authored-case path. Their geometry must represent their housing accurately; they are not offered as differently named cardboard cuboids. No opening animation, authored-case ingestion, media renderer, primary-package controls or public presentation is added here.
 
 Verified 2026-10-20: synthetic portrait NES and landscape SNES fixtures cover all six face normals/UVs, independent textures, crop/rotation/containment, bounded artwork and late cleanup. Integration coverage includes coexistence of ready NES/SNES revisions and artwork on separate components, immutable retained SNES rows, cross-family slot rejection, role checks, idempotent creation, independent revision numbering and bounded per-format choices. Desktop and mobile browser flows cover real attributed uploads, explicit format selection, preserved crop errors, lazy activation, distinct front/back views, keyboard/reduced-motion controls, component switching and revoked access at 320px. No personal database is migrated and no historical packaging measurements are asserted.
 
-Current-increment checks: 1,129 unit/component tests, 6 packaging integration tests, 52 core-schema tests, 8 game-catalog integration tests and 4 desktop/mobile packaging flows pass, along with lint, typecheck, schema validation, production build, formatting/whitespace and the unchanged deferred bundle budget (1,002,313 raw / 268,033 gzip bytes). The broader search-plan benchmark issue recorded under Task 14.2 is unchanged and was not rerun or suppressed in this increment. Genesis is the next planned format addition in Task 14.3.
+Current-increment checks: 1,129 unit/component tests, 6 packaging integration tests, 52 core-schema tests, 8 game-catalog integration tests and 4 desktop/mobile packaging flows pass, along with lint, typecheck, schema validation, production build, formatting/whitespace and the unchanged deferred bundle budget (1,002,313 raw / 268,033 gzip bytes). The broader search-plan benchmark issue recorded under Task 14.2 is unchanged and was not rerun or suppressed in this increment. The Genesis addition follows below.
+
+## Task 14.3 — Genesis increment
+
+Genesis now uses a distinct `gltf-slots-v1` contract with explicit front/back/spine primitives, physical artwork sizes, authored housing and direct private geometry uploads. The [Genesis authoring guide](GENESIS_PACKAGING_AUTHORING.md) describes export rules, review, synthetic fixtures, revisions and budgets. Existing NES/SNES contracts, old descriptors, manual `hasBox` and expected-component semantics remain supported. PlayStation jewel, PS2 DVD and Switch cases remain pending.

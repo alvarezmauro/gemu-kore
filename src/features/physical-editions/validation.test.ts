@@ -41,3 +41,22 @@ it("rejects inferred or unsupported formats, empty measurement evidence and inva
     }).success,
   ).toBe(false);
 });
+import { clamshellFixture } from "../../../tests/helpers/clamshell-fixture";
+it("requires three explicit authored targets when creating a Genesis draft", () => {
+  const f = clamshellFixture();
+  expect(
+    createBoxTemplate.safeParse({
+      ...input,
+      familyKey: "genesis-clamshell",
+      dimensions: f.dimensions,
+      slots: f.slots,
+    }).success,
+  ).toBe(true);
+  expect(
+    createBoxTemplate.safeParse({ ...input, familyKey: "genesis-clamshell" })
+      .success,
+  ).toBe(false);
+  expect(
+    createBoxTemplate.safeParse({ ...input, slots: f.slots }).success,
+  ).toBe(false);
+});

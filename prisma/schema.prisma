@@ -931,6 +931,7 @@ enum AppAssetRole {
 
 model Asset {
   packagingBindings PackagingTextureBinding[]
+  packagingModels   PackagingTemplate[]       @relation("PackagingBaseModel")
   id                String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   kind              AssetKind
   scope             AssetScope
@@ -1134,6 +1135,8 @@ model PackagingTemplate {
   revision         Int                       @default(1)
   status           PackagingTemplateStatus   @default(DRAFT)
   geometryType     String                    @default("PROCEDURAL_BOX")
+  baseModelAssetId String?                   @db.Uuid
+  baseModelAsset   Asset?                    @relation("PackagingBaseModel", fields: [baseModelAssetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   dimensions       Json
   materialSettings Json
   cameraSettings   Json
@@ -1147,6 +1150,7 @@ model PackagingTemplate {
   components       GameReleaseIncludedItem[]
 
   @@unique([familyKey, revisionNumber])
+  @@index([baseModelAssetId])
   @@index([createdById])
   @@map("packaging_template")
 }

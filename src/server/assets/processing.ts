@@ -184,13 +184,20 @@ export async function prepareUpload(
   description: ReturnType<typeof uploadDescription>,
   originalId: string,
   signal: AbortSignal,
+  modelMaximum = MODEL_LIMIT,
 ) {
+  if (
+    !Number.isSafeInteger(modelMaximum) ||
+    modelMaximum < 1 ||
+    modelMaximum > MODEL_LIMIT
+  )
+    throw new AssetError("INVALID_INPUT");
   const directory = await mkdtemp(join(tmpdir(), "gemukore-upload-"));
   const cleanup = () => rm(directory, { recursive: true, force: true });
   const path = join(directory, "original");
   try {
     let size = 0;
-    const maximum = description.kind === "IMAGE" ? IMAGE_LIMIT : MODEL_LIMIT;
+    const maximum = description.kind === "IMAGE" ? IMAGE_LIMIT : modelMaximum;
     const bound = new Transform({
       transform(chunk: Buffer, _encoding, done) {
         size += chunk.length;
