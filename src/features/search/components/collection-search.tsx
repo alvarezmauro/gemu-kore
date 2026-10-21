@@ -1,4 +1,5 @@
 "use client";
+import { copyLink } from "@/features/collection/copy-links";
 import { useEffect, useRef, type ReactNode } from "react";
 import { CollectionResults } from "@/features/collection/components/collection-results";
 import { useCollectionView } from "@/features/collection/use-collection-view";
@@ -236,16 +237,14 @@ export function CollectionSearch({
                       </p>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      {(item.type === "CONSOLE" || item.type === "GAME") && (
-                        <Button asChild>
-                          <Link
-                            href={`/app/${item.type === "CONSOLE" ? "consoles" : "games"}/${item.id}`}
-                            aria-label={`View ${item.type === "CONSOLE" ? "console" : "game"} ${item.title}, copy ${item.id.slice(0, 8)}`}
-                          >
-                            View {item.type === "CONSOLE" ? "console" : "game"}
-                          </Link>
-                        </Button>
-                      )}
+                      <Button asChild>
+                        <Link
+                          href={copyLink(item.type, item.id).href}
+                          aria-label={`${copyLink(item.type, item.id).label} ${item.title}, copy ${item.id.slice(0, 8)}`}
+                        >
+                          {copyLink(item.type, item.id).label}
+                        </Link>
+                      </Button>
                       <Button asChild variant="outline">
                         <Link
                           href={`/app/media?itemId=${item.id}`}

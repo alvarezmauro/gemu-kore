@@ -59,6 +59,9 @@ export default async function CollectionPage() {
                 <Button asChild variant="outline">
                   <Link href="/app/games/new">Add game</Link>
                 </Button>
+                <Button asChild variant="outline">
+                  <Link href="/app/accessories/new">Add accessory</Link>
+                </Button>
               </div>
             ) : undefined
           }

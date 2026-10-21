@@ -22,8 +22,12 @@ export async function fixture(command: string, argument?: string) {
 export async function signIn(
   context: BrowserContext,
   role: "ADMIN" | "EDITOR" | "VIEWER" = "EDITOR",
+  email?: string,
 ) {
-  const identity = await fixture("sign-in", JSON.stringify({ role }));
+  const identity = await fixture(
+    "sign-in",
+    JSON.stringify({ role, ...(email ? { email } : {}) }),
+  );
   await context.addCookies([
     {
       name: "__Secure-gemukore.session_token",

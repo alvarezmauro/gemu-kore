@@ -1,5 +1,6 @@
 "use client";
 
+import { copyLink } from "@/features/collection/copy-links";
 import {
   createContext,
   useContext,
@@ -223,20 +224,14 @@ function PaletteSession({ close }: { close: () => void }) {
               </CommandItem>
               {selected.scope === "copy" && (
                 <>
-                  {(selected.item.type === "CONSOLE" ||
-                    selected.item.type === "GAME") && (
-                    <CommandItem
-                      value="copy-detail"
-                      onSelect={() =>
-                        go(
-                          `/app/${selected.item.type === "CONSOLE" ? "consoles" : "games"}/${selected.item.id}`,
-                        )
-                      }
-                    >
-                      View{" "}
-                      {selected.item.type === "CONSOLE" ? "console" : "game"}
-                    </CommandItem>
-                  )}
+                  <CommandItem
+                    value="copy-detail"
+                    onSelect={() =>
+                      go(copyLink(selected.item.type, selected.item.id).href)
+                    }
+                  >
+                    {copyLink(selected.item.type, selected.item.id).label}
+                  </CommandItem>
                   <CommandItem
                     value="photos"
                     onSelect={() => go(`/app/media?itemId=${selected.item.id}`)}

@@ -38,6 +38,90 @@ async function main() {
         platformIds: [first.id, second.id],
         regionId: region.id,
       };
+    } else if (command === "seed-accessory-copies") {
+      const producer = await database.company.create({
+        data: { name: "Sony", slug: "sony" },
+      });
+      const platform = await database.consolePlatform.create({
+        data: { name: "PlayStation 2", slug: "ps2" },
+      });
+      const region = await database.region.create({
+        data: { name: "North America", slug: "north-america", code: "NA" },
+      });
+      const accessory = await database.accessory.create({
+        data: {
+          name: "DualShock 2",
+          slug: "dualshock-2",
+          producerId: producer.id,
+          releaseYear: 2000,
+        },
+      });
+      const variant = await database.accessoryVariant.create({
+        data: {
+          accessoryId: accessory.id,
+          name: "Black",
+          slug: "black",
+          color: "Black",
+          modelNumber: "SCPH-10010",
+          platforms: {
+            create: {
+              platformId: platform.id,
+              compatibilityNote: "Analog support varies by game",
+            },
+          },
+          regions: { create: { regionId: region.id } },
+        },
+      });
+      const silver = await database.accessoryVariant.create({
+        data: {
+          accessoryId: accessory.id,
+          name: "Silver",
+          slug: "silver",
+          color: "Silver",
+        },
+      });
+      const location = await database.location.create({
+        data: { name: "Controller shelf", normalizedName: "controller shelf" },
+      });
+      result = {
+        accessoryId: accessory.id,
+        variantId: variant.id,
+        silverId: silver.id,
+        locationId: location.id,
+      };
+    } else if (command === "accessory-copy-state") {
+      result = await database.collectionItem.findMany({
+        where: { type: "ACCESSORY" },
+        select: {
+          id: true,
+          revision: true,
+          publicationStatus: true,
+          serialNumber: true,
+          notes: true,
+          hasBox: true,
+          locationId: true,
+          ownedAccessory: { select: { accessoryVariantId: true } },
+          defects: { select: { title: true, status: true } },
+          media: {
+            select: { id: true, type: true, assetId: true, isPrimary: true },
+          },
+        },
+      });
+    } else if (command === "accessory-copy-concurrent-edit") {
+      const { id } = JSON.parse(argument!);
+      await database.collectionItem.update({
+        where: { id },
+        data: {
+          notes: "Edited in another session",
+          revision: { increment: 1 },
+        },
+      });
+    } else if (command === "accessory-variant-revise") {
+      const { id } = JSON.parse(argument!);
+      await database.accessoryVariant.update({
+        where: { id },
+        data: { revision: { increment: 1 }, color: "Revised black" },
+      });
     } else if (command === "accessory-catalog-state") {
       result = {
         families: await database.accessory.findMany({

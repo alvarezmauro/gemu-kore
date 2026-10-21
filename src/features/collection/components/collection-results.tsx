@@ -1,4 +1,5 @@
 "use client";
+import { copyLink } from "@/features/collection/copy-links";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -120,16 +121,14 @@ function CopyCard({ item, view }: { item: SearchHit; view: CollectionView }) {
           </p>
         )}
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
-          {(item.type === "CONSOLE" || item.type === "GAME") && (
-            <Button asChild>
-              <Link
-                href={`/app/${item.type === "CONSOLE" ? "consoles" : "games"}/${item.id}`}
-                aria-label={`View ${item.type === "CONSOLE" ? "console" : "game"} ${item.title}, copy ${item.id.slice(0, 8)}`}
-              >
-                View {item.type === "CONSOLE" ? "console" : "game"}
-              </Link>
-            </Button>
-          )}
+          <Button asChild>
+            <Link
+              href={copyLink(item.type, item.id).href}
+              aria-label={`${copyLink(item.type, item.id).label} ${item.title}, copy ${item.id.slice(0, 8)}`}
+            >
+              {copyLink(item.type, item.id).label}
+            </Link>
+          </Button>
           <Button asChild variant="outline">
             <Link
               href={`/app/media?itemId=${item.id}`}

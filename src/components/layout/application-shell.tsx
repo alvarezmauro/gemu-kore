@@ -35,14 +35,14 @@ export function ApplicationShell({
         </p>
       </aside>
       <div className="min-w-0 lg:ml-62">
-        <header className="sticky top-0 z-30 flex min-h-20 items-center justify-between gap-3 border-b bg-background px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b bg-background px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <MobileNavigation items={items} context={context} />
             <p className="truncate text-sm font-medium lg:text-base">
               {context}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
             {headerActions}
             <ThemeMenu />
           </div>

@@ -37,8 +37,8 @@ export default async function PrivateEntryPage() {
             : "Viewer"}
       </Badge>
       <p className="text-sm text-muted-foreground">
-        Browse your collection, add physical consoles and games and organize the
-        places where you keep them.
+        Browse your collection, add physical consoles, games and accessories and
+        organize the places where you keep them.
       </p>
       {result.welcome.role !== "VIEWER" && (
         <>
@@ -47,6 +47,9 @@ export default async function PrivateEntryPage() {
           </Button>
           <Button asChild variant="outline">
             <Link href="/app/games/new">Add game</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/app/accessories/new">Add accessory</Link>
           </Button>
         </>
       )}
