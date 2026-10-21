@@ -1,0 +1,75 @@
+{
+  "task": "17.2",
+  "recordedDate": "2026-10-21",
+  "environment": "Disposable PostgreSQL 16; one synthetic warm-cache sample, no forced planner settings. Baseline uses SQL equivalents of the six prior count calls. Timings exclude network and application overhead and are not a production latency guarantee.",
+  "corpus": {
+    "copies": 6012,
+    "defects": 2405,
+    "photoUses": 607,
+    "assets": 1821
+  },
+  "aggregate": {
+    "executionMs": 2.266,
+    "planningMs": 0.135,
+    "sharedBlocks": 391,
+    "rows": 1,
+    "indexes": []
+  },
+  "recent": {
+    "executionMs": 0.437,
+    "planningMs": 1.64,
+    "sharedBlocks": 73,
+    "rows": 9,
+    "indexes": [
+      "collection_item_createdAt_id_idx",
+      "owned_console_collectionItemId_type_key",
+      "console_model_pkey",
+      "console_platform_pkey",
+      "owned_game_collectionItemId_type_key",
+      "game_release_pkey",
+      "game_pkey",
+      "owned_accessory_collectionItemId_type_key",
+      "accessory_variant_pkey",
+      "accessory_pkey"
+    ]
+  },
+  "photos": {
+    "executionMs": 0.506,
+    "planningMs": 0.963,
+    "sharedBlocks": 201,
+    "rows": 8,
+    "indexes": [
+      "collection_item_id_type_key",
+      "collection_item_media_collectionItemId_sortOrder_id_idx",
+      "asset_pkey",
+      "asset_dependency_pkey",
+      "asset_dependency_sourceAssetId_derivedAssetId_idx"
+    ]
+  },
+  "baseline": {
+    "queryCount": 6,
+    "executionMs": 5.868,
+    "sharedBlocks": 2161
+  },
+  "collectionScanLoops": 1,
+  "recentOwnedLookups": [
+    {
+      "relation": "owned_console",
+      "rowsPerLookup": 1,
+      "loops": 3,
+      "index": "owned_console_collectionItemId_type_key"
+    },
+    {
+      "relation": "owned_game",
+      "rowsPerLookup": 1,
+      "loops": 3,
+      "index": "owned_game_collectionItemId_type_key"
+    },
+    {
+      "relation": "owned_accessory",
+      "rowsPerLookup": 1,
+      "loops": 3,
+      "index": "owned_accessory_collectionItemId_type_key"
+    }
+  ]
+}

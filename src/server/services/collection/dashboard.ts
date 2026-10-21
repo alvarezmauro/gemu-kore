@@ -7,7 +7,7 @@ import { PermissionError, requirePermission } from "@/server/auth/permissions";
 import { canPerform } from "@/server/policies/permissions";
 import { withTransaction } from "@/server/db/transaction";
 import * as repository from "@/server/repositories/collection/dashboard";
-import { listCardSummaries } from "@/server/repositories/collection/cards";
+import { listCardPhotos } from "@/server/repositories/collection/cards";
 import type { DashboardData, RecentItem } from "@/features/dashboard/contracts";
 import { copyLink } from "@/features/collection/copy-links";
 export class DashboardError extends Error {
@@ -16,21 +16,15 @@ export class DashboardError extends Error {
   }
 }
 function identity(row: Awaited<ReturnType<typeof repository.recent>>[number]) {
-  if (row.type === "CONSOLE" && row.ownedConsole) {
-    const model = row.ownedConsole.consoleModel;
-    return { title: model.platform.name, context: model.name };
-  }
-  if (row.type === "GAME" && row.ownedGame) {
-    const release = row.ownedGame.gameRelease;
+  if (row.type === "CONSOLE" && row.consolePlatform && row.consoleModel)
+    return { title: row.consolePlatform, context: row.consoleModel };
+  if (row.type === "GAME" && row.game && row.gamePlatform)
     return {
-      title: release.game.name,
-      context: `${release.platform.name} · ${release.editionName ?? "Edition unspecified"}`,
+      title: row.game,
+      context: `${row.gamePlatform} · ${row.editionName ?? "Edition unspecified"}`,
     };
-  }
-  if (row.type === "ACCESSORY" && row.ownedAccessory) {
-    const variant = row.ownedAccessory.accessoryVariant;
-    return { title: variant.accessory.name, context: variant.name };
-  }
+  if (row.type === "ACCESSORY" && row.accessory && row.variant)
+    return { title: row.accessory, context: row.variant };
   throw new DashboardError();
 }
 export async function getDashboard(
@@ -45,7 +39,7 @@ export async function getDashboard(
         const page = rows.slice(0, 8);
         const thumbnails = new Map(
           (
-            await listCardSummaries(
+            await listCardPhotos(
               page.map((r) => r.id),
               tx,
             )
