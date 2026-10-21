@@ -63,7 +63,11 @@ for (const [role, label] of [
     const response = await page.goto("/app");
     await expect(page).toHaveURL(/\/app$/);
     await expect(
-      page.getByRole("heading", { name: "Your collection" }),
+      page.getByRole("heading", {
+        name: "Your collection",
+        level: 1,
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(page.getByText(label, { exact: true })).toBeVisible();
     expect(response?.headers()["cache-control"]).toContain("no-store");
@@ -127,7 +131,11 @@ test("denies an initially disabled admin and still allows signout", async ({
   await page.goto("/app");
   await expect(page).toHaveURL(/\/access-denied$/);
   await expect(
-    page.getByRole("heading", { name: "Your collection" }),
+    page.getByRole("heading", {
+      name: "Your collection",
+      level: 1,
+      exact: true,
+    }),
   ).toHaveCount(0);
   await expect(page.getByText(email, { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Sign out" }).click();
@@ -143,7 +151,11 @@ test("requires verified identity even with an enabled administrator grant", asyn
   await page.goto("/app");
   await expect(page).toHaveURL(/\/login$/);
   await expect(
-    page.getByRole("heading", { name: "Your collection" }),
+    page.getByRole("heading", {
+      name: "Your collection",
+      level: 1,
+      exact: true,
+    }),
   ).toHaveCount(0);
 });
 
@@ -155,13 +167,21 @@ for (const state of ["expire", "revoke"] as const) {
     const email = await signIn(context, "ADMIN");
     await page.goto("/app");
     await expect(
-      page.getByRole("heading", { name: "Your collection" }),
+      page.getByRole("heading", {
+        name: "Your collection",
+        level: 1,
+        exact: true,
+      }),
     ).toBeVisible();
     await fixture(state, email);
     await page.reload();
     await expect(page).toHaveURL(/\/login$/);
     await expect(
-      page.getByRole("heading", { name: "Your collection" }),
+      page.getByRole("heading", {
+        name: "Your collection",
+        level: 1,
+        exact: true,
+      }),
     ).toHaveCount(0);
   });
 }
@@ -215,7 +235,11 @@ for (const secondRole of ["VIEWER", undefined] as const) {
       } else {
         await expect(otherPage).toHaveURL(/\/access-denied$/);
         await expect(
-          otherPage.getByRole("heading", { name: "Your collection" }),
+          otherPage.getByRole("heading", {
+            name: "Your collection",
+            level: 1,
+            exact: true,
+          }),
         ).toHaveCount(0);
       }
       await page.reload();

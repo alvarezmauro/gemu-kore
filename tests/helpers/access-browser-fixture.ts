@@ -20,7 +20,31 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-accessory-catalog") {
+    if (command === "seed-dashboard") {
+      const { seedDashboardData } = await import("./dashboard-data");
+      const { artwork } = await import("./game-detail-fixture");
+      const data = await seedDashboardData(
+        database,
+        Boolean(argument && JSON.parse(argument).longTitle),
+      );
+      const photo = await artwork(
+        database,
+        "COLLECTION",
+        "MY COLLECTION",
+        "#315952",
+      );
+      await database.collectionItemMedia.create({
+        data: {
+          collectionItemId: data.items[11].id,
+          type: "PHOTO",
+          assetId: photo.id,
+          altText: "Synthetic recent copy photo",
+        },
+      });
+      result = { newestId: data.items[11].id, photoId: photo.id };
+    } else if (command === "dashboard-delete-copy") {
+      await database.collectionItem.delete({ where: { id: argument! } });
+    } else if (command === "seed-accessory-catalog") {
       const company = await database.company.create({
         data: { name: "Sony", slug: "sony" },
       });

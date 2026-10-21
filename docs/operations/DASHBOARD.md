@@ -1,0 +1,31 @@
+# Private dashboard
+
+Task 17.1 replaces the `/app` welcome screen with a private collection overview using the existing application shell. It includes Total items, Consoles, Games, Accessories, Boxed items, Items with active defects and Recently added, plus links to the established collection workflows. Task 17.2 owns aggregate-query consolidation and measured optimization; this step establishes the working UX and its data contract.
+
+## Counts and recent copies
+
+Counts describe owned `CollectionItem` copies, including multiple copies of one catalog identity and retained archived identities. Canonical catalog records without owned copies do not increase totals. Boxed items include only `hasBox=true`; unknown and false are excluded, and having a box does not imply completeness. Items with active defects include copies with at least one `ACTIVE` defect, counted once regardless of the number of defects. `ACCEPTED` and `REPAIRED` defects do not contribute. The link opens defect records without pretending the existing unresolved-defect filter matches this narrower metric.
+
+Recently added shows the latest eight physical copies, ordered by creation time then copy UUID descending, with a ninth-row sentinel for the overflow notice. Each entry includes its copy link, catalog identity/context, category, date added and a thumbnail or explicit no-photo/unavailable fallback. Dates use a fixed English format and UTC to keep server/client output consistent; the page labels the timezone. An edited copy does not become a recent addition. All recent entries and links remain immediately available; there is no delayed reveal or looping notification feed.
+
+The service performs only baseline database-side counts and a bounded recent-identity query. It reuses the existing batch card-thumbnail resolver for those eight IDs. It never loads the full collection to count it, performs a per-row photo request to the database, or calculates condition counts in React. The dedicated service/repository can be optimized in Task 17.2 without changing presentation. Statistics reflect the authorized request snapshot; there is no polling, background refresh or persistent cache. Refresh overview requests a new snapshot while retaining current values, with a disabled pending control and a reduced-motion-aware skeleton status. It is a normal GET form when JavaScript is unavailable. There is no route-level streamed skeleton that would hide the resolved server content from a JavaScript-free browser.
+
+## Access and privacy
+
+`getDashboard` revalidates `private.read` and the current role within a Repeatable Read transaction. Returned flags use that current role, not a captured client role. The request adapter authenticates through the existing session/grant flow. Disabled/deleted grants and expired/deleted sessions deny further access. The route remains dynamic with private no-store responses.
+
+The dashboard DTO includes only counts and bounded recent display identities, links, dates and safe private thumbnail URLs. It omits account identifiers, serials, private notes, locations, defect descriptions, storage locators, metadata snapshots and audit payloads. Recent thumbnails reuse the collection-card policy: ready display photos, excluding SERIAL and custom model/logo uses, with a thumbnail derivative when available. Media endpoints independently enforce authorization. No public query or endpoint is introduced.
+
+Editors and administrators get add/manage links. Viewers get read-only labels and no creation or catalog-management controls. Existing destination services remain responsible for permission checks. The header retains the role badge, command palette, theme menu, collection links and sign-out. A failed read shows Overview unavailable with a retry; it never renders fabricated zero counts. A truly empty collection shows actual zeros and role-appropriate introductory guidance.
+
+## Visual and motion behavior
+
+The warm neutral Bento Grid separates totals, category summaries and condition summaries. It uses semantic server-rendered sections, visible links and the shared spacing/theme tokens. Cards require neither hover nor animation to expose actions. Long titles wrap; mobile collapses to one column.
+
+The owned `NumberTicker` adapts the [Magic UI Number Ticker](https://magicui.design/docs/components/number-ticker) with the existing Motion runtime and short shared timing. The real formatted value is in server HTML and remains the accessible value throughout. The visual tween is finite, has no spring/delay and is skipped for unknown/reduced-motion preferences. Cleanup stops playback, restores the final value and rejects late callbacks when the preference changes. There is no per-frame React state update or live-region chatter.
+
+The semantic [Bento Grid](https://magicui.design/docs/components/bento-grid) adaptation stays server-rendered. Recent rows use the existing `AnimatedList` equivalent documented in [Animation strategy](ANIMATION_STRATEGY.md), preserving static order/content, stable copy identities and live reduced-motion handling rather than the registry's delayed notification sequence. The [Magic UI Animated List](https://magicui.design/docs/components/animated-list) is the reference pattern. No extra UI or animation dependency is needed.
+
+## Verification
+
+Tests use synthetic catalog data and artwork with disposable PostgreSQL/MinIO. They cover empty/failed reads, actual owned counts, null box values, duplicate active defects, accepted/repaired exclusion, deterministic recent order, bound/overflow, scoped thumbnails, current role/grant/session checks, copy deletion, no private DTO fields, screen-reader count stability, cancellation of late animation callbacks and real browser navigation. Browser checks also cover light/dark themes, 320px, 200% text, live reduced motion, image failure and JavaScript-free reading. Verification passes lint, typecheck, production builds, formatting/whitespace, the unchanged deferred 3D bundle budget, 1,276 unit/component cases, 32 disposable-PostgreSQL dashboard/access cases and 34 desktop/mobile dashboard/access browser checks. Light desktop, dark narrow and JavaScript-free screenshots were reviewed. The personal database was not migrated. Final task status and remaining work are recorded in [the development plan](../../DEVELOPMENT_PLAN.md).

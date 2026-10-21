@@ -1,79 +1,45 @@
 import { PaletteTrigger } from "@/features/search/components/command-palette";
 import { redirect } from "next/navigation";
-import { AuthCard } from "@/features/auth/components/auth-card";
+import { ApplicationShell } from "@/components/layout/application-shell";
+import { PageContainer } from "@/components/layout/page-container";
+import { DashboardUnavailable } from "@/features/dashboard/components/dashboard-unavailable";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
-import { getPrivateWelcomePageData } from "@/features/auth/queries.server";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-
+import { getDashboardPageData } from "@/features/dashboard/queries.server";
+import { Dashboard } from "@/features/dashboard/components/dashboard";
 export const dynamic = "force-dynamic";
-
+export const metadata = {
+  title: "Your collection | GemuKore",
+  referrer: "same-origin",
+};
 export default async function PrivateEntryPage() {
-  const result = await getPrivateWelcomePageData();
+  const result = await getDashboardPageData();
   if (result.status !== "authorized") {
     if (result.status === "UNAUTHENTICATED") redirect("/login");
     if (result.status === "DENIED") redirect("/access-denied");
-    return (
-      <AuthCard
-        title="Access unavailable"
-        description="We couldn't check your access right now. Please try again in a moment."
-      >
-        <SignOutButton />
-      </AuthCard>
-    );
+    return <DashboardUnavailable />;
   }
   return (
-    <AuthCard
-      title="Your collection"
-      description="Your account has access to GemuKore."
+    <ApplicationShell
+      context="Your collection"
+      headerActions={<PaletteTrigger compact />}
+      items={[
+        {
+          label: "Your collection",
+          href: "/app",
+          icon: "overview",
+          current: true,
+        },
+        { label: "Browse collection", href: "/app/collection", icon: "cards" },
+        { label: "Search", href: "/app/search", icon: "search" },
+        { label: "Locations", href: "/app/locations", icon: "locations" },
+        { label: "Defects", href: "/app/defects", icon: "defects" },
+        { label: "Photos", href: "/app/media", icon: "photos" },
+      ]}
     >
-      <PaletteTrigger />
-      <Badge variant="secondary">
-        {result.welcome.role === "ADMIN"
-          ? "Administrator"
-          : result.welcome.role === "EDITOR"
-            ? "Editor"
-            : "Viewer"}
-      </Badge>
-      <p className="text-sm text-muted-foreground">
-        Browse your collection, add physical consoles, games and accessories and
-        organize the places where you keep them.
-      </p>
-      {result.welcome.role !== "VIEWER" && (
-        <>
-          <Button asChild>
-            <Link href="/app/consoles/new">Add console</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/app/games/new">Add game</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/app/accessories/new">Add accessory</Link>
-          </Button>
-        </>
-      )}
-      <Button asChild variant="outline">
-        <Link href="/app/collection">Browse collection</Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/app/search">Search collection</Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/app/locations">Manage locations</Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/app/defects">Manage defects</Link>
-      </Button>
-      <Button asChild variant="outline">
-        <Link href="/app/media">Manage photos</Link>
-      </Button>
-      {result.welcome.role === "ADMIN" ? (
-        <Button asChild variant="outline">
-          <Link href="/app/catalog">Manage console catalog</Link>
-        </Button>
-      ) : null}
-      <SignOutButton />
-    </AuthCard>
+      <PageContainer>
+        <Dashboard data={result.data} />
+        <SignOutButton />
+      </PageContainer>
+    </ApplicationShell>
   );
 }
