@@ -13,7 +13,7 @@ export function CatalogPicker({
   multiple = false,
   disabled = false,
 }: {
-  kind: "company" | "platform" | "region" | "game";
+  kind: "company" | "platform" | "region" | "game" | "accessory" | "variant";
   label: string;
   selected: CatalogOption[];
   onChange: (value: CatalogOption[]) => void;

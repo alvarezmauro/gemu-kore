@@ -464,30 +464,38 @@ model GameReleaseCompany {
 }
 
 model Accessory {
-  enrichmentRuns     EnrichmentRun[]
-  assets             CatalogAsset[]
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String
-  slug               String              @unique
-  seedKey            String?             @unique
-  archivedAt         DateTime?           @db.Timestamptz(3)
-  revision           Int                 @default(1)
-  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
-  producerId         String?             @db.Uuid
-  producer           Company?            @relation(fields: [producerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  description        String?
-  releaseYear        Int?
-  specifications     Json?
-  variants           AccessoryVariant[]
-  externalReferences ExternalReference[]
-  metadataChanges    MetadataChange[]
+  trailerProvider       TrailerProvider?
+  trailerId             String?
+  trailerUrl            String?
+  trailerPublicApproved Boolean             @default(false)
+  enrichmentRuns        EnrichmentRun[]
+  assets                CatalogAsset[]
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  slug                  String              @unique
+  seedKey               String?             @unique
+  archivedAt            DateTime?           @db.Timestamptz(3)
+  revision              Int                 @default(1)
+  createdAt             DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+  producerId            String?             @db.Uuid
+  producer              Company?            @relation(fields: [producerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  description           String?
+  releaseYear           Int?
+  specifications        Json?
+  variants              AccessoryVariant[]
+  externalReferences    ExternalReference[]
+  metadataChanges       MetadataChange[]
 
   @@index([producerId])
   @@map("accessory")
 }
 
 model AccessoryVariant {
+  trailerProvider        TrailerProvider?
+  trailerId              String?
+  trailerUrl             String?
+  trailerPublicApproved  Boolean                    @default(false)
   enrichmentRuns         EnrichmentRun[]
   assets                 CatalogAsset[]
   id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

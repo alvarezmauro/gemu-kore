@@ -3,6 +3,7 @@ import { Prisma } from "../../db/generated/client";
 import type { TransactionClient } from "../../db/transaction";
 
 type Kind = "company" | "region" | "platform" | "model";
+type TargetKind = Kind | "game" | "release" | "accessory" | "variant";
 const identity = { id: true, name: true, archivedAt: true } as const;
 const base = {
   ...identity,
@@ -63,7 +64,7 @@ const modelSelect = {
   },
   externalReferences: references,
 } as const;
-export function target(kind: Kind | "game" | "release", id: string) {
+export function target(kind: TargetKind, id: string) {
   switch (kind) {
     case "company":
       return { companyId: id };
@@ -77,6 +78,10 @@ export function target(kind: Kind | "game" | "release", id: string) {
       return { gameId: id };
     case "release":
       return { gameReleaseId: id };
+    case "accessory":
+      return { accessoryId: id };
+    case "variant":
+      return { accessoryVariantId: id };
   }
 }
 export async function findCatalogRecord(
@@ -127,7 +132,7 @@ export async function listCatalogRecords(
   }
 }
 export async function lookupCatalogRecords(
-  kind: Exclude<Kind, "model"> | "game",
+  kind: Exclude<Kind, "model"> | "game" | "accessory" | "variant",
   query: string,
   tx: TransactionClient,
 ) {
@@ -143,6 +148,39 @@ export async function lookupCatalogRecords(
     take: 25,
   };
   switch (kind) {
+    case "accessory":
+      return tx.accessory.findMany({
+        ...args,
+        where: {
+          archivedAt: null,
+          OR: [
+            { name: { contains: literal, mode: "insensitive" } },
+            { slug: { contains: literal, mode: "insensitive" } },
+          ],
+        },
+        select: { ...identity, slug: true },
+      });
+    case "variant":
+      return tx.accessoryVariant
+        .findMany({
+          ...args,
+          where: {
+            archivedAt: null,
+            accessory: { archivedAt: null },
+            OR: [
+              { name: { contains: literal, mode: "insensitive" } },
+              { slug: { contains: literal, mode: "insensitive" } },
+            ],
+          },
+          select: {
+            ...identity,
+            slug: true,
+            accessory: { select: { name: true } },
+          },
+        })
+        .then((rows) =>
+          rows.map((r) => ({ ...r, name: `${r.accessory.name} · ${r.name}` })),
+        );
     case "game":
       return tx.game.findMany({
         ...args,
@@ -262,7 +300,7 @@ export async function setModelMarkets(
   });
 }
 export async function setCatalogReferences(
-  kind: Exclude<Kind, "region"> | "game" | "release",
+  kind: Exclude<TargetKind, "region">,
   id: string,
   refs: {
     id?: string;
@@ -300,7 +338,7 @@ export async function setCatalogReferences(
   }
 }
 export async function appendCatalogHistory(
-  kind: Kind | "game" | "release",
+  kind: TargetKind,
   id: string,
   revision: number,
   actorId: string,
@@ -322,7 +360,7 @@ export async function appendCatalogHistory(
   });
 }
 export function listCatalogHistory(
-  kind: Kind | "game" | "release",
+  kind: TargetKind,
   id: string,
   tx: TransactionClient,
 ) {

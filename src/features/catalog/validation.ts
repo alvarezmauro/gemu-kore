@@ -145,7 +145,7 @@ function validJson(value: unknown, depth = 0): boolean {
     );
   return false;
 }
-const specifications = z
+export const specifications = z
   .string()
   .max(16000)
   .transform((v, ctx) => {
@@ -274,7 +274,14 @@ export const catalogPage = z.strictObject({
   id: z.uuid().optional(),
 });
 export const catalogLookup = z.strictObject({
-  kind: z.enum(["company", "platform", "region", "game"]),
+  kind: z.enum([
+    "company",
+    "platform",
+    "region",
+    "game",
+    "accessory",
+    "variant",
+  ]),
   query: z.string().trim().max(200),
 });
 export type CatalogSave = z.output<typeof catalogSave>;

@@ -54,6 +54,11 @@ export default async function GameCatalogPage({
           icon: "forms",
           current: true,
         },
+        {
+          label: "Accessory catalog",
+          href: "/app/catalog/accessories",
+          icon: "forms",
+        },
       ]}
     >
       <PageContainer>

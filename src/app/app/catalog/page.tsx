@@ -66,6 +66,9 @@ export default async function CatalogPage({
         <Button asChild variant="outline">
           <Link href="/app/catalog/games">Manage game catalog</Link>
         </Button>
+        <Button asChild variant="outline">
+          <Link href="/app/catalog/accessories">Manage accessory catalog</Link>
+        </Button>
         <nav aria-label="Catalog sections" className="flex flex-wrap gap-2">
           {catalogKinds.map((k) => (
             <Button

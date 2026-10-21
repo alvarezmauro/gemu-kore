@@ -20,7 +20,44 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-game-detail") {
+    if (command === "seed-accessory-catalog") {
+      const company = await database.company.create({
+        data: { name: "Sony", slug: "sony" },
+      });
+      const first = await database.consolePlatform.create({
+        data: { name: "PlayStation", slug: "playstation" },
+      });
+      const second = await database.consolePlatform.create({
+        data: { name: "PlayStation 2", slug: "playstation-2" },
+      });
+      const region = await database.region.create({
+        data: { name: "North America", code: "NA", slug: "north-america" },
+      });
+      result = {
+        companyId: company.id,
+        platformIds: [first.id, second.id],
+        regionId: region.id,
+      };
+    } else if (command === "accessory-catalog-state") {
+      result = {
+        families: await database.accessory.findMany({
+          select: { id: true, name: true, revision: true, archivedAt: true },
+        }),
+        variants: await database.accessoryVariant.findMany({
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            revision: true,
+            archivedAt: true,
+            platforms: {
+              select: { platformId: true, compatibilityNote: true },
+            },
+          },
+        }),
+        ownedCount: await database.ownedAccessory.count(),
+      };
+    } else if (command === "seed-game-detail") {
       const { seedGameDetail } = await import("./game-detail-fixture");
       result = await seedGameDetail(database, JSON.parse(argument!));
     } else if (command === "remove-detail-covers") {
