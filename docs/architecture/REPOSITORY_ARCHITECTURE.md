@@ -343,6 +343,8 @@ Custom MVP models are self-contained GLB files. No renderer-originated download 
 
 ### 8.1 Publication is checked at every output surface
 
+The Task 18.1 [Public Privacy Architecture](PUBLIC_PRIVACY_ARCHITECTURE.md) refines the public settings, DTO allowlists, contextual media/derivative resolution, mutation coordination and Phase 18 acceptance requirements below. The private data/query layer is not a public projection implementation.
+
 Public list, detail, search, filter options, counts, metadata, sitemap and media services must apply the publication policy. Do not load a private aggregate and attempt to remove sensitive fields after serialization. Public HTML, React Server Component payloads and error responses are outputs subject to the same restrictions as JSON.
 
 Public item reads require publication globally enabled and the individual item published. Media additionally requires an approved use, an eligible display asset and any applicable personal-photo setting. Component models and each artwork slot are evaluated independently. Missing or ineligible private artwork results in a safe placeholder, not a fallback to its original. These gates implement the domain model's approval rules; linking an asset to a catalog entity alone does not publish it.

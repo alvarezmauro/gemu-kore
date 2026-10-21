@@ -129,7 +129,7 @@ Do not add signed-read methods in Task 5.2: the approved baseline does not need 
 
 Signed uploads are also unnecessary initially. If later justified, require authenticated initiation, bounded lifetime/size and separate authorized completion. A still-valid upload token must not be able to overwrite READY/approved bytes; staging-to-immutable-final-object handling must be designed before enabling that flow. Presigning is not a shortcut around content validation or use approval.
 
-Phase 5 provides private media delivery. Phase 18 implements and verifies the complete public gates before enabling publication. Nothing in this architecture enables public access today.
+Phase 5 provides private media delivery. Phase 18 implements and verifies the complete public gates before enabling publication. Task 18.1 specifies the exact contextual use/output checks, pinned derivative policy and revocation acceptance cases in [Public Privacy Architecture](PUBLIC_PRIVACY_ARCHITECTURE.md). Nothing in this architecture enables public access today.
 
 ## 7. Deletion, failures and reconciliation
 

@@ -252,6 +252,8 @@ Replacing an approved image, publicDisplayAssetId, caption or other publicly vis
 
 ### 6.3 Publication rule
 
+Task 18.1 refines these established gates in [Public Privacy Architecture](PUBLIC_PRIVACY_ARCHITECTURE.md), including exact setting/field projections, settings-widening invalidation, contextual media, a conservative sanitized-media profile and the implementation acceptance matrix. That document is the Phase 18 handoff; it does not enable public delivery.
+
 Public collection output requires the global toggle. Item output additionally requires PUBLISHED status. Field output additionally obeys the corresponding settings. Personal media requires showPersonalPhotos plus approved use and eligible display asset. A personal custom model/logo counts as personal media for this gate. Canonical fallback still needs an approved catalog use and eligible asset.
 
 For generated package/media viewers, publish only approved component presentations whose base geometry and every delivered texture pass eligibility checks. A derived preview must pass its own content review and input-rights checks. Do not infer public permission from “this URL exists” or “this model is from the catalog.”
