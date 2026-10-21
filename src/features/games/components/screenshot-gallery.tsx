@@ -1,6 +1,9 @@
 "use client";
 import { AssetSource } from "@/features/provenance/components/asset-source";
 import { useRef, useState } from "react";
+import { motion } from "motion/react";
+import { useMotionAllowed } from "@/lib/motion/use-motion-preference";
+import { motionEase, motionTiming } from "@/lib/motion/tokens";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +26,7 @@ export function ScreenshotGallery({
 }) {
   const [index, setIndex] = useState<number | null>(null);
   const trigger = useRef<HTMLAnchorElement | null>(null);
+  const allowed = useMotionAllowed();
   const photo = index === null ? null : gallery.items[index];
   return (
     <div className="space-y-4">
@@ -35,7 +39,7 @@ export function ScreenshotGallery({
         <ul className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {gallery.items.map((item, i) => (
             <li key={item.id} className="min-w-0 space-y-3">
-              <BlurFade>
+              <BlurFade inView>
                 <a
                   href={item.url}
                   aria-label={`View screenshot ${(gallery.page - 1) * 16 + i + 1}`}
@@ -124,11 +128,21 @@ export function ScreenshotGallery({
           </DialogDescription>
           {photo && (
             <>
-              <ConsoleImage
-                key={photo.id}
-                {...photo}
-                alt={photo.altText ?? photo.caption ?? "Game screenshot"}
-              />
+              <motion.div
+                key={`${photo.id}:${allowed}`}
+                data-screenshot-motion={allowed ? "enabled" : "disabled"}
+                initial={allowed ? { opacity: 0.96 } : false}
+                animate={{ opacity: 1 }}
+                transition={{
+                  duration: motionTiming.enter / 1000,
+                  ease: motionEase,
+                }}
+              >
+                <ConsoleImage
+                  {...photo}
+                  alt={photo.altText ?? photo.caption ?? "Game screenshot"}
+                />
+              </motion.div>
               <AssetSource source={photo.source} />
               <div className="flex flex-wrap gap-3">
                 <Button

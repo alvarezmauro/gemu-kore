@@ -20,6 +20,7 @@ import type { CopyLocation } from "../creation-contracts";
 import { GameReleaseSummary } from "./game-release-summary";
 import { GameControls } from "./game-controls";
 import { GameDetailHero } from "./game-detail-hero";
+import { GameSectionNav } from "./game-section-nav";
 import { gameDetailPresentation } from "../detail-presentation";
 const identifierLabels: Record<string, string> = {
   PRODUCT_CODE: "Product code",
@@ -75,41 +76,7 @@ export function GameDetail({
           ) : undefined
         }
       />
-      <nav aria-label="Game sections" className="space-y-2">
-        <div className="flex flex-wrap gap-2 text-sm">
-          {[
-            ["My copy", "my-copy"],
-            ["About", "about-game"],
-            ["Screenshots", "screenshots"],
-            ["Physical edition", "game-packaging"],
-            ["Edition contents", "game-release"],
-            ["Trailer", "game-trailer"],
-          ].map(([label, id]) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className="inline-flex min-h-11 items-center rounded-full bg-secondary px-4 text-secondary-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-x-5 text-sm">
-          {[
-            ["Playtime", "game-playtime"],
-            ["Personal photos", "game-photos"],
-            ["Metadata sources", "game-sources"],
-          ].map(([label, id]) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className="inline-flex min-h-11 items-center text-link underline underline-offset-4"
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <GameSectionNav />
       <section
         id="my-copy"
         className="scroll-mt-24 space-y-5 rounded-xl bg-card p-5 sm:p-6"

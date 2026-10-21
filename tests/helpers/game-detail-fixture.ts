@@ -51,7 +51,12 @@ async function artwork(
 
 export async function seedGameDetail(
   db: PrismaClient,
-  input: { id: string; releaseId: string; longTitle?: boolean },
+  input: {
+    id: string;
+    releaseId: string;
+    longTitle?: boolean;
+    screenshots?: boolean;
+  },
 ) {
   if (!process.env.DATABASE_URL?.includes("/gemukore_test?schema=public"))
     throw new Error("Game detail fixtures require the isolated database.");
@@ -127,6 +132,21 @@ export async function seedGameDetail(
       publicApproved: false,
     },
   });
+  if (input.screenshots) {
+    for (const [index, color] of ["#315952", "#855a32"].entries()) {
+      const scene = await artwork(db, "CATALOG", `SCENE ${index + 1}`, color);
+      await db.catalogAsset.create({
+        data: {
+          gameReleaseId: release.id,
+          assetId: scene.id,
+          role: "SCREENSHOT",
+          sortOrder: index,
+          caption: `Synthetic scene ${index + 1}`,
+          altText: `Original test scene ${index + 1}`,
+        },
+      });
+    }
+  }
   return {
     title,
     gameCoverId: gameCover.id,

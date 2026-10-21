@@ -40,6 +40,9 @@ it("keeps original private image links, opens a keyboard viewer, and restores tr
   await screen.findByRole("dialog");
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "ArrowRight" });
   expect(screen.getByRole("heading", { name: "Screenshot 2" })).toBeVisible();
+  expect(
+    screen.getByRole("dialog").querySelector('[alt="Scene 1"]'),
+  ).toBeNull();
   expect(screen.getByRole("button", { name: "Next image" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Close screenshot" }));
   await waitFor(() => expect(trigger).toHaveFocus());

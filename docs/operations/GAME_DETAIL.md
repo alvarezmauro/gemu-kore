@@ -1,6 +1,6 @@
 # Game detail page
 
-Task 15.1 assembles the private owned-game page at `/app/games/[id]` using the existing game, release, media and collection services. It follows [DESIGN.md](../../DESIGN.md) and specification §§46–47. Task 15.2 animation/interaction polish remains a separate task.
+Task 15.1 assembles the private owned-game page at `/app/games/[id]` using the existing game, release, media and collection services. It follows [DESIGN.md](../../DESIGN.md) and specification §§46–47. Task 15.2 adds the focused interaction polish described below.
 
 ## Identity and copy context
 
@@ -27,9 +27,19 @@ Metadata sources remain available after these sections. Existing fragment identi
 
 Catalog product identifiers are a narrow, deterministic projection of the selected release. The repository retrieves at most 21 records, the service returns 20 and a truthful overflow indicator, and the UI labels issuer/market notes separately from the copy serial/observed markings. Internal normalized values and storage fields are not added to the detail DTO. This is a read-only addition to existing typed catalog data, with no migration or new write path.
 
+## Game UX polish
+
+The section navigation keeps native anchors and adds a selected state synchronized with the URL fragment, including direct links, reloads and browser history. `aria-current="location"` and a heavier underline identify the chosen destination without relying on color. A neutral pill background moves between the six primary links using the shared 200ms Motion transition. Supporting links retain a static selected underline. Selection reflects the followed fragment; it does not claim to track the current scroll position. With JavaScript disabled, all nine links still navigate to the server-rendered sections.
+
+Screenshot thumbnails use the existing restrained Magic UI Blur Fade once on entering view, rather than playing offscreen at page load. The gallery dialog switches its content immediately and gives the new image a 180ms opacity change from 0.96 to 1. It retains one current image and keeps source details, keyboard controls and focus restoration outside the moving region. No exit sequence retains obsolete content. The catalog cover stays contained and stationary; only the existing small identity entry and fine-pointer metadata spotlight decorate the hero.
+
+Unknown/server motion preferences are static. Live reduced-motion changes remove the moving pill and replace the image presentation with its static state; no travel, blur, scale or delayed access is introduced. Re-enabling motion leaves navigation and the current image usable. Effects use the existing shared tokens and preference hook, without new dependencies, data fetching, schema changes or early media/3D activation.
+
 ## Verification
 
-Verification passes: lint, typecheck, production build, formatting/whitespace, 1,221 unit/component cases, 34 disposable-PostgreSQL game integration cases and 20 distinct desktop/mobile browser cases (four new detail cases and sixteen existing feature regressions). The deferred 3D renderer remains unchanged at 1,011,263 raw / 270,732 gzip bytes, within its existing budget. Light desktop and dark mobile screenshots were visually reviewed. The final task status is recorded in [the development plan](../../DEVELOPMENT_PLAN.md).
+Task 15.1 verification passed: lint, typecheck, production build, formatting/whitespace, 1,221 unit/component cases, 34 disposable-PostgreSQL game integration cases and 20 distinct desktop/mobile browser cases (four new detail cases and sixteen existing feature regressions). The deferred 3D renderer remained unchanged at 1,011,263 raw / 270,732 gzip bytes, within its existing budget. Light desktop and dark mobile screenshots were visually reviewed. The final task status is recorded in [the development plan](../../DEVELOPMENT_PLAN.md).
+
+Task 15.2 verification passes: lint, typecheck, production build, formatting/whitespace, unchanged deferred 3D bundle budget, all 1,221 unit/component cases, five screenshot database integration cases and 16 desktop/mobile browser cases (six new polish cases and ten detail/gallery regressions). Coverage checks fragment selection/history, keyboard links, live reduced-motion cleanup, still cover artwork, immediate screenshot replacement, focus restoration, JavaScript-free navigation/private image links at 320px, source details, curation and stale caption drafts. Selected navigation was visually reviewed in light/dark desktop/mobile captures, along with both gallery dialog layouts. Implementation: [section navigation](../../src/features/games/components/game-section-nav.tsx), [gallery](../../src/features/games/components/screenshot-gallery.tsx), [polish browser coverage](../../tests/access-e2e/game-polish.spec.ts).
 
 The browser fixtures use original synthetic artwork in disposable PostgreSQL/MinIO, not retail covers or a live provider. Coverage includes all six section anchors, single-title semantics, partial dates and catalog/copy separation, cover precedence and source details, failed/absent cover states, long titles, 320px width, light/dark themes, reduced motion, zoom, read-only/revoked/anonymous access and inactive media. Existing copy CRUD, screenshots, trailers, playtime and physical previews are exercised as regressions. Native phone GPU performance is not claimed by viewport emulation.
 

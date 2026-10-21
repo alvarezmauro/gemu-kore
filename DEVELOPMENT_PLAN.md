@@ -2014,6 +2014,10 @@ REASONING:
 
 Use Magic UI and Motion without overwhelming cover artwork.
 
+Status: **Completed 2026-10-20.** Added a restrained Motion selected-section pill with URL-fragment/history synchronization and a visible, accessible selected state for primary and supporting links. Native section anchors remain usable before hydration and without JavaScript. Screenshot thumbnails now play the existing Magic UI entry only when entering view; dialog images switch immediately with a short opacity transition. Live reduced-motion changes restore static presentation without stale images or lost focus. The cover stays contained and stationary. Uses existing shared timings, preference handling and libraries; no data, permission or schema changes. See the [game detail notes](docs/operations/GAME_DETAIL.md#game-ux-polish).
+
+Verification: lint, typecheck, production build, formatting/whitespace, unchanged deferred 3D bundle budget, all 1,221 unit/component cases, five disposable-PostgreSQL screenshot integration cases and all 16 desktop/mobile browser cases pass. Browser coverage includes deep links/history, keyboard navigation, live reduced-motion changes, immediate gallery replacement/focus restoration, 320px JavaScript-free links, existing detail fallbacks/access, gallery curation and stale-caption protection. Visually reviewed light/dark selected navigation and desktop/mobile gallery screenshots. Task 16.1 — Accessory Domain is next and has not started.
+
 ---
 
 # PHASE 16 — Accessories
