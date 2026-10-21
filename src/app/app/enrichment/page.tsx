@@ -39,6 +39,7 @@ export default async function EnrichmentPage({
         { label: "Your collection", href: "/app", icon: "overview" },
         { label: "Browse collection", href: "/app/collection", icon: "cards" },
         { label: "Add game", href: "/app/games/new", icon: "forms" },
+        { label: "Add accessory", href: "/app/accessories/new", icon: "forms" },
       ]}
     >
       <PageContainer>

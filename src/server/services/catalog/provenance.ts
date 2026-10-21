@@ -19,7 +19,7 @@ const imported = z.object({
   data: z.object({
     provider: text(100),
     retrievedAt: timestamp,
-    scope: z.enum(["GAME", "RELEASE"]),
+    scope: z.enum(["GAME", "RELEASE", "ACCESSORY"]),
     mappingVersion: text(64),
     transformation: z
       .enum(["COPY", "APPEND_PRESERVING_EXISTING", "WHOLE_ESTIMATE_SET"])
@@ -113,7 +113,9 @@ export function describeMetadataSource(
       scope:
         data.scope === "GAME"
           ? "Game-level evidence"
-          : "Release-level evidence",
+          : data.scope === "RELEASE"
+            ? "Release-level evidence"
+            : "Accessory product evidence",
       transformations: [
         ...(data.transformation === "APPEND_PRESERVING_EXISTING"
           ? ["Sourced entries added while retaining existing values."]

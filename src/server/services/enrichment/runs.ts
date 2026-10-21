@@ -2,12 +2,17 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { PrivateAccessContext } from "@/server/auth/access";
+import { getAccessoryMetadataProvider } from "@/server/providers/accessory-metadata";
+import type { AccessoryMetadataProvider } from "@/server/providers/accessory-metadata/contracts";
+import {
+  retrieve,
+  selectedReference,
+  resultData,
+  searchData,
+} from "./provider-data";
+import { targetPointer } from "@/server/repositories/catalog/enrichment";
 import { getGameMetadataProvider } from "@/server/providers/game-metadata";
 import {
-  gameMetadataResult,
-  gameSearchPage,
-  providerObjectReference,
-  validateProviderOutput,
   type GameMetadataProvider,
   type ProviderErrorCode,
 } from "@/server/providers/game-metadata/contracts";
@@ -82,6 +87,7 @@ async function admit(
 }
 export function createEnrichmentRunner(
   getProvider: () => GameMetadataProvider = getGameMetadataProvider,
+  getAccessoryProvider: () => AccessoryMetadataProvider = getAccessoryMetadataProvider,
 ) {
   async function execute(
     context: PrivateAccessContext,
@@ -106,11 +112,7 @@ export function createEnrichmentRunner(
     let data: unknown;
     let code: string | null = null;
     try {
-      const provider = getProvider();
-      if (provider.id !== "IGDB") throw new Error("Unsupported provider");
-      const selected = run.selectedCandidate
-        ? providerObjectReference.parse(run.selectedCandidate)
-        : null;
+      const selected = run.selectedCandidate ? selectedReference(run) : null;
       const providerContext = {
         signal: controller.signal,
         deadlineAt,
@@ -127,26 +129,24 @@ export function createEnrichmentRunner(
         });
         const result = await Promise.race([
           aborted,
-          selected
-            ? provider.fetch({ game: selected }, providerContext)
-            : provider.search(
-                { query: querySchema.parse(run.query).query, limit: 20 },
-                providerContext,
-              ),
+          retrieve(
+            run,
+            querySchema.parse(run.query).query,
+            providerContext,
+            getProvider,
+            getAccessoryProvider,
+          ),
         ]);
         if (!result.ok)
           code = providerCodes.has(result.error.code)
             ? result.error.code
             : "INVALID_RESPONSE";
         else if (selected) {
-          const metadata = validateProviderOutput(
-            gameMetadataResult,
-            result.data,
-          );
+          const metadata = resultData(run, result.data);
           if (!equal(metadata.identity.ref, selected))
             throw new Error("Mismatched identity");
           data = metadata;
-        } else data = validateProviderOutput(gameSearchPage, result.data);
+        } else data = searchData(run, result.data);
         if (data)
           bounded({
             target: run.targetSnapshot,
@@ -224,7 +224,7 @@ export function createEnrichmentRunner(
               tx,
             );
           } else {
-            const page = validateProviderOutput(gameSearchPage, data);
+            const page = searchData(current, data);
             await repository.updateRun(
               run.id,
               {
@@ -314,18 +314,25 @@ export function createEnrichmentRunner(
             }),
           )
           .parse(target.fields.references);
+        const accessory =
+          command.target.kind === "accessory" ||
+          command.target.kind === "variant";
+        const provider = accessory ? "WIKIDATA" : "IGDB";
+        const objectType = accessory ? "ITEM" : "GAME";
         const accepted = refs.filter(
           (ref) =>
-            ref.provider.toLowerCase() === "igdb" &&
-            ref.providerObjectType?.toUpperCase() === "GAME" &&
+            ref.provider.toUpperCase() === provider &&
+            ref.providerObjectType?.toUpperCase() === objectType &&
             ref.externalId &&
-            /^[1-9][0-9]{0,15}$/.test(ref.externalId),
+            (accessory ? /^Q[1-9][0-9]{0,15}$/ : /^[1-9][0-9]{0,15}$/).test(
+              ref.externalId,
+            ),
         );
         const selected =
           accepted.length === 1
             ? {
-                provider: "IGDB",
-                objectType: "GAME",
+                provider,
+                objectType,
                 externalId: accepted[0].externalId!,
               }
             : null;
@@ -334,14 +341,12 @@ export function createEnrichmentRunner(
           {
             requestKey: command.requestKey,
             requestedById: actor.userId,
-            ...(command.target.kind === "game"
-              ? { gameId: target.target.id }
-              : { gameReleaseId: target.target.id }),
+            ...targetPointer(command.target.kind, target.target.id),
             targetBaseRevision: target.revision,
             targetSnapshot: json(target),
             query: json({ query: command.query }),
             fingerprint,
-            provider: "IGDB",
+            provider,
             fetchStatus: "RUNNING",
             attemptCount: 1,
             attempts: json([{ number: 1, startedAt: now.toISOString() }]),
@@ -373,10 +378,7 @@ export function createEnrichmentRunner(
           new Date(),
         );
         if (run.selectedCandidate) {
-          if (
-            providerObjectReference.parse(run.selectedCandidate).externalId !==
-            command.externalId
-          )
+          if (selectedReference(run).externalId !== command.externalId)
             throw new EnrichmentError("STALE");
           return null;
         }
@@ -386,10 +388,7 @@ export function createEnrichmentRunner(
           !run.candidates
         )
           throw new EnrichmentError("STALE");
-        const candidate = validateProviderOutput(
-          gameSearchPage,
-          run.candidates,
-        ).candidates.find(
+        const candidate = searchData(run).candidates.find(
           (c) => c.identity.ref.externalId === command.externalId,
         );
         if (!candidate) throw new EnrichmentError("INVALID_INPUT");

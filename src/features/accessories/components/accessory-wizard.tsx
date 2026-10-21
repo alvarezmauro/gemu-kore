@@ -32,6 +32,7 @@ import type {
   Choices,
   CopyLocation,
 } from "../copy-contracts";
+import { AccessoryEnrichmentLinks } from "@/features/enrichment/components/accessory-enrichment-links";
 import { AccessoryChoiceSummary } from "./accessory-choice-summary";
 const steps = ["Accessory", "Variant", "My copy", "Review"];
 export function AccessoryWizard({
@@ -456,6 +457,16 @@ export function AccessoryWizard({
           </>
         )}
       </fieldset>
+      {accessory &&
+        variant &&
+        step >= 2 &&
+        !accessory.archived &&
+        !variant.archived && (
+          <AccessoryEnrichmentLinks
+            accessoryId={accessory.id}
+            variantId={variant.id}
+          />
+        )}
       {error}
       <div className="flex flex-wrap gap-3">
         {step > 0 && (

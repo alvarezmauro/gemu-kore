@@ -20,6 +20,7 @@ export type EnrichmentTargetSummary = {
   query: string;
 };
 export type EnrichmentReview = {
+  observations?: { label: string; value: string; sourceUrl: string }[];
   companies: { id: string; name: string }[];
   id: string;
   target: EnrichmentTarget;

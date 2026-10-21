@@ -52,7 +52,10 @@ async function main() {
         data: {
           name: "DualShock 2",
           slug: "dualshock-2",
-          producerId: producer.id,
+          producerId:
+            argument && JSON.parse(argument).unassignedProducer
+              ? null
+              : producer.id,
           releaseYear: 2000,
         },
       });
@@ -232,6 +235,75 @@ async function main() {
         }),
         copies: await database.collectionItem.findMany({
           select: { id: true, hasBox: true },
+        }),
+      };
+    } else if (command === "seed-accessory-enrichment") {
+      const { token, id, kind = "accessory" } = JSON.parse(argument!);
+      const { signedSessionCookie } = await import("./access-session");
+      const { requirePrivateAccess } =
+        await import("../../src/server/auth/access");
+      const { createEnrichmentRunner } =
+        await import("../../src/server/services/enrichment");
+      const { fixtureAccessoryProvider } =
+        await import("./accessory-enrichment-fixture");
+      const actor = await requirePrivateAccess(
+        new Headers({
+          Cookie: `__Secure-gemukore.session_token=${signedSessionCookie(token, process.env.BETTER_AUTH_SECRET!)}`,
+        }),
+      );
+      const record =
+        kind === "accessory"
+          ? await database.accessory.findUniqueOrThrow({ where: { id } })
+          : await database.accessoryVariant.findUniqueOrThrow({
+              where: { id },
+            });
+      const runner = createEnrichmentRunner(undefined, () =>
+        fixtureAccessoryProvider(),
+      );
+      const found = await runner.start(actor, {
+        target: { kind, id },
+        expectedRevision: record.revision,
+        requestKey: randomUUID(),
+        query: "Synthetic controller",
+      });
+      result = await runner.selectCandidate(actor, {
+        runId: found.id,
+        expectedRunVersion: found.runVersion,
+        externalId: "Q42",
+      });
+    } else if (command === "accessory-enrichment-state") {
+      result = {
+        families: await database.accessory.findMany({
+          select: {
+            id: true,
+            name: true,
+            revision: true,
+            description: true,
+            releaseYear: true,
+            producerId: true,
+            trailerProvider: true,
+            trailerId: true,
+            trailerPublicApproved: true,
+          },
+        }),
+        variants: await database.accessoryVariant.findMany({
+          select: {
+            id: true,
+            name: true,
+            revision: true,
+            edition: true,
+            regions: { select: { regionId: true } },
+            platforms: { select: { platformId: true } },
+          },
+        }),
+        changes: await database.metadataChange.findMany({
+          select: {
+            fieldPath: true,
+            origin: true,
+            accessoryId: true,
+            accessoryVariantId: true,
+            sourceSnapshot: true,
+          },
         }),
       };
     } else if (command === "seed-enrichment") {

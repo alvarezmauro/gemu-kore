@@ -28,6 +28,8 @@ import { EnrichmentError } from "./errors";
 
 const scalars = z.strictObject({
   name: z.string().min(1).max(200).optional(),
+  releaseYear: z.number().int().min(1).max(9999).optional(),
+  producerId: z.uuid().optional(),
   description: z.string().min(1).max(16000).optional(),
   aliases: z.array(z.string().min(1).max(200)).max(30).optional(),
   trailer: trailerReference.optional(),
@@ -41,8 +43,8 @@ const receiptSchema = z.strictObject({
 const sourceSchema = z.object({
   schemaVersion: z.literal(1),
   data: z.object({
-    provider: z.literal("IGDB"),
-    scope: z.literal("GAME"),
+    provider: z.enum(["IGDB", "WIKIDATA"]),
+    scope: z.enum(["GAME", "ACCESSORY"]),
     bindings: z
       .array(
         z.strictObject({
@@ -135,6 +137,15 @@ export async function applyEnrichmentSuggestions(
           throw new EnrichmentError("INVALID_INPUT");
         validateAcceptedField(target, row.fieldPath, row.proposed);
         const source = sourceSchema.parse(row.sourceSnapshot);
+        if (
+          source.data.provider !== run.provider ||
+          source.data.scope !==
+            (target.target.kind === "accessory" ||
+            target.target.kind === "variant"
+              ? "ACCESSORY"
+              : "GAME")
+        )
+          throw new EnrichmentError("INVALID_INPUT");
         const bindings = source.data.bindings;
         if (bindings.length) {
           const current = await catalog.companies(
@@ -187,9 +198,14 @@ export async function applyEnrichmentSuggestions(
         Object.fromEntries(
           selected
             .filter((row) =>
-              ["name", "description", "aliases", "trailer"].includes(
-                row.fieldPath,
-              ),
+              [
+                "name",
+                "description",
+                "aliases",
+                "trailer",
+                "releaseYear",
+                "producerId",
+              ].includes(row.fieldPath),
             )
             .map((row) => [row.fieldPath, row.proposed]),
         ),
@@ -227,6 +243,8 @@ export async function applyEnrichmentSuggestions(
             tx,
           );
         if (row.fieldPath === "playtime") {
+          if (target.target.kind !== "game" && target.target.kind !== "release")
+            throw new EnrichmentError("INVALID_INPUT");
           const estimates = playtimeSet.parse(row.proposed);
           await catalog.writeAcceptedPlaytime(
             target.target.kind,

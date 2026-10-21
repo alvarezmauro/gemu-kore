@@ -406,3 +406,40 @@ it("lets an editor explicitly bind a provider developer to an existing company",
     }),
   );
 });
+it("keeps accessory product observations separate from accepted fields and blocks unsafe source links", () => {
+  const product = {
+    ...initial,
+    target: { kind: "variant" as const, id: target.target.id },
+    availableFields: ["references" as const],
+    observations: [
+      {
+        label: "Product image",
+        value: "Controller.png",
+        sourceUrl: "javascript:alert(1)",
+      },
+    ],
+    suggestions: [],
+    reviewToken: null,
+  };
+  render(
+    <EnrichmentReviewPanel
+      initialTarget={{ ...target, target: product.target }}
+      initialReview={product}
+    />,
+  );
+  expect(screen.getByText("Accessory variant reference")).toBeVisible();
+  expect(screen.getByText(/Product evidence does not establish/)).toBeVisible();
+  expect(
+    screen.getByRole("heading", { name: "Source observations" }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("link", { name: "Inspect source (new tab)" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(
+    screen.getByLabelText("External references", { exact: true }),
+  ).toBeVisible();
+  expect(
+    screen.queryByLabelText("Producer", { exact: true }),
+  ).not.toBeInTheDocument();
+});

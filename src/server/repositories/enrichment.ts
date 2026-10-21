@@ -1,4 +1,5 @@
 import "server-only";
+import { targetPointer } from "./catalog/enrichment";
 import { Prisma } from "../db/generated/client";
 import type { TransactionClient } from "../db/transaction";
 
@@ -124,14 +125,14 @@ export function decideSuggestions(
   });
 }
 export function fieldOrigins(
-  kind: "game" | "release",
+  kind: "game" | "release" | "accessory" | "variant",
   id: string,
   fields: string[],
   tx: TransactionClient,
 ) {
   return tx.metadataChange.findMany({
     where: {
-      ...(kind === "game" ? { gameId: id } : { gameReleaseId: id }),
+      ...targetPointer(kind, id),
       fieldPath: { in: fields },
     },
     distinct: ["fieldPath"],

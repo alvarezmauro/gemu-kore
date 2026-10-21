@@ -237,3 +237,7 @@ Complete provenance presentation and retention/read coverage across supported ac
 Audit hallucination and prompt-injection paths, physical identity/credit mistakes, provider coupling, stale/partial/idempotent acceptance, incomplete evidence, manual replacements, source preservation and private/public separation. Exercise optional-provider failure and manual save end to end with deterministic fixtures. Validate the complete flow rather than treating a successful provider response as a successful catalog change.
 
 Task 13.1 verification is documentary: check local links, fenced examples, formatting and patch integrity, and confirm only documentation changed. No runtime tests, API calls, migrations or live enrichment claims are introduced by this design task.
+
+## Task 16.3 implementation extension
+
+Accessory and variant targets now use the existing runner and persistence with a separate optional structured accessory-source adapter. Wikidata product evidence can propose supported family fields; variant acceptance remains reference-only. Existing authorization, quotas, fencing, immutable reviews, receipts and history remain shared. The constraint-only migration expands the bounded provider/field allowlists; no new workflow tables or AI service are introduced. See [Accessory enrichment operations](../operations/ACCESSORY_ENRICHMENT.md) for source configuration, exact field eligibility and verification.

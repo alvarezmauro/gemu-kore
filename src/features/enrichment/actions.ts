@@ -64,6 +64,10 @@ export async function applySuggestions(input: unknown) {
     const receipt = await applyEnrichmentSuggestions(context, input);
     revalidatePath("/app/catalog/games");
     revalidatePath("/app/games/[id]", "page");
+    revalidatePath("/app/catalog/accessories");
+    revalidatePath("/app/accessories/[id]", "page");
+    revalidatePath("/app/collection");
+    revalidatePath("/app/search");
     return receipt;
   });
 }

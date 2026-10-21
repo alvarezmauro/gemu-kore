@@ -8,6 +8,7 @@ import type {
   AccessoryModel,
   Choices,
 } from "../copy-contracts";
+import { AccessoryEnrichmentLinks } from "@/features/enrichment/components/accessory-enrichment-links";
 import { AccessoryChoiceSummary } from "./accessory-choice-summary";
 import { AccessoryControls } from "./accessory-controls";
 import { AccessoryModelFiles } from "./accessory-model-files";
@@ -39,6 +40,12 @@ export function AccessoryCopy({
           : "Published copy"}
       </Badge>
       {canManage && <AccessoryControls detail={detail} locations={locations} />}
+      {canManage && !detail.accessory.archived && !detail.variant.archived && (
+        <AccessoryEnrichmentLinks
+          accessoryId={detail.accessory.id}
+          variantId={detail.variant.id}
+        />
+      )}
       <AccessoryChoiceSummary
         accessory={detail.accessory}
         variant={detail.variant}

@@ -84,3 +84,32 @@ it("accepts IDs and a frozen token instead of client-authored values or sources"
       false,
     );
 });
+it("allows accessory targets and bounded Wikidata item identities while rejecting malformed IDs", () => {
+  for (const kind of ["accessory", "variant"])
+    expect(
+      startEnrichment.safeParse({
+        ...start,
+        target: { kind, id: randomUUID() },
+      }).success,
+    ).toBe(true);
+  expect(
+    chooseEnrichmentCandidate.safeParse({
+      runId,
+      expectedRunVersion: 1,
+      externalId: "Q42",
+    }).success,
+  ).toBe(true);
+  for (const externalId of [
+    "Q0",
+    "Q-1",
+    "Q42 OR 1=1",
+    "https://www.wikidata.org/Q42",
+  ])
+    expect(
+      chooseEnrichmentCandidate.safeParse({
+        runId,
+        expectedRunVersion: 1,
+        externalId,
+      }).success,
+    ).toBe(false);
+});

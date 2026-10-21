@@ -20,7 +20,7 @@ import type {
   EnrichmentReview,
   EnrichmentTargetSummary,
 } from "../contracts";
-import { sourceDetails } from "../presentation";
+import { sourceUrl, sourceDetails } from "../presentation";
 import { FieldChoices } from "./field-choices";
 import { SuggestionCard } from "./suggestion-card";
 type ReviewResult =
@@ -48,7 +48,7 @@ const failures: Record<string, string> = {
     "The provider returned information we could not validate. Start a new lookup later.",
   UNAVAILABLE:
     "The metadata provider is unavailable. You can keep working manually.",
-  NOT_FOUND: "The selected provider game is no longer available.",
+  NOT_FOUND: "The selected provider record is no longer available.",
 };
 export function EnrichmentReviewPanel({
   initialTarget,
@@ -178,7 +178,7 @@ export function EnrichmentReviewPanel({
           "Your changes were applied. Refresh the review to see the saved values.",
         );
       setNotice(
-        "Changes applied to the shared catalog. Return to your add-game tab and refresh its catalog choices before reviewing and saving your copy.",
+        "Changes applied to the shared catalog. Return to your add-copy tab and refresh its catalog choices before reviewing and saving your copy.",
       );
     });
   }
@@ -210,6 +210,8 @@ export function EnrichmentReviewPanel({
           sourceDetails(s.source) !== null &&
           (!s.manualReplacementRequired || acknowledged.includes(s.id)),
       );
+  const accessory =
+    target.target.kind === "accessory" || target.target.kind === "variant";
   const command = review
     ? { runId: review.id, expectedRunVersion: review.runVersion }
     : null;
@@ -226,7 +228,11 @@ export function EnrichmentReviewPanel({
         <Badge variant="secondary">
           {target.target.kind === "game"
             ? "Shared game metadata"
-            : "Physical release reference"}
+            : target.target.kind === "release"
+              ? "Physical release reference"
+              : target.target.kind === "accessory"
+                ? "Shared accessory metadata"
+                : "Accessory variant reference"}
         </Badge>
         <p className="text-sm text-muted-foreground">
           Review suggestions before changing the catalog. Personal notes,
@@ -236,6 +242,13 @@ export function EnrichmentReviewPanel({
           <p className="text-sm">
             This lookup can add a provider reference. Game-level evidence cannot
             establish this release’s edition, market dates or artwork.
+          </p>
+        )}
+        {target.target.kind === "variant" && (
+          <p className="text-sm">
+            This lookup can add a source reference. Product evidence does not
+            establish this variant’s edition, commercial markets or platform
+            compatibility.
           </p>
         )}
       </section>
@@ -400,7 +413,7 @@ export function EnrichmentReviewPanel({
           {review.fetchStatus === "NEEDS_SELECTION" && (
             <section aria-labelledby="candidate-heading" className="space-y-4">
               <h2 id="candidate-heading" className="font-heading text-2xl">
-                Choose the matching game
+                Choose the matching {accessory ? "accessory product" : "game"}
               </h2>
               <p>
                 A title match does not confirm your physical edition. Choose
@@ -451,8 +464,43 @@ export function EnrichmentReviewPanel({
           )}
           {review.selectedCandidate && (
             <p className="text-sm">
-              Provider game: {review.selectedCandidate.name}
+              Provider {accessory ? "product" : "game"}:{" "}
+              {review.selectedCandidate.name}
             </p>
+          )}
+          {Boolean(review.observations?.length) && (
+            <section
+              aria-labelledby="source-observations"
+              className="space-y-4 rounded-xl bg-card p-5"
+            >
+              <h2 id="source-observations" className="font-heading text-xl">
+                Source observations
+              </h2>
+              <p className="text-sm">
+                These observations are retained for inspection. They are not
+                accepted catalog fields or attached media.
+              </p>
+              <ul className="space-y-3">
+                {review.observations?.map((observation, index) => (
+                  <li key={index}>
+                    <p className="font-medium">{observation.label}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {observation.value}
+                    </p>
+                    {sourceUrl(observation.sourceUrl) && (
+                      <a
+                        href={sourceUrl(observation.sourceUrl)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm underline"
+                      >
+                        Inspect source (new tab)
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
           {review.fetchStatus === "COMPLETED" &&
             !review.reviewToken &&
@@ -489,7 +537,7 @@ export function EnrichmentReviewPanel({
                 saved to the shared catalog.
               </p>
               <p className="text-sm">
-                Any remaining suggestions need a new review. In your add-game
+                Any remaining suggestions need a new review. In your add-copy
                 tab, refresh catalog choices and review your copy again before
                 saving.
               </p>
@@ -610,7 +658,7 @@ export function EnrichmentReviewPanel({
         </Button>
       )}
       <p className="text-sm text-muted-foreground">
-        You can close this tab and continue manually in your add-game form. Its
+        You can close this tab and continue manually in your add-copy form. Its
         draft and photos remain there. You can also enrich a saved copy from its
         details.
       </p>

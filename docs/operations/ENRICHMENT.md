@@ -66,3 +66,7 @@ The page uses the shared warm panels and functional controls, stacked comparison
 Task 13.4 adds [current source labels, retained administrator history and private media attribution](PROVENANCE.md). Manual replacement checks also treat a field as unknown when its current value no longer matches the latest recorded source.
 
 Task 13.5's [phase review](../architecture/ENRICHMENT_REVIEW.md) rejects ambiguous candidate/trailer IDs and makes retained evidence limits visible before selection or acceptance. The **Evidence limitations** panel uses fixed explanations for incomplete search/identity context and limited or invalid supported sections; it does not change which facts can be accepted, relax acknowledgements or fetch new evidence on reload.
+
+## Accessory extension
+
+Task 16.3 adds accessory families and variants to these same operations. Optional Wikidata retrieval, supported fields, setup, scope restrictions and the constraint-only migration are described in [Accessory enrichment](ACCESSORY_ENRICHMENT.md). The first adapter factory parameter remains the game provider; an optional second factory supplies the accessory provider for deterministic tests. Production selects the adapter from the validated canonical target. There is no second workflow or AI system.

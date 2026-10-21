@@ -11,8 +11,10 @@ function CompanyBinding({
   selected,
   disabled,
   onChange,
+  role = "developer",
 }: {
   name: string;
+  role?: "developer" | "manufacturer";
   selected?: { id: string; name: string };
   disabled: boolean;
   onChange: (company?: { id: string; name: string }) => void;
@@ -36,7 +38,7 @@ function CompanyBinding({
         setMessage(
           result.data.length
             ? "Choose an existing company below."
-            : "No companies found. Leave this developer unresolved or add its company in the catalog first.",
+            : "No companies found. Leave this company unresolved or add its company in the catalog first.",
         );
       }
     } catch {
@@ -51,11 +53,13 @@ function CompanyBinding({
       disabled={disabled || busy}
       className="min-w-0 space-y-3 rounded-lg bg-muted p-4"
     >
-      <legend className="px-1 font-medium">Match developer: {name}</legend>
+      <legend className="px-1 font-medium">
+        Match {role}: {name}
+      </legend>
       <p className="text-sm">
         {selected
           ? `Selected: ${selected.name}`
-          : "Use an existing accepted mapping, or choose an active company. Unresolved developers cannot be applied."}
+          : "Use an existing accepted mapping, or choose an active company. Unresolved companies cannot be applied."}
       </p>
       {selected && (
         <Button
@@ -123,6 +127,8 @@ export function FieldChoices({
     Record<string, { id: string; name: string } | undefined>
   >({});
   const selectId = useId();
+  const accessory =
+    review.target.kind === "accessory" || review.target.kind === "variant";
   return (
     <section
       className="space-y-5 rounded-xl bg-card p-5 sm:p-6"
@@ -151,13 +157,17 @@ export function FieldChoices({
                 )
               }
             />
-            {fieldLabels[field]}
+            {accessory && field === "trailer"
+              ? "Product video"
+              : fieldLabels[field]}
           </label>
         ))}
       </fieldset>
       {fields.includes("trailer") && (
         <div className="space-y-2">
-          <label htmlFor={selectId}>Trailer to review</label>
+          <label htmlFor={selectId}>
+            {accessory ? "Video to review" : "Trailer to review"}
+          </label>
           <select
             id={selectId}
             disabled={busy}
@@ -165,20 +175,31 @@ export function FieldChoices({
             value={trailer}
             onChange={(e) => setTrailer(e.target.value)}
           >
-            <option value="">Choose a trailer</option>
+            <option value="">
+              {accessory ? "Choose a video" : "Choose a trailer"}
+            </option>
             {review.trailerChoices.map((option) => (
               <option key={option.externalId} value={option.externalId}>
-                {option.title ?? "Untitled trailer"}
+                {option.title ??
+                  (accessory ? "Untitled video" : "Untitled trailer")}
               </option>
             ))}
           </select>
         </div>
       )}
-      {fields.includes("developers") &&
+      {fields.includes("producerId") && (
+        <p className="text-sm text-muted-foreground">
+          Resolve exactly one sourced manufacturer to an existing company. Leave
+          other manufacturers unresolved; manufacturer choices do not establish
+          a variant identity.
+        </p>
+      )}
+      {(fields.includes("developers") || fields.includes("producerId")) &&
         review.companyChoices.map((company) => (
           <CompanyBinding
             key={company.externalId}
             name={company.name}
+            role={fields.includes("producerId") ? "manufacturer" : "developer"}
             selected={bindings[company.externalId]}
             disabled={busy}
             onChange={(selected) =>
@@ -200,11 +221,12 @@ export function FieldChoices({
             ...(fields.includes("trailer")
               ? { trailerExternalId: trailer }
               : {}),
-            companyBindings: fields.includes("developers")
-              ? Object.entries(bindings).flatMap(([externalId, company]) =>
-                  company ? [{ externalId, companyId: company.id }] : [],
-                )
-              : [],
+            companyBindings:
+              fields.includes("developers") || fields.includes("producerId")
+                ? Object.entries(bindings).flatMap(([externalId, company]) =>
+                    company ? [{ externalId, companyId: company.id }] : [],
+                  )
+                : [],
           })
         }
       >

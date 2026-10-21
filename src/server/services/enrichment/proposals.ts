@@ -6,6 +6,8 @@ import {
   type ProposalField,
 } from "@/features/enrichment/validation";
 import type { EnrichmentValue } from "@/features/enrichment/contracts";
+import { accessoryFields } from "@/features/accessories/validation";
+import type { AccessoryMetadataResult } from "@/server/providers/accessory-metadata/contracts";
 import { gameFields } from "@/features/games/validation";
 import { playtimeSet } from "@/features/games/playtime-validation";
 import { trailerReference } from "@/features/games/trailer-validation";
@@ -89,6 +91,20 @@ export function validateAcceptedField(
   value: unknown,
 ): EnrichmentValue {
   if (field === "references") return referencesSchema.parse(value);
+  if (target.target.kind === "accessory") {
+    if (field === "name") return accessoryFields.shape.name.parse(value);
+    if (field === "description") {
+      const parsed = accessoryFields.shape.description.parse(value);
+      if (parsed) return parsed;
+    }
+    if (field === "releaseYear") {
+      const year = z.number().int().min(1).max(9999).parse(value);
+      return accessoryFields.shape.releaseYear.parse(String(year));
+    }
+    if (field === "producerId") return z.uuid().parse(value);
+    if (field === "trailer") return trailerReference.parse(value);
+    throw new EnrichmentError("INVALID_INPUT");
+  }
   if (target.target.kind !== "game") throw new EnrichmentError("INVALID_INPUT");
   if (field === "trailer") return trailerReference.parse(value);
   if (field === "playtime") {
@@ -117,10 +133,12 @@ export function validateAcceptedField(
 
 export function buildProposals(
   target: TargetSnapshot,
-  result: GameMetadataResult,
+  result: GameMetadataResult | AccessoryMetadataResult,
   choices: Choices,
   bindings: Binding[],
 ) {
+  if (result.provider === "WIKIDATA")
+    return buildAccessoryProposals(target, result, choices, bindings);
   const proposals: Proposal[] = [];
   const unavailable: { field: string; reason: string }[] = [];
   const add = (
@@ -320,5 +338,135 @@ export function buildProposals(
       });
   }
   bounded({ result, proposals });
+  return { proposals, unavailable };
+}
+
+function buildAccessoryProposals(
+  target: TargetSnapshot,
+  result: AccessoryMetadataResult,
+  choices: Choices,
+  bindings: Binding[],
+) {
+  const proposals: Proposal[] = [],
+    unavailable: { field: string; reason: string }[] = [];
+  const add = (
+    field: ProposalField,
+    value: unknown,
+    ids: string[],
+    transformation = "COPY",
+  ) => {
+    const before = target.fields[field] ?? null,
+      proposed = validateAcceptedField(target, field, value);
+    if (equal(before, proposed)) return;
+    const evidence = ids.map((id) => result.evidence.find((e) => e.id === id));
+    if (!evidence.length || evidence.some((e) => !e))
+      throw new EnrichmentError("INVALID_INPUT");
+    proposals.push({
+      id: randomUUID(),
+      fieldPath: field,
+      before,
+      proposed,
+      origin: "PROVIDER",
+      sourceSnapshot: {
+        schemaVersion: 1,
+        data: {
+          provider: result.provider,
+          item: result.identity.ref,
+          mappingVersion: result.mappingVersion,
+          resultSchemaVersion: 1,
+          pipelineVersion: "1",
+          retrievedAt: result.retrievedAt,
+          scope: "ACCESSORY",
+          transformation,
+          evidence: evidence as AccessoryMetadataResult["evidence"],
+          bindings: field === "producerId" ? bindings : [],
+        },
+      },
+    });
+  };
+  if (choices.trailerExternalId && !choices.fields.includes("trailer"))
+    throw new EnrichmentError("INVALID_INPUT");
+  if (choices.companyBindings.length && !choices.fields.includes("producerId"))
+    throw new EnrichmentError("INVALID_INPUT");
+  for (const field of choices.fields) {
+    if (field === "references") {
+      const refs = referencesSchema.parse(target.fields.references),
+        ref = result.identity.ref;
+      if (
+        !refs.some(
+          (r) =>
+            r.provider.toUpperCase() === ref.provider &&
+            r.providerObjectType?.toUpperCase() === ref.objectType &&
+            r.externalId === ref.externalId,
+        )
+      )
+        add(
+          field,
+          [
+            ...refs,
+            {
+              provider: "wikidata",
+              providerObjectType: "ITEM",
+              externalId: ref.externalId,
+              url: result.evidence.find((e) =>
+                result.identity.evidenceIds.includes(e.id),
+              )!.sourceUrl,
+            },
+          ],
+          result.identity.evidenceIds,
+          "APPEND_PRESERVING_EXISTING",
+        );
+      continue;
+    }
+    if (target.target.kind !== "accessory") {
+      unavailable.push({
+        field,
+        reason:
+          "Product evidence does not establish this variant's exact edition, markets or compatibility. Review its accessory family instead.",
+      });
+      continue;
+    }
+    if (field === "name")
+      add(field, result.identity.name, result.identity.evidenceIds);
+    else if (field === "description" && "data" in result.description)
+      add(
+        field,
+        result.description.data.value,
+        result.description.data.evidenceIds,
+      );
+    else if (field === "releaseYear" && "data" in result.releaseYear)
+      add(
+        field,
+        result.releaseYear.data.value,
+        result.releaseYear.data.evidenceIds,
+      );
+    else if (field === "trailer" && "data" in result.videos) {
+      const video = result.videos.data.find(
+        (v) => v.value.externalId === choices.trailerExternalId,
+      );
+      if (!video) throw new EnrichmentError("INVALID_INPUT");
+      add(field, video.value.video, video.evidenceIds);
+    } else if (field === "producerId" && "data" in result.producers) {
+      const matched = result.producers.data.flatMap((p) => {
+        const binding = bindings.find(
+          (b) => b.externalId === p.value.ref.externalId,
+        );
+        return binding ? [{ producer: p, binding }] : [];
+      });
+      if (matched.length !== 1) {
+        unavailable.push({
+          field,
+          reason:
+            "Choose exactly one sourced manufacturer and bind it to an existing active company.",
+        });
+        continue;
+      }
+      add(field, matched[0].binding.companyId, matched[0].producer.evidenceIds);
+    } else
+      unavailable.push({
+        field,
+        reason: "No eligible accessory evidence was supplied for this field.",
+      });
+  }
   return { proposals, unavailable };
 }

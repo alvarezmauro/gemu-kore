@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const enrichmentTarget = z.strictObject({
-  kind: z.enum(["game", "release"]),
+  kind: z.enum(["game", "release", "accessory", "variant"]),
   id: z.uuid(),
 });
 export type EnrichmentTarget = z.infer<typeof enrichmentTarget>;
@@ -20,7 +20,7 @@ export const startEnrichment = z.strictObject({
 export const runIdentity = z.strictObject({ runId: z.uuid() });
 export const runCommand = runIdentity.extend({ expectedRunVersion: version });
 export const chooseEnrichmentCandidate = runCommand.extend({
-  externalId: z.string().regex(/^[1-9][0-9]{0,15}$/),
+  externalId: z.string().regex(/^(?:[1-9][0-9]{0,15}|Q[1-9][0-9]{0,15})$/),
 });
 export const proposalFields = [
   "name",
@@ -34,6 +34,8 @@ export const proposalFields = [
   "credits",
   "markets",
   "firstReleaseYear",
+  "releaseYear",
+  "producerId",
 ] as const;
 export type ProposalField = (typeof proposalFields)[number];
 export const prepareEnrichment = runCommand.extend({

@@ -1,6 +1,7 @@
 import "server-only";
 import { Prisma } from "../../db/generated/client";
 import type { TransactionClient } from "../../db/transaction";
+import { findAccessoryCatalog } from "./accessories";
 import { findGameCatalog } from "./games";
 import { playtimeRecord } from "./playtime";
 import { trailerRecord } from "./trailers";
@@ -36,11 +37,18 @@ export function companies(ids: string[], tx: TransactionClient) {
     take: 30,
   });
 }
-export function mappedCompanies(ids: string[], tx: TransactionClient) {
+export function mappedCompanies(
+  ids: string[],
+  tx: TransactionClient,
+  provider: "IGDB" | "WIKIDATA" = "IGDB",
+) {
   return tx.externalReference.findMany({
     where: {
-      provider: { equals: "igdb", mode: "insensitive" },
-      providerObjectType: { equals: "COMPANY", mode: "insensitive" },
+      provider: { equals: provider.toLowerCase(), mode: "insensitive" },
+      providerObjectType: {
+        equals: provider === "IGDB" ? "COMPANY" : "ITEM",
+        mode: "insensitive",
+      },
       externalId: { in: ids },
       companyId: { not: null },
       company: { archivedAt: null },
@@ -52,9 +60,11 @@ export function mappedCompanies(ids: string[], tx: TransactionClient) {
 
 // The outer acceptance service owns permission checks, guard and one revision bump.
 export async function writeAcceptedFields(
-  kind: "game" | "release",
+  kind: "game" | "release" | "accessory" | "variant",
   id: string,
   fields: {
+    releaseYear?: number;
+    producerId?: string;
     name?: string;
     description?: string;
     aliases?: string[];
@@ -75,6 +85,35 @@ export async function writeAcceptedFields(
         trailerPublicApproved: false,
       }
     : {};
+  if (kind === "accessory" || kind === "variant") {
+    const data = {
+      ...(scalar.name !== undefined ? { name: scalar.name } : {}),
+      ...(scalar.releaseYear !== undefined
+        ? { releaseYear: scalar.releaseYear }
+        : {}),
+      ...(scalar.producerId !== undefined
+        ? { producerId: scalar.producerId }
+        : {}),
+      ...media,
+      revision: { increment: 1 },
+    };
+    return kind === "accessory"
+      ? tx.accessory.update({
+          where: { id },
+          data: {
+            ...data,
+            ...(scalar.description !== undefined
+              ? { description: scalar.description }
+              : {}),
+          },
+          select: { revision: true },
+        })
+      : tx.accessoryVariant.update({
+          where: { id },
+          data,
+          select: { revision: true },
+        });
+  }
   if (kind === "game") {
     const { name, description, aliases } = scalar;
     return tx.game.update({
@@ -125,9 +164,9 @@ export function writeAcceptedPlaytime(
     update: estimates,
   });
 }
-export function recordAcceptedChange(
+export async function recordAcceptedChange(
   data: {
-    kind: "game" | "release";
+    kind: "game" | "release" | "accessory" | "variant";
     targetId: string;
     fieldPath: string;
     revision: number;
@@ -141,9 +180,7 @@ export function recordAcceptedChange(
 ) {
   return tx.metadataChange.create({
     data: {
-      ...(data.kind === "game"
-        ? { gameId: data.targetId }
-        : { gameReleaseId: data.targetId }),
+      ...targetPointer(data.kind, data.targetId),
       fieldPath: data.fieldPath,
       rootRevision: data.revision,
       actorId: data.actorId,
@@ -155,4 +192,27 @@ export function recordAcceptedChange(
     },
     select: { id: true },
   });
+}
+
+export function targetPointer(
+  kind: "game" | "release" | "accessory" | "variant",
+  id: string,
+) {
+  switch (kind) {
+    case "game":
+      return { gameId: id };
+    case "release":
+      return { gameReleaseId: id };
+    case "accessory":
+      return { accessoryId: id };
+    case "variant":
+      return { accessoryVariantId: id };
+  }
+}
+export function readAccessoryEnrichmentTarget(
+  kind: "accessory" | "variant",
+  id: string,
+  tx: TransactionClient,
+) {
+  return findAccessoryCatalog(kind, id, tx);
 }

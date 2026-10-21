@@ -5,12 +5,7 @@ import type { PrivateAccessContext } from "@/server/auth/access";
 import { Prisma } from "@/server/db/generated/client";
 import * as repository from "@/server/repositories/enrichment";
 import * as catalog from "@/server/repositories/catalog/enrichment";
-import {
-  gameMetadataResult,
-  gameSearchPage,
-  providerObjectReference,
-  validateProviderOutput,
-} from "@/server/providers/game-metadata/contracts";
+import { resultData, searchData, selectedReference } from "./provider-data";
 import {
   prepareEnrichment,
   rejectEnrichment,
@@ -99,35 +94,48 @@ export async function getEnrichmentReview(
         ),
       ]),
     );
-    const metadata = run.result
-      ? validateProviderOutput(gameMetadataResult, run.result)
-      : null;
-    const search = run.candidates
-      ? validateProviderOutput(gameSearchPage, run.candidates)
-      : null;
+    const metadata = run.result ? resultData(run) : null;
+    const search = run.candidates ? searchData(run) : null;
     const candidates = search?.candidates ?? [];
-    const selected = run.selectedCandidate
-      ? providerObjectReference.parse(run.selectedCandidate)
-      : null;
+    const selected = run.selectedCandidate ? selectedReference(run) : null;
     const prepared = run.preparedChoices as {
       unavailable?: { field: string; reason: string }[];
     } | null;
+    const accessory =
+      current.target.kind === "accessory" || current.target.kind === "variant";
     const availableFields: ProposalField[] = !metadata
       ? []
-      : current.target.kind === "release"
-        ? ["references"]
-        : [
-            "name",
-            "aliases",
-            "references",
-            ...("data" in metadata.description ? ["description" as const] : []),
-            ...("data" in metadata.playtime ? ["playtime" as const] : []),
-            ...("data" in metadata.videos ? ["trailer" as const] : []),
-            ...("data" in metadata.companies &&
-            metadata.companies.data.some((c) => c.value.role === "DEVELOPER")
-              ? ["developers" as const]
-              : []),
-          ];
+      : metadata.provider === "WIKIDATA"
+        ? current.target.kind === "variant"
+          ? ["references"]
+          : [
+              "name",
+              "references",
+              ...("data" in metadata.description
+                ? ["description" as const]
+                : []),
+              ...("data" in metadata.releaseYear
+                ? ["releaseYear" as const]
+                : []),
+              ...("data" in metadata.producers ? ["producerId" as const] : []),
+              ...("data" in metadata.videos ? ["trailer" as const] : []),
+            ]
+        : current.target.kind === "release"
+          ? ["references"]
+          : [
+              "name",
+              "aliases",
+              "references",
+              ...("data" in metadata.description
+                ? ["description" as const]
+                : []),
+              ...("data" in metadata.playtime ? ["playtime" as const] : []),
+              ...("data" in metadata.videos ? ["trailer" as const] : []),
+              ...("data" in metadata.companies &&
+              metadata.companies.data.some((c) => c.value.role === "DEVELOPER")
+                ? ["developers" as const]
+                : []),
+            ];
     const companyIds = new Set<string>();
     for (const value of [
       current.fields.developers,
@@ -140,6 +148,15 @@ export async function getEnrichmentReview(
         .safeParse(value);
       if (parsed.success)
         for (const row of parsed.data) companyIds.add(row.companyId);
+    }
+    for (const value of [
+      current.fields.producerId,
+      ...suggestions
+        .filter((s) => s.fieldPath === "producerId")
+        .flatMap((s) => [s.before, s.proposed]),
+    ]) {
+      const parsed = z.uuid().safeParse(value);
+      if (parsed.success) companyIds.add(parsed.data);
     }
     const companyNames = await catalog.companies([...companyIds], tx);
     return {
@@ -157,19 +174,24 @@ export async function getEnrichmentReview(
       candidates: candidates.map((candidate) => ({
         externalId: candidate.identity.ref.externalId,
         name: candidate.identity.name,
-        classification: candidate.identity.classification,
+        classification:
+          "classification" in candidate.identity
+            ? candidate.identity.classification
+            : "Product item — verify identity",
         platforms:
-          "data" in candidate.platforms
-            ? candidate.platforms.data.map((platform) => platform.value.name)
+          "platforms" in candidate && "data" in candidate.platforms
+            ? candidate.platforms.data.map((p) => p.value.name)
             : [],
         year:
-          "data" in candidate.firstRelease
+          "firstRelease" in candidate && "data" in candidate.firstRelease
             ? candidate.firstRelease.data.value.year
             : null,
         description:
-          "data" in candidate.descriptionExcerpt
-            ? candidate.descriptionExcerpt.data.value
-            : null,
+          "descriptionExcerpt" in candidate
+            ? "data" in candidate.descriptionExcerpt
+              ? candidate.descriptionExcerpt.data.value
+              : null
+            : candidate.description,
       })),
       selectedCandidate: selected
         ? {
@@ -181,20 +203,56 @@ export async function getEnrichmentReview(
       trailerChoices:
         metadata && "data" in metadata.videos
           ? metadata.videos.data.map((video) => ({
-              externalId: video.value.ref.externalId,
+              externalId:
+                "ref" in video.value
+                  ? video.value.ref.externalId
+                  : video.value.externalId,
               title: video.value.title,
             }))
           : [],
       companyChoices:
-        metadata && "data" in metadata.companies
-          ? metadata.companies.data
-              .filter((company) => company.value.role === "DEVELOPER")
-              .map((company) => ({
-                externalId: company.value.ref.externalId,
-                name: company.value.name,
+        metadata?.provider === "WIKIDATA"
+          ? "data" in metadata.producers
+            ? metadata.producers.data.map((p) => ({
+                externalId: p.value.ref.externalId,
+                name: p.value.name,
               }))
+            : []
+          : metadata && "data" in metadata.companies
+            ? metadata.companies.data
+                .filter((c) => c.value.role === "DEVELOPER")
+                .map((c) => ({
+                  externalId: c.value.ref.externalId,
+                  name: c.value.name,
+                }))
+            : [],
+      warnings:
+        metadata?.provider === "WIKIDATA" || search?.provider === "WIKIDATA"
+          ? [
+              "Product matches can include unrelated items. Verify the source identity. Product evidence never establishes a specific variant's edition, commercial markets or compatibility.",
+              ...(metadata?.provider === "WIKIDATA"
+                ? [
+                    ...new Set(
+                      metadata.diagnostics.map(
+                        (d) =>
+                          `${d.section} evidence is incomplete or unsupported; inspect the source before applying.`,
+                      ),
+                    ),
+                  ]
+                : []),
+            ]
+          : evidenceWarnings(
+              metadata?.provider === "IGDB" ? metadata : null,
+              search?.provider === "IGDB" ? search : null,
+            ),
+      observations:
+        metadata?.provider === "WIKIDATA"
+          ? metadata.observations.map(({ label, value, sourceUrl }) => ({
+              label,
+              value,
+              sourceUrl,
+            }))
           : [],
-      warnings: evidenceWarnings(metadata, search),
       suggestions: suggestions.map((suggestion) => ({
         id: suggestion.id,
         fieldPath: suggestion.fieldPath as ProposalField,
@@ -211,6 +269,43 @@ export async function getEnrichmentReview(
       })),
       unavailable: [
         ...baseUnavailable,
+        ...(metadata?.provider === "WIKIDATA"
+          ? (
+              [
+                ["description", metadata.description],
+                ["releaseYear", metadata.releaseYear],
+                ["producerId", metadata.producers],
+                ["trailer", metadata.videos],
+              ] as const
+            ).flatMap(([field, section]) =>
+              "data" in section
+                ? []
+                : [
+                    {
+                      field,
+                      reason: `The source returned ${section.state} evidence for this field; no value can be imported.`,
+                    },
+                  ],
+            )
+          : []),
+        ...(accessory
+          ? [
+              {
+                field: "includedItems",
+                reason:
+                  "No scoped package-contents evidence or typed accessory contents storage is available.",
+              },
+              ...(current.target.kind === "variant"
+                ? [
+                    {
+                      field: "variantMetadata",
+                      reason:
+                        "Only an explicit reference mapping can be accepted for this variant. Family facts, edition, markets and compatibility are not inferred.",
+                    },
+                  ]
+                : []),
+            ]
+          : []),
         ...(current.target.kind === "release"
           ? [
               {
@@ -281,12 +376,16 @@ export async function prepareEnrichmentReview(
       throw new EnrichmentError("STALE");
     const target = await loadTarget(targetOf(run), tx);
     if (!unchanged(run, target)) throw new EnrichmentError("CONFLICT");
-    const metadata = validateProviderOutput(gameMetadataResult, run.result);
-    const developerIds =
-      "data" in metadata.companies
+    const metadata = resultData(run);
+    const accessory = metadata.provider === "WIKIDATA";
+    const developerIds = accessory
+      ? "data" in metadata.producers
+        ? metadata.producers.data.map((p) => p.value.ref.externalId)
+        : []
+      : "data" in metadata.companies
         ? metadata.companies.data
-            .filter((company) => company.value.role === "DEVELOPER")
-            .map((company) => company.value.ref.externalId)
+            .filter((c) => c.value.role === "DEVELOPER")
+            .map((c) => c.value.ref.externalId)
         : [];
     if (
       choice.companyBindings.some(
@@ -294,11 +393,29 @@ export async function prepareEnrichmentReview(
       )
     )
       throw new EnrichmentError("INVALID_INPUT");
-    const foundMappings = choice.fields.includes("developers")
-      ? await catalog.mappedCompanies(developerIds, tx)
-      : [];
+    const foundMappings =
+      choice.fields.includes("developers") ||
+      choice.fields.includes("producerId")
+        ? await catalog.mappedCompanies(
+            developerIds,
+            tx,
+            accessory ? "WIKIDATA" : "IGDB",
+          )
+        : [];
     const mappings = foundMappings.length >= 61 ? [] : foundMappings;
     const selected = developerIds.flatMap((externalId) => {
+      if (
+        accessory &&
+        choice.companyBindings.length &&
+        !choice.companyBindings.some((b) => b.externalId === externalId)
+      )
+        return [];
+      if (
+        accessory &&
+        !choice.companyBindings.length &&
+        developerIds.length !== 1
+      )
+        return [];
       const explicit = choice.companyBindings.find(
         (binding) => binding.externalId === externalId,
       );

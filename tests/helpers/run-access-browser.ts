@@ -142,6 +142,8 @@ async function main() {
             S3_FORCE_PATH_STYLE: "true",
             NODE_EXTRA_CA_CERTS: certificate,
             NEXT_TELEMETRY_DISABLED: "1",
+            ACCESSORY_METADATA_PROVIDER: "none",
+            WIKIDATA_USER_AGENT: "",
             IGDB_CLIENT_ID: "",
             IGDB_CLIENT_SECRET: "",
           },

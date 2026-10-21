@@ -26,8 +26,11 @@ export function SuggestionCard({
   onApply: () => void;
   onIgnore: () => void;
 }) {
-  const label = fieldLabels[s.fieldPath];
   const source = sourceDetails(s.source);
+  const label =
+    s.fieldPath === "trailer" && source?.provider === "WIKIDATA"
+      ? "Product video"
+      : fieldLabels[s.fieldPath];
   const pending = s.status === "PENDING";
   return (
     <article

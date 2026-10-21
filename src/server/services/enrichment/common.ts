@@ -12,6 +12,7 @@ import {
 } from "@/server/auth/access";
 import { PermissionError, requirePermission } from "@/server/auth/permissions";
 import { lockCatalogWrites } from "@/server/repositories/catalog/management";
+import { readAccessoryEnrichmentTarget } from "@/server/repositories/catalog/enrichment";
 import { readEnrichmentTarget } from "@/server/repositories/catalog/enrichment";
 import * as repository from "@/server/repositories/enrichment";
 import {
@@ -115,6 +116,9 @@ export async function guarded<T>(
 export function targetOf(run: repository.Run): EnrichmentTarget {
   if (run.gameId) return { kind: "game", id: run.gameId };
   if (run.gameReleaseId) return { kind: "release", id: run.gameReleaseId };
+  if (run.accessoryId) return { kind: "accessory", id: run.accessoryId };
+  if (run.accessoryVariantId)
+    return { kind: "variant", id: run.accessoryVariantId };
   throw new EnrichmentError("NOT_FOUND");
 }
 export async function authorizedRun(
@@ -126,6 +130,12 @@ export async function authorizedRun(
   if (!run || (actor.role !== "ADMIN" && run.requestedById !== actor.userId))
     throw new EnrichmentError("NOT_FOUND");
   targetOf(run);
+  if (
+    run.accessoryId || run.accessoryVariantId
+      ? run.provider !== "WIKIDATA"
+      : run.provider !== "IGDB"
+  )
+    throw new EnrichmentError("UNAVAILABLE");
   if (run.snapshotSchemaVersion !== 1 || run.pipelineVersion !== "1")
     throw new EnrichmentError("UNAVAILABLE");
   return run;
@@ -134,6 +144,45 @@ export async function loadTarget(
   target: EnrichmentTarget,
   tx: TransactionClient,
 ): Promise<TargetSnapshot> {
+  if (target.kind === "accessory" || target.kind === "variant") {
+    const record = await readAccessoryEnrichmentTarget(
+      target.kind,
+      target.id,
+      tx,
+    );
+    if (!record) throw new EnrichmentError("NOT_FOUND");
+    const variant = "accessoryId" in record ? record : null;
+    return snapshotSchema.parse({
+      target,
+      label: variant
+        ? `${variant.accessory.name} · ${record.name} · ${record.slug}`
+        : `${record.name} · ${record.slug}`,
+      revision: record.revision,
+      archived: Boolean(record.archivedAt || variant?.accessory.archivedAt),
+      identity: variant
+        ? {
+            accessoryId: variant.accessoryId,
+            accessoryRevision: variant.accessory.revision,
+            modelNumber: variant.modelNumber,
+            color: variant.color,
+            edition: variant.edition,
+            markets: variant.regions.map((r) => r.regionId),
+            platforms: variant.platforms.map((p) => ({
+              id: p.platformId,
+              note: p.compatibilityNote,
+            })),
+          }
+        : { id: record.id },
+      fields: {
+        references: record.externalReferences.map((r) => ({ ...r })),
+        name: record.name,
+        description: "description" in record ? record.description : null,
+        releaseYear: record.releaseYear,
+        producerId: record.producerId,
+        trailer: storedTrailer(record),
+      },
+    });
+  }
   const loaded = await readEnrichmentTarget(target.kind, target.id, tx);
   if (!loaded) throw new EnrichmentError("NOT_FOUND");
   const { record, parent } = loaded;

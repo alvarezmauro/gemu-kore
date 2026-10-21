@@ -13,6 +13,8 @@ export const fieldLabels: Record<ProposalField, string> = {
   credits: "Release company credits",
   markets: "Market dates",
   firstReleaseYear: "Release year",
+  releaseYear: "Release year",
+  producerId: "Producer",
 };
 export function sourceUrl(value: string) {
   try {
@@ -20,7 +22,12 @@ export function sourceUrl(value: string) {
     return url.protocol === "https:" &&
       !url.username &&
       !url.password &&
-      (url.hostname === "igdb.com" || url.hostname === "www.igdb.com")
+      [
+        "igdb.com",
+        "www.igdb.com",
+        "www.wikidata.org",
+        "commons.wikimedia.org",
+      ].includes(url.hostname)
       ? url.href
       : null;
   } catch {
@@ -30,9 +37,9 @@ export function sourceUrl(value: string) {
 const sourceSchema = z.object({
   schemaVersion: z.literal(1),
   data: z.object({
-    provider: z.literal("IGDB"),
+    provider: z.enum(["IGDB", "WIKIDATA"]),
     retrievedAt: z.iso.datetime(),
-    scope: z.literal("GAME"),
+    scope: z.enum(["GAME", "ACCESSORY"]),
     evidence: z.array(
       z.object({
         id: z.string(),
@@ -49,7 +56,10 @@ export function sourceDetails(value: EnrichmentValue) {
   return {
     provider: source.data.data.provider,
     retrievedAt: source.data.data.retrievedAt,
-    scope: "Game-level evidence",
+    scope:
+      source.data.data.scope === "GAME"
+        ? "Game-level evidence"
+        : "Accessory product evidence",
     links: [
       ...new Set(
         source.data.data.evidence.flatMap((e) =>
@@ -72,6 +82,10 @@ export function displayValue(
     (Array.isArray(value) && value.length === 0)
   )
     return ["Not recorded"];
+  if (field === "producerId" && typeof value === "string")
+    return [
+      companies.find((c) => c.id === value)?.name ?? "Company name unavailable",
+    ];
   if (typeof value === "string" || typeof value === "number")
     return [String(value)];
   if (Array.isArray(value))
