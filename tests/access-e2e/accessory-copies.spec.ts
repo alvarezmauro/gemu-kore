@@ -125,7 +125,7 @@ test("editor creates, edits, reidentifies and deletes a private copy with photos
   await expect(models).toContainText("synthetic-controller.glb · Selected");
   await expect(
     page.getByRole("button", { name: "View in 3D", exact: true }),
-  ).toHaveCount(0);
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Edit accessory", exact: true })
     .click();

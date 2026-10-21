@@ -23,7 +23,12 @@ export default async function AccessoryPage({
   const raw = query.modelPage ?? "1";
   const modelPage =
     typeof raw === "string" && /^[1-9]\d{0,3}$/.test(raw) ? Number(raw) : 0;
-  const result = await getAccessoryCopyPageData({ id, modelPage });
+  const rawGallery = query.galleryPage ?? "1";
+  const galleryPage =
+    typeof rawGallery === "string" && /^[1-9]\d{0,3}$/.test(rawGallery)
+      ? Number(rawGallery)
+      : 0;
+  const result = await getAccessoryCopyPageData({ id, modelPage, galleryPage });
   if (result.status !== "authorized") {
     if (result.status === "UNAUTHENTICATED") redirect("/login");
     if (result.status === "DENIED") redirect("/access-denied");
@@ -65,6 +70,7 @@ export default async function AccessoryPage({
       <PageContainer>
         <AccessoryCopy
           detail={result.detail}
+          presentation={result.presentation}
           models={result.models}
           locations={result.locations}
           canManage={result.canManage}

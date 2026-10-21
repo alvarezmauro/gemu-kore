@@ -15,6 +15,7 @@ import {
 import { lockAssets } from "@/server/repositories/assets";
 import * as repository from "@/server/repositories/collection/accessory-copies";
 import { getLocations } from "@/server/services/locations";
+import { readAccessoryPresentation } from "./accessory-presentation";
 import {
   accessorySearch,
   variantSearch,
@@ -364,6 +365,12 @@ export async function getOwnedAccessoryCopy(
         const canManage = canPerform(actor.role, "collection.manage");
         return {
           detail,
+          presentation: await readAccessoryPresentation(
+            item.id,
+            selected.id,
+            p.data.galleryPage,
+            tx,
+          ),
           canManage,
           locations: canManage ? locations : [],
           models: {

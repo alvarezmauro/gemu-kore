@@ -8,23 +8,23 @@ import {
   type TrailerReference,
 } from "../trailer-validation";
 const TrailerMedia = dynamic(() => import("./trailer-media"), {
-  loading: () => <p role="status">Loading trailer player…</p>,
+  loading: () => <p role="status">Loading video player…</p>,
   ssr: false,
 });
 export function TrailerPlayer({
   trailer,
   title,
+  kind = "trailer",
 }: {
   trailer: TrailerReference | null;
   title: string;
+  kind?: "trailer" | "video";
 }) {
   const [open, setOpen] = useState(false);
   // Defense in depth for all callers, including stored legacy values.
   const parsed = trailerReference.safeParse(trailer);
   if (!parsed.success)
-    return (
-      <p className="text-sm text-muted-foreground">No trailer recorded.</p>
-    );
+    return <p className="text-sm text-muted-foreground">No {kind} recorded.</p>;
   const reference = parsed.data;
   return (
     <div className="max-w-3xl space-y-4">
@@ -38,7 +38,7 @@ export function TrailerPlayer({
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {open ? "Close trailer" : "Load trailer"}
+        {open ? `Close ${kind}` : `Load ${kind}`}
       </Button>
       {open && <TrailerMedia trailer={reference} title={title} />}
       <p className="text-sm">

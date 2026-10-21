@@ -28,7 +28,7 @@ The copy page supports private model upload, download, selection, catalog fallba
 
 ## Scope and verification
 
-This task adds no schema, dependencies, provider or public endpoint. The richer catalog imagery, information, video and interactive 3D presentation belong to Task 16.4. Enrichment belongs to Task 16.3. Existing media delivery and public privacy rules remain authoritative.
+This task adds no schema, dependencies, provider or public endpoint. The richer catalog imagery, information, video and interactive 3D presentation are documented in [Accessory detail](ACCESSORY_DETAIL.md) (Task 16.4). Enrichment is documented in [Accessory enrichment](ACCESSORY_ENRICHMENT.md) (Task 16.3). Existing media delivery and public privacy rules remain authoritative.
 
 Checks use synthetic catalog records and disposable PostgreSQL/MinIO. The personal development database is not migrated. Verification passes: lint, typecheck, production builds, formatting/whitespace, 1,247 unit/component cases, 158 distinct relevant database cases and 26 distinct desktop/mobile browser checks across full and focused runs. The deferred 3D bundle is unchanged and within budget. Reviewed light desktop, dark mobile, reduced-motion and 200% text-size screenshots. The shared header and accessory controls wrap at narrow widths; save/cancel remain reachable. Final task status is recorded in the development plan.
 

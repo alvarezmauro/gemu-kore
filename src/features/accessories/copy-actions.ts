@@ -12,6 +12,8 @@ import {
   mutateAccessoryCopy,
 } from "@/server/services/collection/accessory-copies";
 import type { Result } from "./copy-contracts";
+import { getAccessoryModelPresentation } from "@/server/services/collection/accessory-presentation";
+import type { ModelPresentationResult } from "@/lib/three/contracts";
 async function run<T>(
   work: (
     context: Awaited<ReturnType<typeof requirePrivateAccess>>,
@@ -70,4 +72,9 @@ export async function changeAccessoryCopy(input: unknown) {
   });
   if (result.status === "success") invalidate();
   return result;
+}
+export async function loadAccessoryModelView(
+  input: unknown,
+): Promise<ModelPresentationResult> {
+  return run((context) => getAccessoryModelPresentation(context, input));
 }

@@ -49,3 +49,16 @@ it("handles unknown or unsafe legacy references without an executable link", () 
   expect(screen.getByText("No trailer recorded.")).toBeVisible();
   expect(container.querySelector("a,iframe,video")).toBeNull();
 });
+it("uses product video controls while preserving explicit activation and safe fallback", async () => {
+  const { container } = render(
+    <TrailerPlayer trailer={trailer} title="Accessory video" kind="video" />,
+  );
+  expect(container.querySelector("iframe")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Load video" }));
+  expect(await screen.findByTitle("Accessory video")).toHaveAttribute(
+    "src",
+    "https://www.youtube-nocookie.com/embed/AbCdEf123_-?playsinline=1",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Close video" }));
+  expect(container.querySelector("iframe")).toBeNull();
+});

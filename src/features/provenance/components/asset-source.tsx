@@ -6,11 +6,22 @@ const labels: Record<string, string> = {
   AI_ASSISTED: "AI-assisted image",
   IMPORTED: "Imported image",
 };
-export function AssetSource({ source: s }: { source: AssetAttribution }) {
+export function AssetSource({
+  source: s,
+  kind = "image",
+}: {
+  source: AssetAttribution;
+  kind?: "image" | "model";
+}) {
   return (
     <div className="min-w-0 space-y-2 text-sm [overflow-wrap:anywhere]">
       <p>
-        Source: {labels[s.type] ?? "Source unknown"}
+        Source:{" "}
+        {kind === "model" && s.type === "CURATED"
+          ? "Curated 3D model"
+          : kind === "model" && s.type === "AI_ASSISTED"
+            ? "AI-assisted 3D model"
+            : (labels[s.type] ?? "Source unknown")}
         {s.provider ? ` · ${s.provider}` : ""}
       </p>
       {s.url && (
@@ -50,7 +61,8 @@ export function AssetSource({ source: s }: { source: AssetAttribution }) {
         </p>
       )}
       <p className="text-muted-foreground">
-        Source information does not grant permission to publish this image.
+        Source information does not grant permission to publish this{" "}
+        {kind === "model" ? "model" : "image"}.
       </p>
     </div>
   );

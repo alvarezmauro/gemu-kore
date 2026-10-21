@@ -6,7 +6,7 @@ import { getObjectStorage } from "../../src/server/storage";
 import { createObjectLocator } from "../../src/server/storage/objects";
 
 // Original synthetic artwork, never a copied retail cover or external download.
-async function artwork(
+export async function artwork(
   db: PrismaClient,
   scope: "CATALOG" | "COLLECTION",
   label: string,

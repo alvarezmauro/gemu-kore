@@ -45,4 +45,5 @@ export const accessoryCopyMutation = z.discriminatedUnion("operation", [
 export const accessoryCopyDetail = z.strictObject({
   id: z.uuid(),
   modelPage: z.number().int().min(1).max(1000).default(1),
+  galleryPage: z.number().int().min(1).max(1000).default(1),
 });

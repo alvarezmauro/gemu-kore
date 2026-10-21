@@ -144,6 +144,10 @@ async function main() {
         }),
         ownedCount: await database.ownedAccessory.count(),
       };
+    } else if (command === "seed-accessory-detail") {
+      const { seedAccessoryDetail } =
+        await import("./accessory-detail-fixture");
+      result = await seedAccessoryDetail(database, JSON.parse(argument!));
     } else if (command === "seed-game-detail") {
       const { seedGameDetail } = await import("./game-detail-fixture");
       result = await seedGameDetail(database, JSON.parse(argument!));
