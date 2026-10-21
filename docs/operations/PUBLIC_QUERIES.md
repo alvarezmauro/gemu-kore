@@ -1,6 +1,6 @@
 # Public collection query layer
 
-Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. The public home and administrator review UI are now documented in [Public home operations](PUBLIC_HOME.md); browse/detail/media entry points follow in Tasks 18.4–18.5. Existing database defaults and the personal collection's publication choices are unchanged.
+Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. The public home and administrator review UI are now documented in [Public home operations](PUBLIC_HOME.md); [browse/search pages and their public JSON endpoint](PUBLIC_BROWSING.md) are implemented in Task 18.4, with detail/media entry points following in Task 18.5. Existing database defaults and the personal collection's publication choices are unchanged.
 
 ## Public reads
 
@@ -79,3 +79,5 @@ pnpm test:e2e:access dashboard.spec.ts access.spec.ts locations.spec.ts
 ```
 
 The broader regression run covers existing database workflows because coordination is centralized, the existing asset pipeline, functional search cases, unit/component tests, and desktop/mobile dashboard/access/location journeys. The unrelated existing complete-private-search timing benchmark is outside the functional search run; the new public scale test runs under unchanged production and test timeouts. Final check counts/status are recorded in [the development plan](../../DEVELOPMENT_PLAN.md).
+
+Task 18.4 adds a same-snapshot `filters` object to public collection results. Only permitted personal-filter keys are included (`location: true` and/or `hasDefects: true`); disabled keys are absent. This advertises allowed public controls without returning a settings object or its revision. The home DTO is unchanged.

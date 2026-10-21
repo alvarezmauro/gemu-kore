@@ -49,3 +49,23 @@ test("root redirects consistently and an unavailable database gives a generic un
   expect(html).not.toContain("gemukore_e2e");
   await expect(page.getByRole("link", { name: "Try again" })).toBeVisible();
 });
+
+test("public browse failure preserves the requested search and its API returns a generic uncached 503", async ({
+  page,
+  request,
+}) => {
+  const response = await page.goto("/collection/games?q=Chrono&page=2");
+  expect(response?.headers()["cache-control"]).toContain("no-store");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "The collection is unavailable right now.",
+  );
+  await expect(
+    page.getByRole("link", { name: "Try again", exact: true }),
+  ).toHaveAttribute("href", "/collection/games?q=Chrono&page=2");
+  const api = await request.get("/api/search/public?q=Chrono");
+  expect(api.status()).toBe(503);
+  expect(api.headers()["cache-control"]).toBe("no-store");
+  expect(await api.json()).toEqual({
+    error: "The collection is unavailable right now.",
+  });
+});

@@ -61,6 +61,10 @@ async function collection(
   const facets = await repository.collectionFacets(data, terms, policy, tx);
   if (!totals) throw new PublicCollectionError("UNAVAILABLE");
   return {
+    filters: {
+      ...(policy.showLocations ? { location: true as const } : {}),
+      ...(policy.showDefects ? { hasDefects: true as const } : {}),
+    },
     items: rows.slice(0, data.limit).map(publicCard),
     counts: {
       total: count(totals.total),

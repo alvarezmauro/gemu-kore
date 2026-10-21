@@ -4,7 +4,7 @@ Task 18.3 introduces `/collection` and consistently redirects `/` there. `/app` 
 
 The home reads the existing public home service, without loading a session or accepting an audience override. It shows the configured name/description, published-only counts and up to eight recent approved owned copies. A disabled or missing policy shows only the fixed private message and static branding. A database failure shows generic unavailable text and a retry link; Next page rendering does not provide a custom 503 status here. Empty published collections show real zero counts and an empty exhibit.
 
-Public category/detail destinations are deliberately absent until Tasks 18.4/18.5. The home uses an in-page exhibit link and noninteractive display cards. Neutral, labelled photo placeholders never request private images. No viewer, model, trailer, personal photo or catalog artwork is delivered by this step.
+Task 18.4 now provides [public category browsing and search](PUBLIC_BROWSING.md), linked from the home. Recent display cards remain noninteractive until public detail destinations arrive in Task 18.5. Neutral, labelled photo placeholders never request private images. No viewer, model, trailer, personal photo or catalog artwork is delivered by this step.
 
 ## Administrator workflow
 

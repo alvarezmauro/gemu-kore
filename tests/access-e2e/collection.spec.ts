@@ -82,6 +82,7 @@ test("opens the collection home from the workspace and distinguishes empty colle
   await signIn(context);
   await page.goto("/app");
   await page
+    .getByRole("main")
     .getByRole("link", { name: "Browse collection", exact: true })
     .click();
   await expect(page).toHaveURL(/\/app\/collection$/);

@@ -24,6 +24,8 @@ export type PublicFacet = {
   count: number;
 };
 export type PublicCollection = {
+  // Only advertise personal-field filters explicitly enabled in this snapshot.
+  filters: { location?: true; hasDefects?: true };
   items: PublicCard[];
   counts: PublicCounts;
   facets: PublicFacet[];

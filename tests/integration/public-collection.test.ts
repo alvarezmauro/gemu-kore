@@ -25,6 +25,7 @@ import * as policyRepository from "@/server/repositories/public-collection/polic
 import * as queryRepository from "@/server/repositories/public-collection/query";
 import { getLocations, mutateLocation } from "@/server/services/locations";
 import { seedDashboardData } from "../helpers/dashboard-data";
+import { publicSearchRequest } from "@/server/http/public-search";
 import { signedSessionCookie } from "../helpers/access-session";
 const db = getDatabase(),
   secret = "public-query-integration-secret-longer-than-thirty-two-characters";
@@ -338,6 +339,61 @@ it("filters complete public sets before bounded paging and keeps ties/final page
   await expect(
     getPublicCollection({ location: randomUUID() }),
   ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+});
+
+it("advertises only current public filter capabilities and revokes them with policy", async () => {
+  const { context } = await seedPublished();
+  expect((await getPublicCollection()).filters).toEqual({});
+  await settings(context, { showDefects: true });
+  expect((await getPublicCollection()).filters).toEqual({ hasDefects: true });
+  await settings(context, { showLocations: true });
+  expect((await getPublicCollection()).filters).toEqual({
+    location: true,
+    hasDefects: true,
+  });
+  await settings(context, { showDefects: false, showLocations: false });
+  expect((await getPublicCollection()).filters).toEqual({});
+  await expect(
+    getPublicCollection({ hasDefects: false }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+});
+it("serves public URL queries with policy-first denial, fixed paging and no private identity", async () => {
+  const url = "https://example.test/api/search/public";
+  expect(
+    (await publicSearchRequest(new Request(`${url}?role=ADMIN`))).status,
+  ).toBe(404);
+  const { data } = await seedPublished();
+  const response = await publicSearchRequest(
+    new Request(`${url}?type=game&q=Chrono&page=1`, {
+      headers: { "x-role": "ADMIN", cookie: "role=ADMIN" },
+    }),
+  );
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  const result = await response.json();
+  expect(result.items.map((item: { id: string }) => item.id)).toEqual([
+    data.items[1].id,
+  ]);
+  expect(result).toMatchObject({
+    filters: {},
+    limit: 20,
+    offset: 0,
+    counts: { total: 1, games: 1 },
+  });
+  expect(JSON.stringify(result)).not.toMatch(
+    /PRIVATE-|serialNumber|notes|repair|location|email|objectKey|\/app\//i,
+  );
+  for (const query of [
+    "role=ADMIN",
+    "q=Chrono&q=Controller",
+    "type=GAME",
+    "page=252",
+    "hasDefects=false",
+    "limit=5000",
+  ])
+    expect(
+      (await publicSearchRequest(new Request(`${url}?${query}`))).status,
+    ).toBe(400);
 });
 it.each(["VIEWER", "EDITOR"] as const)(
   "denies %s publication and settings commands with current server policy",

@@ -38,6 +38,17 @@ async function main() {
         where: { id: 1 },
         data: { collectionName: "GemuKore", collectionDescription: null },
       });
+    } else if (command === "seed-public-browse") {
+      const { seedPublicBrowseData } = await import("./public-browse-data");
+      result = await seedPublicBrowseData(
+        database,
+        Boolean(argument && JSON.parse(argument).longTitle),
+      );
+    } else if (command === "public-delete-items") {
+      const ids = JSON.parse(argument) as string[];
+      if (!Array.isArray(ids) || ids.length > 50)
+        throw new Error("Invalid fixture IDs");
+      await database.collectionItem.deleteMany({ where: { id: { in: ids } } });
     } else if (command === "seed-public-home") {
       const { seedDashboardData } = await import("./dashboard-data");
       const data = await seedDashboardData(

@@ -103,6 +103,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Enrichment phase review and corrected findings](docs/architecture/ENRICHMENT_REVIEW.md)
 - [Physical packaging/media templates, artwork bindings and owned presence](docs/architecture/PACKAGING_ARCHITECTURE.md)
 - [Public collection home and administrator publication review](docs/operations/PUBLIC_HOME.md)
+- [Public category browsing, search and filters](docs/operations/PUBLIC_BROWSING.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

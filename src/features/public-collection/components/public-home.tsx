@@ -11,6 +11,7 @@ import { BentoCard, BentoGrid } from "@/components/magic/bento-grid";
 import { NumberTicker } from "@/components/magic/number-ticker";
 import { Button } from "@/components/ui/button";
 import type { PublicHome as HomeData } from "../contracts";
+import Link from "next/link";
 
 const categories = [
   {
@@ -62,13 +63,20 @@ export function PublicHome({ data }: { data: HomeData }) {
             {data.description ||
               "Consoles, games and the little things in between. A personal collection of the objects that made us players."}
           </p>
-          {data.recent.length > 0 && (
-            <Button asChild variant="outline" className="mt-8">
-              <a href="#recent">
-                Step inside <ArrowDown aria-hidden="true" />
-              </a>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/collection/search" prefetch={false}>
+                Explore all objects
+              </Link>
             </Button>
-          )}
+            {data.recent.length > 0 && (
+              <Button asChild variant="outline">
+                <a href="#recent">
+                  Step inside <ArrowDown aria-hidden="true" />
+                </a>
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-5 border-t pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
           <Library
@@ -107,6 +115,13 @@ export function PublicHome({ data }: { data: HomeData }) {
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {description}
               </p>
+              <Link
+                prefetch={false}
+                href={`/collection/${key}`}
+                className="mt-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+              >
+                Browse {label.toLowerCase()}
+              </Link>
             </div>
           </BentoCard>
         ))}
