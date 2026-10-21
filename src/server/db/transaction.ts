@@ -11,11 +11,26 @@ export function withTransaction<T>(
     isolationLevel?: Prisma.TransactionIsolationLevel;
     timeout?: number;
     maxWait?: number;
+    publicationPolicy?: "shared" | "exclusive" | "read";
   } = {},
 ) {
-  return getDatabase().$transaction(operation, {
-    maxWait: 5_000,
-    timeout: 10_000,
-    ...options,
-  });
+  const { publicationPolicy = "shared", ...transactionOptions } = options;
+  return getDatabase().$transaction(
+    async (tx) => {
+      // Enter before domain locks in every application transaction. Centralizing
+      // this also covers catalog, location, upload attachment and future writers.
+      // Public snapshot-only reads opt out; settings writes use the exclusive side.
+      if (publicationPolicy === "exclusive")
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(1195724117, 1347764802)::text`;
+      else if (publicationPolicy === "shared")
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock_shared(1195724117, 1347764802)::text`;
+      else await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+      return operation(tx);
+    },
+    {
+      maxWait: 5_000,
+      timeout: 10_000,
+      ...transactionOptions,
+    },
+  );
 }

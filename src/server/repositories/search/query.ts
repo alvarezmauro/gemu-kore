@@ -77,6 +77,7 @@ function buildQuery(
   parsed: ParsedTerm[],
   audience: "private" | "public",
   controls?: ControlParameters,
+  matchingIds = false,
 ) {
   const isPublic = audience === "public";
   const order = controls
@@ -104,7 +105,7 @@ function buildQuery(
   // They are not persisted search documents or materialized database views.
   // Page only complete, deduplicated matches, then hydrate market context for
   // those IDs. Joining that projection before paging repeats work on broad hits.
-  return Prisma.sql`WITH ${controls ? Prisma.sql`controls AS MATERIALIZED (${controlRows(controls)}),` : Prisma.empty} terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (${parsed.length ? Prisma.sql`VALUES ${termValues(parsed)}` : emptyTerms}),
+  const matches = Prisma.sql`WITH ${controls ? Prisma.sql`controls AS MATERIALIZED (${controlRows(controls)}),` : Prisma.empty} terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (${parsed.length ? Prisma.sql`VALUES ${termValues(parsed)}` : emptyTerms}),
   roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate} ${controls ? Prisma.sql`AND c.id IN (SELECT id FROM controls)` : Prisma.empty}),
   links AS MATERIALIZED (
     SELECT r.id,'model'::text kind,o."consoleModelId" target FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id
@@ -141,7 +142,10 @@ function buildQuery(
     }
     UNION ALL SELECT r.id,t.ordinal,1,1,'Edition',false,0::real FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release g ON g.id=o."gameReleaseId" CROSS JOIN terms t WHERE replace(lower(g."editionType"::text),'_',' ') = t.term OR to_tsvector('pg_catalog.simple',replace(lower(g."editionType"::text),'_',' ')) @@ t.exact
   ), best AS (SELECT DISTINCT ON(id,ordinal) * FROM candidates ORDER BY id,ordinal,class,priority,strength DESC,source),
-  matched AS (${parsed.length ? Prisma.sql`SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}` : Prisma.sql`SELECT id,false whole,0 class,0::bigint priority,0::real strength,ARRAY[]::text[] sources FROM roots`}),
+  matched AS (${parsed.length ? Prisma.sql`SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}` : Prisma.sql`SELECT id,false whole,0 class,0::bigint priority,0::real strength,ARRAY[]::text[] sources FROM roots`})`;
+  if (matchingIds)
+    return Prisma.sql`${matches} SELECT id,whole,class,priority,strength FROM matched`;
+  return Prisma.sql`${matches},
   titles AS MATERIALIZED (
     SELECT r.id,r.type,p.name title FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
     UNION ALL SELECT r.id,r.type,g.name FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId"
@@ -167,6 +171,11 @@ export const publicSearchQuery = (
   input: SearchParameters,
   terms: ParsedTerm[],
 ) => buildQuery(input, terms, "public");
+
+// Database-only relation for public counts/filtering before bounded hydration.
+// It never returns private match sources or accepts private control expressions.
+export const publicMatchesQuery = (q: string, terms: ParsedTerm[]) =>
+  buildQuery({ q, limit: 0, offset: 0 }, terms, "public", undefined, true);
 
 export const filteredPrivateSearchQuery = (
   input: SearchParameters,

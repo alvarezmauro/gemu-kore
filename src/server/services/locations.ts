@@ -10,6 +10,7 @@ import { requirePermission } from "../auth/permissions";
 import { withTransaction } from "../db/transaction";
 import { Prisma } from "../db/generated/client";
 import { canPerform } from "../policies/permissions";
+import { invalidateLocationCopies } from "../repositories/public-collection/publication";
 import {
   insertLocation,
   listLocationRecords,
@@ -90,7 +91,11 @@ export async function mutateLocation(
     await withTransaction(
       async (transaction) => {
         await lockLocationHierarchy(transaction);
-        await requirePermission(context, "collection.manage", transaction);
+        const actor = await requirePermission(
+          context,
+          "collection.manage",
+          transaction,
+        );
         const parsed = locationMutation.safeParse(input);
         if (!parsed.success) throw new LocationError("INVALID_INPUT");
         const data = parsed.data;
@@ -171,12 +176,19 @@ export async function mutateLocation(
         };
         if (data.operation === "create")
           await insertLocation(fields, transaction);
-        else
+        else {
+          if (
+            current!.name !== data.name ||
+            current!.type !== data.type ||
+            current!.parentId !== data.parentId
+          )
+            await invalidateLocationCopies(data.id, actor.userId, transaction);
           await updateLocationRecord(
             data.id,
             { ...fields, updatedAt: changedAt(current!.updatedAt) },
             transaction,
           );
+        }
       },
       { isolationLevel: "ReadCommitted" },
     );
