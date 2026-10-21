@@ -34,6 +34,15 @@ export default async function PrivateEntryPage() {
         { label: "Locations", href: "/app/locations", icon: "locations" },
         { label: "Defects", href: "/app/defects", icon: "defects" },
         { label: "Photos", href: "/app/media", icon: "photos" },
+        ...(result.data.role === "ADMIN"
+          ? [
+              {
+                label: "Public collection",
+                href: "/app/settings/public",
+                icon: "public" as const,
+              },
+            ]
+          : []),
       ]}
     >
       <PageContainer>

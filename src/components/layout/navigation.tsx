@@ -8,6 +8,7 @@ import {
   Wrench,
   Camera,
   Search,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ const icons = {
   defects: Wrench,
   photos: Camera,
   search: Search,
+  public: Globe,
 };
 
 export type NavigationItem = {

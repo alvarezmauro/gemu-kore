@@ -6,7 +6,7 @@ test("detail and list interactions preserve keyboard access with normal motion",
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const trigger = page.getByRole("button", { name: "Open example detail" });
   await trigger.focus();
   await page.keyboard.press("Enter");
@@ -50,7 +50,7 @@ test("reduced motion and a live preference change preserve static, usable patter
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const media = page.locator("[data-motion-shared]").first();
   await expect(media).toHaveAttribute("data-motion-shared", "enabled");
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -99,7 +99,7 @@ test("server-rendered preview stays readable without JavaScript", async ({
   });
   const page = await context.newPage();
   try {
-    await page.goto(baseURL!);
+    await page.goto(new URL("/design-preview", baseURL!).href);
     await expect(
       page.getByRole("heading", { level: 1, name: "GemuKore" }),
     ).toBeVisible();

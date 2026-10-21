@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("form feedback is associated with fields and examples remain unsaved", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/design-preview");
   const name = page.getByRole("textbox", { name: "Name (required)" });
   const notes = page.getByRole("textbox", { name: "Notes", exact: true });
   await page.getByRole("button", { name: "Check example" }).click();
@@ -37,7 +37,7 @@ test("compact navigation traps focus, closes with Escape and closes after naviga
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const trigger = page.getByRole("button", { name: "Open navigation" });
   await trigger.focus();
   await page.keyboard.press("Enter");
@@ -71,7 +71,7 @@ test("small screens and zoom-sized layouts stay usable in both themes", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.emulateMedia({ reducedMotion: "reduce", colorScheme: "light" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   for (const theme of ["Light", "Dark"] as const) {
     await page.getByRole("button", { name: "Choose theme" }).click();
     await page.getByRole("menuitemradio", { name: theme, exact: true }).click();
@@ -104,7 +104,7 @@ test("small screens and zoom-sized layouts stay usable in both themes", async ({
 test("the skip link moves keyboard focus to the main content", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/design-preview");
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
@@ -118,7 +118,7 @@ test("open mobile navigation closes at the desktop breakpoint and releases focus
 }) => {
   await page.setViewportSize({ width: 640, height: 700 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const trigger = page.getByRole("button", { name: "Open navigation" });
   await trigger.click();
   const sheet = page.getByRole("dialog", { name: "GemuKore" });
@@ -144,7 +144,7 @@ test("card identity and copy metadata wrap instead of being clipped at 320px", a
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const card = page.locator('#cards [data-slot="card"]').first();
   // Stress the existing rendered component with deterministic display values;
   // this does not add a product route, fixture catalog or persistence.

@@ -1,6 +1,6 @@
 # Public collection query layer
 
-Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. Those entry points arrive in Tasks 18.3–18.5. Existing database defaults and the personal collection's publication choices are unchanged.
+Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. The public home and administrator review UI are now documented in [Public home operations](PUBLIC_HOME.md); browse/detail/media entry points follow in Tasks 18.4–18.5. Existing database defaults and the personal collection's publication choices are unchanged.
 
 ## Public reads
 

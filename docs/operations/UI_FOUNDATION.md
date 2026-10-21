@@ -60,3 +60,5 @@ Verified on 2026-10-03: 10 unit/component tests, three database integration test
 ## Sources
 
 Setup follows [shadcn installation](https://ui.shadcn.com/docs/installation/next), [shadcn theme handling](https://ui.shadcn.com/docs/dark-mode/next), [Magic UI installation](https://magicui.design/docs/installation), [Blur Fade](https://magicui.design/docs/components/blur-fade) and [Motion accessibility](https://motion.dev/docs/react-accessibility).
+
+Task 18.3 moved the static foundation preview to `/design-preview`. The `/` entry consistently redirects to the actual public collection at `/collection`; private collection management remains at `/app`.

@@ -4,7 +4,7 @@ test("explicit theme choices change the colors and survive a reload", async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const html = page.locator("html");
   const trigger = page.getByRole("button", { name: "Choose theme" });
   await expect(html).toHaveClass(/(?:^|\s)light(?:\s|$)/);
@@ -39,7 +39,7 @@ test("system mode follows the device while explicit preferences take priority", 
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const html = page.locator("html");
   const trigger = page.getByRole("button", { name: "Choose theme" });
   await expect(html).toHaveClass(/(?:^|\s)dark(?:\s|$)/);
@@ -66,7 +66,7 @@ test("the theme menu supports keyboard selection and reduced motion", async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/design-preview");
   const trigger = page.getByRole("button", { name: "Choose theme" });
   await trigger.focus();
   await expect(trigger).toBeFocused();

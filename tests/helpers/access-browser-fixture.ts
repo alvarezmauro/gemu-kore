@@ -20,7 +20,71 @@ async function main() {
   const database = getDatabase();
   try {
     let result: unknown = null;
-    if (command === "seed-dashboard") {
+    if (command === "reset-public") {
+      await database.publicSettings.update({
+        where: { id: 1 },
+        data: {
+          publicCollectionEnabled: false,
+          allowSearchEngineIndexing: false,
+          showSerialNumbers: false,
+          showLocations: false,
+          showNotes: false,
+          showDefects: false,
+          showPersonalPhotos: false,
+          revision: { increment: 1 },
+        },
+      });
+      await database.appSettings.update({
+        where: { id: 1 },
+        data: { collectionName: "GemuKore", collectionDescription: null },
+      });
+    } else if (command === "seed-public-home") {
+      const { seedDashboardData } = await import("./dashboard-data");
+      const data = await seedDashboardData(
+        database,
+        Boolean(argument && JSON.parse(argument).longTitle),
+      );
+      const ids = data.items.slice(9).map((item) => item.id);
+      await database.collectionItem.updateMany({
+        where: { id: { in: ids } },
+        data: {
+          publicationStatus: "PUBLISHED",
+          publishedAt: new Date(),
+          revision: { increment: 1 },
+        },
+      });
+      await database.publicSettings.update({
+        where: { id: 1 },
+        data: { publicCollectionEnabled: true, revision: { increment: 1 } },
+      });
+      await database.appSettings.update({
+        where: { id: 1 },
+        data: {
+          collectionName: "A small history of play",
+          collectionDescription:
+            "Physical worlds. Familiar buttons. Objects worth keeping.",
+        },
+      });
+      result = {
+        publishedIds: ids,
+        privateIds: data.items.slice(0, 9).map((item) => item.id),
+        selectedId: ids[0],
+      };
+    } else if (command === "public-policy") {
+      await database.publicSettings.update({
+        where: { id: 1 },
+        data: { ...JSON.parse(argument), revision: { increment: 1 } },
+      });
+    } else if (command === "public-state") {
+      result = {
+        settings: await database.publicSettings.findUnique({
+          where: { id: 1 },
+        }),
+        published: await database.collectionItem.count({
+          where: { publicationStatus: "PUBLISHED" },
+        }),
+      };
+    } else if (command === "seed-dashboard") {
       const { seedDashboardData } = await import("./dashboard-data");
       const { artwork } = await import("./game-detail-fixture");
       const data = await seedDashboardData(

@@ -112,7 +112,7 @@ Two copies of one catalog identity have different URLs. Public detail `[id]` is 
 | Database/policy service failure                                      | Generic unavailable response (503 where the transport permits), no diagnostic payload or fabricated empty result.                                  |
 | Valid published copy with unavailable media                          | Preserve safe textual content and a neutral fallback. No private URL or original download alternative.                                             |
 
-All payload forms count as outputs: HTML, RSC/Flight data, serialized props, JSON, metadata, errors, image headers, conditional and range responses. Generic 404 behavior does not claim constant-time indistinguishability. `/` moves to a consistent `/collection` redirect when Task 18.3 introduces the actual root; it remains the existing foundation preview during this design task.
+All payload forms count as outputs: HTML, RSC/Flight data, serialized props, JSON, metadata, errors, image headers, conditional and range responses. Generic 404 behavior does not claim constant-time indistinguishability. `/` consistently redirects to `/collection` as of Task 18.3; the static foundation examples are isolated at `/design-preview`. See [public home operations](../operations/PUBLIC_HOME.md) for current HTTP and administrator review behavior.
 
 ## 6. Contextual media and derivatives
 
