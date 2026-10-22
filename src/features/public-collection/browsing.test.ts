@@ -96,3 +96,15 @@ it("preserves duplicates for rejection and handles prototype-looking keys withou
   expect(Object.getPrototypeOf(params)).toBeNull();
   expect(parsePublicBrowse(params)).toBeNull();
 });
+it.each([
+  "__proto__",
+  "constructor",
+  "prototype",
+  "toString",
+  "hasOwnProperty",
+  "__defineGetter__",
+])("rejects the individual prototype-looking URL control %s", (key) => {
+  const params = publicUrlParams(new URLSearchParams([[key, "private"]]));
+  for (const category of ["search", "games"] as const)
+    expect(parsePublicBrowse(params, category)).toBeNull();
+});

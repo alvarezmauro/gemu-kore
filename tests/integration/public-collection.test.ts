@@ -23,6 +23,7 @@ import {
 } from "@/server/services/public-collection/publication";
 import * as policyRepository from "@/server/repositories/public-collection/policy";
 import * as queryRepository from "@/server/repositories/public-collection/query";
+import * as mediaRepository from "@/server/repositories/public-collection/media";
 import { getLocations, mutateLocation } from "@/server/services/locations";
 import { seedDashboardData } from "../helpers/dashboard-data";
 import { publicSearchRequest } from "@/server/http/public-search";
@@ -385,6 +386,8 @@ it("serves public URL queries with policy-first denial, fixed paging and no priv
   );
   for (const query of [
     "role=ADMIN",
+    "__proto__=private",
+    "constructor=ADMIN",
     "q=Chrono&q=Controller",
     "type=GAME",
     "page=252",
@@ -1377,6 +1380,20 @@ it("maps only canonical metadata even when personal fields are allowed, and keep
     });
   expect(missing).toEqual(privateCopy);
   expect(missing.canonical).toBeUndefined();
+  const prototypeParams = Object.fromEntries([["__proto__", "private"]]);
+  for (const request of [
+    { kind: "home" },
+    { kind: "category", category: "games" },
+    { kind: "item", type: "CONSOLE", id: data.items[0].id },
+  ]) {
+    const metadata = await getPublicSeo({
+      ...request,
+      params: prototypeParams,
+    });
+    expect(metadata.index).toBe(false);
+    expect(metadata.canonical).toBeUndefined();
+    expect(metadata.image).toBeUndefined();
+  }
 });
 it("admits an exact canonical social image independently, then denies rights, indexing, approval and publication withdrawal", async () => {
   const { context, data } = await seedPublished(),
@@ -1480,4 +1497,185 @@ it("fails closed on absent origin/policy and refuses an overflowing sitemap inst
   await expect(getPublicSitemap("aa")).rejects.toMatchObject({
     code: "UNAVAILABLE",
   });
+});
+
+it("keeps site-logo approval independent from personal visibility and copy publication, with current input rights and exact use admission", async () => {
+  const { context } = await seedPublished(),
+    { source, output } = await approvedImage("COLLECTION");
+  const logo = await db.appAsset.create({
+    data: {
+      appSettingsId: 1,
+      assetId: source.id,
+      publicDisplayAssetId: output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  const request = { context: "site", useId: logo.id };
+  expect((await mediaDelivery(request)).locator.objectKey).toBe(
+    output.objectKey,
+  );
+  expect((await getPublicationSettings(context)).showPersonalPhotos).toBe(
+    false,
+  );
+  await db.collectionItem.updateMany({
+    data: {
+      publicationStatus: "PRIVATE",
+      publishedAt: null,
+      publishedById: null,
+    },
+  });
+  expect((await mediaDelivery(request)).indexable).toBe(false);
+  for (const id of [source.id, output.id, randomUUID()])
+    await expect(
+      mediaDelivery({ ...request, useId: id }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "RESTRICTED" },
+  });
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "APPROVED" },
+  });
+  await db.appAsset.update({
+    where: { id: logo.id },
+    data: { publicApproved: false, approvedAt: null },
+  });
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await settings(context, { publicCollectionEnabled: false });
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+});
+
+it("does not transfer an approved file's visibility to a private copy or a different unapproved personal use", async () => {
+  const { context, data } = await seedPublished(),
+    { source, output } = await approvedImage("COLLECTION");
+  await settings(context, { showPersonalPhotos: true });
+  const common = {
+    assetId: source.id,
+    publicDisplayAssetId: output.id,
+    type: "PHOTO" as const,
+    publicApproved: true,
+    approvedAt: new Date(),
+  };
+  const visible = await db.collectionItemMedia.create({
+    data: { ...common, collectionItemId: data.items[0].id },
+  });
+  const hidden = await db.collectionItemMedia.create({
+    data: {
+      ...common,
+      collectionItemId: data.items[3].id,
+      caption: "Private caption",
+    },
+  });
+  const unapproved = await db.collectionItemMedia.create({
+    data: {
+      ...common,
+      collectionItemId: data.items[0].id,
+      publicApproved: false,
+      approvedAt: null,
+      caption: "Private caption",
+    },
+  });
+  const request = {
+    context: "item",
+    kind: "personal",
+    itemId: data.items[0].id,
+    useId: visible.id,
+  };
+  expect((await mediaDelivery(request)).locator.objectKey).toBe(
+    output.objectKey,
+  );
+  for (const override of [
+    { useId: hidden.id },
+    { useId: unapproved.id },
+    { itemId: data.items[3].id, useId: hidden.id },
+    { itemId: data.items[3].id },
+    { useId: output.id },
+    { kind: "catalog" },
+  ])
+    await expect(
+      mediaDelivery({ ...request, ...override }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  const dto = await getPublicConsole({ id: data.items[0].id });
+  expect(dto.gallery?.images).toHaveLength(1);
+  expect(JSON.stringify(dto)).not.toContain("Private caption");
+  await settings(context, { showPersonalPhotos: false });
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+});
+
+it("admits only the established snapshot during concurrent rights withdrawal and denies the next media, detail and SEO reads", async () => {
+  const { context, data } = await seedPublished(),
+    { source, output } = await approvedImage();
+  await settings(context, { allowSearchEngineIndexing: true });
+  const use = await db.catalogAsset.create({
+    data: {
+      consoleModelId: data.model.id,
+      role: "GALLERY",
+      assetId: source.id,
+      publicDisplayAssetId: output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  const request = {
+    context: "item",
+    itemId: data.items[0].id,
+    kind: "catalog",
+    useId: use.id,
+  };
+  const original = mediaRepository.itemMediaUses;
+  let release!: () => void, entered!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const ready = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+  vi.spyOn(mediaRepository, "itemMediaUses").mockImplementationOnce(
+    async (...args) => {
+      const uses = await original(...args);
+      entered();
+      await gate;
+      return uses;
+    },
+  );
+  const admitted = mediaDelivery(request);
+  try {
+    await ready;
+    await db.asset.update({
+      where: { id: source.id },
+      data: { rightsStatus: "RESTRICTED" },
+    });
+    await expect(mediaDelivery(request)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect(
+      (await getPublicConsole({ id: data.items[0].id })).gallery?.images,
+    ).toEqual([]);
+    expect(
+      (
+        await getPublicSeo({
+          kind: "item",
+          type: "CONSOLE",
+          id: data.items[0].id,
+        })
+      ).image,
+    ).toBeUndefined();
+  } finally {
+    release();
+  }
+  expect((await admitted).locator.objectKey).toBe(output.objectKey);
+  await expect(
+    mediaDelivery({ context: "seo", itemId: request.itemId, useId: use.id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });

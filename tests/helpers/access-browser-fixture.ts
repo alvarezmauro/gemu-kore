@@ -38,6 +38,9 @@ async function main() {
         where: { id: 1 },
         data: { collectionName: "GemuKore", collectionDescription: null },
       });
+    } else if (command === "seed-public-privacy") {
+      const { seedPublicPrivacyData } = await import("./public-privacy-data");
+      result = await seedPublicPrivacyData(database);
     } else if (command === "seed-public-detail") {
       const { seedPublicDetailData } = await import("./public-detail-data");
       result = await seedPublicDetailData(

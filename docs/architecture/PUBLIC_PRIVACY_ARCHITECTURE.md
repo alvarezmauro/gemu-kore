@@ -8,6 +8,8 @@ Status: **Design complete.** Implementation belongs to Tasks 18.2–18.7. Public
 
 Task 18.2 implements the server query and publication-command portion of this handoff; see [Public query operations](../operations/PUBLIC_QUERIES.md) for current contracts, transaction coordination, verification and capabilities still reserved for later tasks. The baseline evidence below remains the historical input to this design.
 
+Task 18.7 records the completed implementation review, corrected finding and current verification limits in the [public privacy review](PUBLIC_PRIVACY_REVIEW.md). The design baseline below remains historical.
+
 ## 1. Authority and scope
 
 This refines [PROJECT_SPEC.md](../../PROJECT_SPEC.md) §§12, 54, 61, 69, 79–86, 109–110 and 135, the [domain publication contracts](DOMAIN_MODEL.md#6-assets-uses-and-provenance), and the [repository output/delivery boundary](REPOSITORY_ARCHITECTURE.md#8-public-projections-media-delivery-and-caching). It preserves the separate canonical catalog and owned copies, existing UUID routes, administrator-only publication, private object storage and current-policy/no-store delivery. It does not introduce another global toggle, authentication product, service, cache or asset ownership model.

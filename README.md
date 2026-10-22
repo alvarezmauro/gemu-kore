@@ -106,6 +106,7 @@ Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma
 - [Public category browsing, search and filters](docs/operations/PUBLIC_BROWSING.md)
 - [Public copy details and contextual media](docs/operations/PUBLIC_DETAILS.md)
 - [Public indexing, metadata and sitemap controls](docs/operations/PUBLIC_SEO.md)
+- [Public privacy review and adversarial evidence](docs/architecture/PUBLIC_PRIVACY_REVIEW.md)
 - [UI foundation and theme handling](docs/operations/UI_FOUNDATION.md)
 - [Product specification](PROJECT_SPEC.md)
 - [Development plan](DEVELOPMENT_PLAN.md)

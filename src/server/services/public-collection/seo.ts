@@ -18,9 +18,17 @@ import {
   parsePublicBrowse,
 } from "@/features/public-collection/browsing";
 import { siteIdentity } from "@/server/repositories/public-collection/policy";
-const params = z.record(
-  z.string(),
-  z.union([z.string(), z.array(z.string()), z.undefined()]),
+const params = z.preprocess(
+  // Record normalization drops this own key. Deny it before parsing so a
+  // supplied query cannot become an empty, indexable parameter collection.
+  (value) =>
+    value && typeof value === "object" && Object.hasOwn(value, "__proto__")
+      ? null
+      : value,
+  z.record(
+    z.string(),
+    z.union([z.string(), z.array(z.string()), z.undefined()]),
+  ),
 );
 const input = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("home"), params: params.default({}) }),
