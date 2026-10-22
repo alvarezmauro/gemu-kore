@@ -36,7 +36,7 @@ Location choices are drawn only from matching published copies when allowed. Def
 
 `GET /api/search/public` uses the same URL controls and public collection service, returning its public DTO. Automatic HEAD handling repeats those gates without a response body. It does not accept or derive a private identity; Cookie, Origin and forged role headers do not widen the response. Pages do not call their own HTTP API.
 
-Every response uses `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` and a same-origin referrer policy. The existing request proxy also covers the endpoint, including unsupported methods and generic framework responses. Public pages remain dynamic and retain noindex/nofollow metadata; SEO controls are a later task.
+Every response uses `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` and a same-origin referrer policy. The existing request proxy also covers the endpoint, including unsupported methods and generic framework responses. Public pages remain dynamic and default to noindex/nofollow; Task 18.6 now supplies current-policy SEO controls.
 
 Disabled/missing public policy returns generic 404 for pages and JSON, including malformed queries. Policy is checked before invalid controls can produce a different response. Enabled invalid API requests return 400; invalid page controls show a generic recovery state. Database/service failure returns generic JSON 503 or unavailable page text with the current valid search preserved in its retry link. The page transport retains Next's normal status behavior for these rendered recovery states. Empty published results remain successful and differ from unavailable/disabled states. Errors do not reveal database diagnostics or privately resolved identities.
 
@@ -51,3 +51,5 @@ Verified on 2026-10-21: lint, typecheck, production builds, formatting, document
 See [public home operations](PUBLIC_HOME.md), [public query operations](PUBLIC_QUERIES.md) and the [public privacy architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md).
 
 Task 18.5 now links object titles to public owned-copy detail routes. Browse grids keep neutral media stages; the detail pages resolve individually approved media through contextual endpoints. See [public detail and media operations](PUBLIC_DETAILS.md).
+
+Task 18.6 adds [public SEO controls](PUBLIC_SEO.md): base categories may be indexed by explicit permission, while search and parameterized filter pages remain noindex and omit query text from metadata.

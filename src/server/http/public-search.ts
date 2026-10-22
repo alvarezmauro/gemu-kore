@@ -12,6 +12,7 @@ const headers = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "same-origin",
+  "X-Robots-Tag": "noindex, nofollow",
 };
 export async function publicSearchRequest(request: Request) {
   const parsed = parsePublicBrowse(

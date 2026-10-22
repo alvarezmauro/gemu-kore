@@ -19,6 +19,8 @@ export const config = {
     "/",
     "/collection/:path*",
     "/api/search/public",
+    "/robots.txt",
+    "/sitemap.xml",
     "/api/media/public/:path*",
     "/api/collection/public/:path*",
     "/app/settings/public",

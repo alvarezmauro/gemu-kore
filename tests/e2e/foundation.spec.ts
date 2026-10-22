@@ -97,3 +97,25 @@ test("public detail and media failures keep generic recovery without exposing da
     });
   }
 });
+
+test("SEO outputs fail closed when the database is unavailable", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/collection");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    "noindex, nofollow",
+  );
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  for (const path of [
+    "/robots.txt",
+    "/sitemap.xml",
+    "/sitemap.xml?part=pages",
+  ]) {
+    const r = await request.get(path);
+    expect(r.status()).toBe(503);
+    expect(r.headers()["cache-control"]).toBe("no-store");
+    expect(await r.text()).toBe("The collection is unavailable right now.");
+  }
+});

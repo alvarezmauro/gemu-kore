@@ -44,37 +44,18 @@ async function perform<T>(
   }
 }
 
-// Indexing remains closed until Task 18.6.
-function availableSettings<
-  T extends {
-    settings: {
-      showPersonalPhotos: boolean;
-      allowSearchEngineIndexing: boolean;
-    };
-  },
->(data: T) {
-  if (data.settings.allowSearchEngineIndexing)
-    throw new PublicCollectionError("INVALID_INPUT");
-  return data;
-}
 export async function reviewPublicationSettings(input: unknown) {
   return perform(async (context) => {
     const parsed = settingsReviewInput.safeParse(input);
     if (!parsed.success) throw new PublicCollectionError("INVALID_INPUT");
-    return publication.reviewPublicSettings(
-      context,
-      availableSettings(parsed.data),
-    );
+    return publication.reviewPublicSettings(context, parsed.data);
   });
 }
 export async function savePublicationSettings(input: unknown) {
   const result = await perform(async (context) => {
     const parsed = settingsMutation.safeParse(input);
     if (!parsed.success) throw new PublicCollectionError("INVALID_INPUT");
-    return publication.updatePublicSettings(
-      context,
-      availableSettings(parsed.data),
-    );
+    return publication.updatePublicSettings(context, parsed.data);
   });
   if (result.status === "success") revalidatePath("/app/settings/public");
   return result;

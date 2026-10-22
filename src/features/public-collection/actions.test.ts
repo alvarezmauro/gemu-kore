@@ -82,27 +82,32 @@ it("rejects cross-site requests even with an otherwise valid origin", async () =
   expect((await saveItemPublication({})).status).toBe("error");
   expect(state.itemSave).not.toHaveBeenCalled();
 });
-it.each(["allowSearchEngineIndexing"] as const)(
-  "cannot enable an unfinished capability through action input: %s",
-  async (key) => {
-    const input = {
-      expectedRevision: 1,
-      settings: { ...settings, [key]: true },
-    };
-    expect((await reviewPublicationSettings(input)).status).toBe("error");
-    expect(
-      (
-        await savePublicationSettings({
-          ...input,
-          reviewed: true,
-          reviewToken: "a".repeat(32),
-        })
-      ).status,
-    ).toBe("error");
-    expect(state.settingsReview).not.toHaveBeenCalled();
-    expect(state.settingsSave).not.toHaveBeenCalled();
-  },
-);
+it("accepts the reviewed indexing setting through the same administrator boundary", async () => {
+  const input = {
+    expectedRevision: 1,
+    settings: { ...settings, allowSearchEngineIndexing: true },
+  };
+  expect((await reviewPublicationSettings(input)).status).toBe("success");
+  expect(
+    (
+      await savePublicationSettings({
+        ...input,
+        reviewed: false,
+        reviewToken: "a".repeat(32),
+      })
+    ).status,
+  ).toBe("error");
+  expect(
+    (
+      await savePublicationSettings({
+        ...input,
+        reviewed: true,
+        reviewToken: "a".repeat(32),
+      })
+    ).status,
+  ).toBe("success");
+  expect(state.settingsReview).toHaveBeenCalledWith(state.context, input);
+});
 it("passes the server-created identity, requires reviewed settings and refreshes only successful writes", async () => {
   const input = { expectedRevision: 1, settings };
   expect((await reviewPublicationSettings(input)).status).toBe("success");

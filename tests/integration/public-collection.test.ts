@@ -1258,3 +1258,226 @@ it("requires reviewed component/template revision, exact slot bindings and eligi
     getPublicPresentation({ itemId, componentId: c.id }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });
+
+import {
+  getPublicSeo,
+  getPublicCrawlPolicy,
+  getPublicSitemapIndex,
+  getPublicSitemap,
+} from "@/server/services/public-collection/seo";
+import * as seoRepository from "@/server/repositories/public-collection/seo";
+it("keeps indexing permission independent from publication across current policy combinations", async () => {
+  const { context, data } = await seedPublished();
+  for (const enabled of [false, true])
+    for (const index of [false, true]) {
+      await settings(context, {
+        publicCollectionEnabled: enabled,
+        allowSearchEngineIndexing: index,
+      });
+      expect((await getPublicCrawlPolicy()).index).toBe(enabled && index);
+      const dto = await getPublicSeo({
+        kind: "item",
+        type: "CONSOLE",
+        id: data.items[0].id,
+      });
+      expect(dto.index).toBe(enabled && index);
+      if (!enabled) expect(dto.title).not.toContain("Super Nintendo");
+      expect(
+        (
+          await db.collectionItem.findUnique({
+            where: { id: data.items[0].id },
+          })
+        )?.publicationStatus,
+      ).toBe("PUBLISHED");
+      expect((await getPublicSitemapIndex()).length > 0).toBe(enabled && index);
+    }
+});
+it("maps only canonical metadata even when personal fields are allowed, and keeps search/filter metadata out of the index", async () => {
+  const { context, data } = await seedPublished();
+  await settings(context, {
+    allowSearchEngineIndexing: true,
+    showSerialNumbers: true,
+    showLocations: true,
+    showNotes: true,
+    showDefects: true,
+    showPersonalPhotos: true,
+  });
+  for (const item of data.items.slice(0, 3)) await publish(context, item.id);
+  for (const [i, type] of ["CONSOLE", "GAME", "ACCESSORY"].entries()) {
+    const dto = await getPublicSeo({
+      kind: "item",
+      type,
+      id: data.items[i].id,
+    });
+    expect(dto.index).toBe(true);
+    const text = JSON.stringify(dto);
+    for (const hidden of [
+      "PRIVATE-",
+      "Private active defect",
+      "Private account",
+      "@example.com",
+      "serialNumber",
+      "repairNote",
+      "objectKey",
+    ])
+      expect(text).not.toContain(hidden);
+  }
+  const personal = await approvedImage("COLLECTION");
+  await db.collectionItemMedia.create({
+    data: {
+      collectionItemId: data.items[0].id,
+      type: "PHOTO",
+      assetId: personal.source.id,
+      publicDisplayAssetId: personal.output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  expect(
+    (await getPublicConsole({ id: data.items[0].id })).photo,
+  ).not.toBeNull();
+  expect(
+    (
+      await getPublicSeo({
+        kind: "item",
+        type: "CONSOLE",
+        id: data.items[0].id,
+      })
+    ).image,
+  ).toBeUndefined();
+  const filtered = await getPublicSeo({
+    kind: "category",
+    category: "games",
+    params: { q: "PRIVATE-NOTE-1", page: "2" },
+  });
+  expect(filtered.index).toBe(false);
+  expect(filtered.canonical).toBe("http://localhost:3002/collection/games");
+  expect(JSON.stringify(filtered)).not.toContain("PRIVATE-NOTE");
+  expect(
+    (await getPublicSeo({ kind: "category", category: "search" })).index,
+  ).toBe(false);
+  expect(
+    (
+      await getPublicSeo({
+        kind: "category",
+        category: "games",
+        params: { audience: "ADMIN" },
+      })
+    ).index,
+  ).toBe(false);
+  const missing = await getPublicSeo({
+      kind: "item",
+      type: "GAME",
+      id: data.items[0].id,
+    }),
+    privateCopy = await getPublicSeo({
+      kind: "item",
+      type: "CONSOLE",
+      id: data.items[3].id,
+    });
+  expect(missing).toEqual(privateCopy);
+  expect(missing.canonical).toBeUndefined();
+});
+it("admits an exact canonical social image independently, then denies rights, indexing, approval and publication withdrawal", async () => {
+  const { context, data } = await seedPublished(),
+    { source, output } = await approvedImage();
+  const use = await db.catalogAsset.create({
+    data: {
+      consoleModelId: data.model.id,
+      role: "GALLERY",
+      assetId: source.id,
+      publicDisplayAssetId: output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+      caption: "Not for metadata labels",
+    },
+  });
+  const input = { kind: "item", type: "CONSOLE", id: data.items[0].id },
+    request = { context: "seo", itemId: data.items[0].id, useId: use.id };
+  expect((await getPublicSeo(input)).image).toBeUndefined();
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await settings(context, { allowSearchEngineIndexing: true });
+  const dto = await getPublicSeo(input);
+  expect(dto.image?.url).toBe(
+    `http://localhost:3002/api/media/public/seo/${request.itemId}/${use.id}`,
+  );
+  expect(JSON.stringify(dto)).not.toContain("Not for metadata labels");
+  expect((await mediaDelivery(request)).indexable).toBe(true);
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "RESTRICTED" },
+  });
+  expect((await getPublicSeo(input)).image).toBeUndefined();
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "APPROVED" },
+  });
+  await settings(context, { allowSearchEngineIndexing: false });
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await settings(context, { allowSearchEngineIndexing: true });
+  await publish(context, data.items[0].id, false);
+  expect((await getPublicSeo(input)).canonical).toBeUndefined();
+  await expect(mediaDelivery(request)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+});
+it("sitemap partitions include only published owned identities and immediately lose withdrawn copies without exposing private timestamps or counts", async () => {
+  const { context, data } = await seedPublished();
+  await settings(context, { allowSearchEngineIndexing: true });
+  const duplicate = await db.collectionItem.create({
+    data: {
+      type: "GAME",
+      publicationStatus: "PUBLISHED",
+      publishedAt: new Date(),
+      ownedGame: { create: { gameReleaseId: data.release.id } },
+    },
+  });
+  const maps = await getPublicSitemapIndex();
+  expect(maps).toContain("http://localhost:3002/sitemap.xml?part=pages");
+  const urls = (
+    await Promise.all(
+      maps.map((url) =>
+        getPublicSitemap(new URL(url).searchParams.get("part")!),
+      ),
+    )
+  ).flat();
+  expect(urls).toContain(
+    `http://localhost:3002/collection/games/${duplicate.id}`,
+  );
+  expect(urls).toContain(
+    `http://localhost:3002/collection/games/${data.items[1].id}`,
+  );
+  for (const item of data.items.slice(3))
+    expect(JSON.stringify(urls)).not.toContain(item.id);
+  expect(urls.every((url) => !url.includes("?"))).toBe(true);
+  await publish(context, data.items[1].id, false);
+  expect(await getPublicSitemap(data.items[1].id.slice(0, 2))).not.toContain(
+    `http://localhost:3002/collection/games/${data.items[1].id}`,
+  );
+  await settings(context, { allowSearchEngineIndexing: false });
+  expect(await getPublicSitemap("pages")).toEqual([]);
+  expect(await getPublicSitemapIndex()).toEqual([]);
+});
+it("fails closed on absent origin/policy and refuses an overflowing sitemap instead of silently truncating it", async () => {
+  const { context } = await seedPublished();
+  await settings(context, { allowSearchEngineIndexing: true });
+  vi.stubEnv("BETTER_AUTH_URL", "");
+  expect((await getPublicSeo({ kind: "home" })).index).toBe(false);
+  expect(await getPublicSitemapIndex()).toEqual([]);
+  vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3002");
+  vi.spyOn(policyRepository, "readPolicy").mockResolvedValueOnce(null);
+  expect((await getPublicSeo({ kind: "home" })).index).toBe(false);
+  vi.spyOn(seoRepository, "sitemapItems").mockResolvedValueOnce(
+    Array(50_001).fill({ id: randomUUID(), type: "GAME" }),
+  );
+  await expect(getPublicSitemap("aa")).rejects.toMatchObject({
+    code: "UNAVAILABLE",
+  });
+});

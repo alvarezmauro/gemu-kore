@@ -1,3 +1,4 @@
+import { publicMetadata } from "@/features/public-collection/seo.server";
 import { getPublicHome } from "@/features/public-collection/queries.server";
 import { PublicHome } from "@/features/public-collection/components/public-home";
 
@@ -21,4 +22,12 @@ export default async function CollectionHomePage() {
       </section>
     );
   return <PublicHome data={data} />;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  return publicMetadata({ kind: "home", params: await searchParams });
 }

@@ -100,3 +100,18 @@ it("cancels streams with unexpected metadata and sanitizes failures", async () =
   expect(body.destroyed).toBe(true);
   expect(await r.text()).not.toContain("secret");
 });
+
+it("permits image indexing only when the contextual resolver explicitly admits an SEO use", async () => {
+  state.resolve.mockResolvedValue({
+    locator: { storageNamespace: "hidden", objectKey: "secret" },
+    mimeType: "image/png",
+    sizeBytes: 4,
+    indexable: true,
+  });
+  const r = await publicMediaRequest(
+    new Request("https://example.com/media"),
+    {},
+  );
+  expect(r.headers.get("X-Robots-Tag")).toBe("index, follow");
+  expect(r.headers.get("Cache-Control")).toBe("no-store");
+});

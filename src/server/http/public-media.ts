@@ -31,6 +31,7 @@ export async function publicMediaRequest(request: Request, input: unknown) {
     );
     const headers = new Headers({
       ...base,
+      "X-Robots-Tag": asset.indexable ? "index, follow" : "noindex, nofollow",
       "Content-Type": asset.mimeType,
       "Accept-Ranges": "bytes",
       "Content-Disposition": "inline",

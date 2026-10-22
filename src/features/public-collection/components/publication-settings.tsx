@@ -9,6 +9,11 @@ import type { PublicSettingsValues } from "../validation";
 
 const fields = [
   [
+    "allowSearchEngineIndexing",
+    "Allow search engine indexing",
+    "Search engines may discover public pages and all details you make public. Turning this off requests removal on future crawls; it cannot recall saved copies.",
+  ],
+  [
     "publicCollectionEnabled",
     "Open the public collection",
     "Visitors can see approved copies. Pausing the collection keeps individual approvals.",
@@ -53,7 +58,7 @@ export function PublicationSettingsForm({
     showNotes: initial.showNotes,
     showDefects: initial.showDefects,
     showPersonalPhotos: initial.showPersonalPhotos,
-    allowSearchEngineIndexing: false,
+    allowSearchEngineIndexing: initial.allowSearchEngineIndexing,
   });
   const [review, setReview] = useState<SettingsReview | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -147,7 +152,7 @@ export function PublicationSettingsForm({
           </label>
         ))}
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Search engines are asked not to index the collection.
+          Indexing permission does not publish private copies or media.
         </p>
       </fieldset>
       {review && (
@@ -177,6 +182,11 @@ export function PublicationSettingsForm({
           <p className="text-sm text-muted-foreground">
             Enabling the collection shares its name and description along with
             approved copies. It does not publish unapproved copies.
+          </p>
+          <p className="text-sm">
+            {values.allowSearchEngineIndexing
+              ? "Indexing is permitted while the public collection is open. Search engines may retain information they already collected."
+              : "Public pages request no indexing. Existing search results may take time to disappear."}
           </p>
           <div>
             <p className="font-medium">

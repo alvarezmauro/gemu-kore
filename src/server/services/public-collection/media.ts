@@ -128,6 +128,11 @@ export async function publicItemMedia(
 }
 export const publicMediaInput = z.discriminatedUnion("context", [
   z.strictObject({
+    context: z.literal("seo"),
+    itemId: z.uuid(),
+    useId: z.uuid(),
+  }),
+  z.strictObject({
     context: z.literal("item"),
     itemId: z.uuid(),
     kind: z.enum(["personal", "catalog"]),
@@ -173,7 +178,23 @@ export async function mediaDelivery(input: unknown) {
     const p = publicMediaInput.safeParse(input);
     if (!p.success) throw new PublicCollectionError("NOT_FOUND");
     let asset: PublicAsset | null;
-    if (p.data.context === "item")
+    if (p.data.context === "seo") {
+      if (!policy.allowSearchEngineIndexing)
+        throw new PublicCollectionError("NOT_FOUND");
+      const { publicOrigin } = await import("@/server/config/public-origin");
+      if (!publicOrigin()) throw new PublicCollectionError("NOT_FOUND");
+      asset = await resolveItemUse(
+        {
+          context: "item",
+          kind: "catalog",
+          itemId: p.data.itemId,
+          useId: p.data.useId,
+        },
+        policy,
+        tx,
+      );
+      if (asset.kind !== "IMAGE") throw new PublicCollectionError("NOT_FOUND");
+    } else if (p.data.context === "item")
       asset = await resolveItemUse(p.data, policy, tx);
     else if (p.data.context === "site") {
       const use = await tx.appAsset.findFirst({
@@ -199,6 +220,7 @@ export async function mediaDelivery(input: unknown) {
     if (!locator) throw new PublicCollectionError("NOT_FOUND");
     return {
       locator,
+      indexable: p.data.context === "seo",
       mimeType: asset.mimeType!,
       sizeBytes: Number(asset.sizeBytes),
     };
