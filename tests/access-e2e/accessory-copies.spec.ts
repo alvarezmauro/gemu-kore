@@ -41,7 +41,7 @@ async function view(page: Page) {
     page.getByRole("heading", { name: "DualShock 2 · Black", level: 1 }),
   ).toBeVisible();
 }
-test("editor creates, edits, reidentifies and deletes a private copy with photos and a custom model", async ({
+test("@critical editor creates, edits, reidentifies and deletes a private copy with photos and a custom model", async ({
   page,
   context,
 }, info) => {

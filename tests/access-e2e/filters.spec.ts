@@ -61,7 +61,7 @@ test.afterAll(async () => {
   await fixture("reset-search");
   await fixture("reset");
 });
-test("restores bookmark filters across reload and browser Back/Forward", async ({
+test("@critical restores bookmark filters across reload and browser Back/Forward", async ({
   page,
   context,
 }, testInfo) => {
@@ -147,7 +147,7 @@ test("distinguishes box unknowns and unresolved defects and sorts physical copie
     "Controller",
   );
 });
-test("filters nested and unassigned locations, removes individual controls and clears all", async ({
+test("@critical filters nested and unassigned locations, removes individual controls and clears all", async ({
   page,
   context,
 }) => {

@@ -199,7 +199,7 @@ test("private, empty and paused homes stay honest and work without JavaScript", 
   ]);
 });
 
-test("administrator reviews widening impact, republishes one copy and removes approval", async ({
+test("@critical administrator reviews widening impact, republishes one copy and removes approval", async ({
   page,
   context,
 }, info) => {

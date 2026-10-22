@@ -27,6 +27,7 @@ Unit/component tests need only Node.js. Integration tests also need a running Do
 | `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.          |
 | `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                  |
 | `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
+| `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.        |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
 
 Run lint, typechecking and formatting alongside the applicable suites:
@@ -81,6 +82,36 @@ The example checks the actual application database health function and transacti
 Only the Node integration runners map `server-only` to an empty test helper so server modules can run outside Next.js. The unit/component runner keeps the real module by default; individual server-helper unit files explicitly mock its marker locally and replace external boundaries as needed. Application builds retain the real server-only protection.
 
 Normal completion, failed assertions and setup failures after container creation remove the test container. A forcibly killed runner or stopped Docker engine can prevent cleanup. Inspect `docker ps -a --filter label=gemukore.test=true` and remove only the abandoned `gemukore-test-…` container by its exact name. Never reset the development database to run tests.
+
+## Task 19.2 integration expansion
+
+Task 19.2 adds 19 PostgreSQL integration cases to the existing repository and public-collection suites. They use the application's services, repositories, authorization revalidation and transaction wrapper against the disposable database; no production logic, schema, dependency, isolation level or timeout is changed.
+
+| Boundary                                       | Added coverage                                                                                                                                                                                                                                                                                                                                                                               | Tests                                                                              |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Collection repositories (6 cases)              | Narrow display identities for all three owned types, deterministic ties, caller-transaction visibility and rollback, exact revision compare-and-swap, explicit publication preservation/invalidation, actor attribution and unchanged sibling copies.                                                                                                                                        | [Repository integration](../../tests/integration/repositories.test.ts)             |
+| Publication transactions (6 cases)             | Faults after actual policy/copy writes roll back policy, invalidated copies, revisions and attribution; the same failed copy review remains retryable. Copy identity, publication intent and disclosure choices are bound to the exact review token, even when revisions match.                                                                                                              | [Public collection integration](../../tests/integration/public-collection.test.ts) |
+| Current authority and read snapshots (7 cases) | Retained administrator contexts cannot preview or write after demotion, disabled grants, expired/revoked sessions or unverified email. Anonymous reads remain independent. Already-admitted detail reads retain one snapshot through a concurrent pause or disclosure narrowing; subsequent reads apply the new policy while private collection counts remain available to authorized users. | [Public collection integration](../../tests/integration/public-collection.test.ts) |
+
+The shared 6,000-copy scale fixture now seeds complete root/subtype graphs in six batches of 1,000. This keeps setup transactions below the existing limit while preserving the same total corpus, timestamps, defects and media graph. Deferred database constraints still run on every commit; measured query budgets and runner timeouts are unchanged.
+
+Fault-injection spies delegate to the real repository write before throwing. Tests inspect the intermediate transaction state outside the service error handler, then compare persisted rows and retry the command. Snapshot cases commit a second real service transaction between policy and detail reads; they do not use timing sleeps or replace query results. Existing integration coverage for CRUD, database constraints, authentication, enrichment and media remains in the full suite.
+
+```sh
+pnpm db:generate
+pnpm exec vitest run --config vitest.integration.config.mts tests/integration/repositories.test.ts tests/integration/public-collection.test.ts
+pnpm test:integration
+```
+
+No personal development database, live metadata provider, object storage or browser is used by these additions. Browser expansion follows in Tasks 19.3–19.4.
+
+Verified 2026-10-22: all 19 additions pass. The full integration run initially reports 672 passing / 2 failing cases out of 674; after the setup batching correction, both scale-fixture consumers pass all 57 cases. Passing distinct integration coverage is therefore 673 / 674, with a final five-case fault/snapshot rerun also passing after typed-spy cleanup. All 1,459 unit/component cases, lint, typecheck, formatting and documentation/whitespace checks pass. Test containers and the temporary baseline checkout are removed.
+
+**Known nonpassing check:** the unchanged complete-search benchmark (`tests/integration/search.test.ts`, “measures complete search plans with representative owned graphs and index-backed canonical matches”) still exceeds the existing two-second statement limit. A clean source archive of baseline commit `b4b2928`, reusing the same installed dependencies and generated Prisma client, also fails its filtered-search EXPLAIN with PostgreSQL `57014` (`canceling statement due to statement timeout`). This is the previously recorded Task 14.2 benchmark limitation, reproduced rather than skipped or counted as successful. No search code, assertion, statement budget or test timeout is relaxed in Task 19.2. The other 101 search integration cases pass in the full run.
+
+## Task 19.3 critical browser gate
+
+`pnpm test:e2e:critical` selects 54 desktop/mobile Chromium checks across all twelve Task 19.3 areas using the established isolated production-browser runner. Four new scenarios cover configured login and publication/edit/deletion across every owned subtype; existing critical CRUD, upload, search, filter, enrichment and privacy tests retain their assertions. See the [coverage map, commands and evidence boundaries](CRITICAL_PATHS.md). The full authenticated suite remains available through `pnpm test:e2e:access`; Task 19.4 edge-case expansion is separate.
 
 ## Browser tests
 

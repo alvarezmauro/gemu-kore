@@ -21,6 +21,7 @@
     "test:storage": "vitest run --config vitest.storage.config.mts",
     "test:e2e": "playwright test",
     "test:e2e:access": "pnpm db:generate && tsx tests/helpers/run-access-browser.ts",
+    "test:e2e:critical": "pnpm test:e2e:access --grep @critical",
     "test:e2e:install": "playwright install chromium",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",

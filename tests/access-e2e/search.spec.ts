@@ -91,7 +91,7 @@ test("offers a private idle search and finds separate owned copies through live 
   await search(page, "chrono", 0);
   expect(errors).toEqual([]);
 });
-test("searches all categories, partial names and misspellings", async ({
+test("@critical searches all categories, partial names and misspellings", async ({
   page,
   context,
 }) => {
@@ -106,7 +106,7 @@ test("searches all categories, partial names and misspellings", async ({
   await expect(results(page)).toContainText("Accessory");
   await search(page, "original japan", 2);
 });
-test("keeps serial and note queries in POST bodies and does not return raw private text", async ({
+test("@critical keeps serial and note queries in POST bodies and does not return raw private text", async ({
   page,
   context,
 }) => {

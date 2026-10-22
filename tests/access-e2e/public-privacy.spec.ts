@@ -43,7 +43,7 @@ async function denied(response: APIResponse) {
     expect(JSON.parse(body)).toEqual({ error: "This page is unavailable." });
 }
 
-test("private canaries stay out of HTML, prefetch Flight, JSON, descriptors and SEO for every visitor role", async ({
+test("@critical private canaries stay out of HTML, prefetch Flight, JSON, descriptors and SEO for every visitor role", async ({
   context,
   page,
 }) => {

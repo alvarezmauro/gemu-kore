@@ -24,10 +24,24 @@ import {
 import * as policyRepository from "@/server/repositories/public-collection/policy";
 import * as queryRepository from "@/server/repositories/public-collection/query";
 import * as mediaRepository from "@/server/repositories/public-collection/media";
+import * as publicationRepository from "@/server/repositories/public-collection/publication";
+import { getDashboard } from "@/server/services/collection/dashboard";
 import { getLocations, mutateLocation } from "@/server/services/locations";
 import { seedDashboardData } from "../helpers/dashboard-data";
 import { publicSearchRequest } from "@/server/http/public-search";
 import { signedSessionCookie } from "../helpers/access-session";
+// Services await repository results; they do not use Prisma's fluent relation
+// methods. Spy through that awaitable contract without casting async test hooks.
+type AwaitableMethod<F extends (...args: never[]) => unknown> = (
+  ...args: Parameters<F>
+) => PromiseLike<Awaited<ReturnType<F>>>;
+const publicationBoundary: {
+  saveSettings: AwaitableMethod<typeof publicationRepository.saveSettings>;
+  saveItem: AwaitableMethod<typeof publicationRepository.saveItem>;
+} = publicationRepository;
+const policyBoundary: {
+  readPolicy: AwaitableMethod<typeof policyRepository.readPolicy>;
+} = policyRepository;
 const db = getDatabase(),
   secret = "public-query-integration-secret-longer-than-thirty-two-characters";
 const defaults = {
@@ -98,6 +112,21 @@ async function seedPublished() {
   await settings(a.context, { publicCollectionEnabled: true });
   for (const item of data.items.slice(0, 3)) await publish(a.context, item.id);
   return { ...a, data };
+}
+async function publicationRequest(
+  context: PrivateAccessContext,
+  id: string,
+  published: boolean,
+) {
+  const review = await getItemPublicationReview(context, { id, published });
+  return {
+    id,
+    published,
+    expectedRevision: review.revision,
+    expectedSettingsRevision: review.settingsRevision,
+    reviewToken: review.reviewToken,
+    reviewed: true,
+  };
 }
 async function reset() {
   await db.$executeRaw`TRUNCATE TABLE asset, location, company, region, console_platform, game, collection_item, accessory CASCADE`;
@@ -1679,3 +1708,268 @@ it("admits only the established snapshot during concurrent rights withdrawal and
     mediaDelivery({ context: "seo", itemId: request.itemId, useId: use.id }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });
+
+it("rolls back policy and every affected copy when a settings write fails after invalidation", async () => {
+  const { context } = await seedPublished();
+  const beforePolicy = await db.publicSettings.findUniqueOrThrow({
+    where: { id: 1 },
+  });
+  const beforeCopies = await db.collectionItem.findMany({
+    orderBy: { id: "asc" },
+  });
+  const save = publicationRepository.saveSettings;
+  let during: { published: number; showNotes: boolean } | undefined;
+  vi.spyOn(publicationBoundary, "saveSettings").mockImplementationOnce(
+    async (values, tx) => {
+      // The service has already invalidated the three published copies in this transaction.
+      const published = await tx.collectionItem.count({
+        where: { publicationStatus: "PUBLISHED" },
+      });
+      await save(values, tx);
+      during = {
+        published,
+        showNotes: (
+          await tx.publicSettings.findUniqueOrThrow({ where: { id: 1 } })
+        ).showNotes,
+      };
+      throw new Error("PRIVATE-POLICY-WRITE-FAILURE");
+    },
+  );
+  await expect(settings(context, { showNotes: true })).rejects.toMatchObject({
+    code: "UNAVAILABLE",
+    message: "The collection is unavailable right now.",
+  });
+  expect(during).toEqual({ published: 0, showNotes: true });
+  expect(
+    await db.publicSettings.findUniqueOrThrow({ where: { id: 1 } }),
+  ).toEqual(beforePolicy);
+  expect(await db.collectionItem.findMany({ orderBy: { id: "asc" } })).toEqual(
+    beforeCopies,
+  );
+  expect((await getPublicCollection()).counts.total).toBe(3);
+  expect(await settings(context, { showNotes: true })).toEqual({
+    revision: beforePolicy.revision + 1,
+    unpublished: 3,
+  });
+  expect((await getPublicCollection()).counts.total).toBe(0);
+});
+
+it.each([true, false])(
+  "rolls back publication intent %s after persistence and permits retry of the same review",
+  async (published) => {
+    const { context, data } = await seedPublished();
+    const id = data.items[published ? 3 : 0].id;
+    const request = await publicationRequest(context, id, published);
+    const before = await db.collectionItem.findUniqueOrThrow({ where: { id } });
+    const save = publicationRepository.saveItem;
+    let written: typeof before | undefined;
+    vi.spyOn(publicationBoundary, "saveItem").mockImplementationOnce(
+      async (...args) => {
+        await save(...args);
+        written = await args[3].collectionItem.findUniqueOrThrow({
+          where: { id },
+        });
+        throw new Error("PRIVATE-PUBLICATION-WRITE-FAILURE");
+      },
+    );
+    await expect(setItemPublication(context, request)).rejects.toMatchObject({
+      code: "UNAVAILABLE",
+      message: "The collection is unavailable right now.",
+    });
+    expect(written).toMatchObject({
+      publicationStatus: published ? "PUBLISHED" : "PRIVATE",
+      revision: before.revision + 1,
+    });
+    expect(
+      await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+    ).toEqual(before);
+    expect((await getPublicCollection()).counts.total).toBe(3);
+    await expect(setItemPublication(context, request)).resolves.toEqual({
+      revision: before.revision + 1,
+    });
+    expect((await getPublicCollection()).counts.total).toBe(published ? 4 : 2);
+  },
+);
+
+it.each(["identity", "intent"] as const)(
+  "binds a copy review token to its exact %s even with matching current revisions",
+  async (change) => {
+    const { context, data } = await seedPublished();
+    const request = await publicationRequest(context, data.items[3].id, true);
+    const before = await db.collectionItem.findMany({ orderBy: { id: "asc" } });
+    await expect(
+      setItemPublication(context, {
+        ...request,
+        ...(change === "identity"
+          ? { id: data.items[4].id }
+          : { published: false }),
+      }),
+    ).rejects.toMatchObject({ code: "STALE" });
+    expect(
+      await db.collectionItem.findMany({ orderBy: { id: "asc" } }),
+    ).toEqual(before);
+    await expect(setItemPublication(context, request)).resolves.toEqual({
+      revision: request.expectedRevision + 1,
+    });
+  },
+);
+
+it("binds a settings review to the exact disclosure choices without accepting a substituted intent", async () => {
+  const { context } = await seedPublished();
+  const { revision, ...current } = await getPublicationSettings(context);
+  const request = {
+    expectedRevision: revision,
+    settings: { ...current, showNotes: true },
+  };
+  const review = await reviewPublicSettings(context, request);
+  const before = await db.collectionItem.findMany({ orderBy: { id: "asc" } });
+  await expect(
+    updatePublicSettings(context, {
+      ...request,
+      settings: { ...current, showSerialNumbers: true },
+      reviewToken: review.reviewToken,
+      reviewed: true,
+    }),
+  ).rejects.toMatchObject({ code: "STALE" });
+  expect(await getPublicationSettings(context)).toEqual({
+    revision,
+    ...current,
+  });
+  expect(await db.collectionItem.findMany({ orderBy: { id: "asc" } })).toEqual(
+    before,
+  );
+  await expect(
+    updatePublicSettings(context, {
+      ...request,
+      reviewToken: review.reviewToken,
+      reviewed: true,
+    }),
+  ).resolves.toEqual({ revision: revision + 1, unpublished: 3 });
+});
+
+it.each(["demote", "disable", "expire", "revoke", "unverified"] as const)(
+  "revalidates a retained administrator context after %s across publication previews and writes",
+  async (state) => {
+    const { context, grant, session, user, data } = await seedPublished();
+    const request = await publicationRequest(context, data.items[3].id, true);
+    const { revision, ...current } = await getPublicationSettings(context);
+    const policyIntent = {
+      expectedRevision: revision,
+      settings: { ...current, showNotes: true },
+    };
+    const review = await reviewPublicSettings(context, policyIntent);
+    const beforePolicy = await db.publicSettings.findUniqueOrThrow({
+      where: { id: 1 },
+    });
+    const beforeCopies = await db.collectionItem.findMany({
+      orderBy: { id: "asc" },
+    });
+    if (state === "demote")
+      await db.accessGrant.update({
+        where: { id: grant.id },
+        data: { role: "EDITOR" },
+      });
+    if (state === "disable")
+      await db.accessGrant.update({
+        where: { id: grant.id },
+        data: { enabled: false },
+      });
+    if (state === "expire")
+      await db.session.update({
+        where: { id: session.id },
+        data: { expiresAt: new Date(0) },
+      });
+    if (state === "revoke")
+      await db.session.delete({ where: { id: session.id } });
+    if (state === "unverified")
+      await db.user.update({
+        where: { id: user.id },
+        data: { emailVerified: false },
+      });
+    const expected = {
+      code:
+        state === "demote"
+          ? "FORBIDDEN"
+          : state === "disable"
+            ? "DENIED"
+            : "UNAUTHENTICATED",
+    };
+    const save = vi.spyOn(publicationRepository, "saveItem");
+    const invalidate = vi.spyOn(
+      publicationRepository,
+      "invalidateExpandedCopies",
+    );
+    // Every request is otherwise valid, including reviews made before authority changed.
+    await expect(getPublicationSettings(context)).rejects.toMatchObject(
+      expected,
+    );
+    await expect(
+      reviewPublicSettings(context, policyIntent),
+    ).rejects.toMatchObject(expected);
+    await expect(
+      getItemPublicationReview(context, { id: request.id, published: true }),
+    ).rejects.toMatchObject(expected);
+    await expect(setItemPublication(context, request)).rejects.toMatchObject(
+      expected,
+    );
+    await expect(
+      updatePublicSettings(context, {
+        ...policyIntent,
+        reviewToken: review.reviewToken,
+        reviewed: true,
+      }),
+    ).rejects.toMatchObject(expected);
+    expect(save).not.toHaveBeenCalled();
+    expect(invalidate).not.toHaveBeenCalled();
+    expect(
+      await db.publicSettings.findUniqueOrThrow({ where: { id: 1 } }),
+    ).toEqual(beforePolicy);
+    expect(
+      await db.collectionItem.findMany({ orderBy: { id: "asc" } }),
+    ).toEqual(beforeCopies);
+    // Anonymous queries do not inherit the account's invalidated private authority.
+    expect((await getPublicCollection()).counts.total).toBe(3);
+  },
+);
+
+it.each(["pause", "narrow"] as const)(
+  "keeps one admitted detail snapshot during a concurrent %s and applies the policy on the next read",
+  async (change) => {
+    const { context, data } = await seedPublished();
+    await settings(context, { showNotes: true });
+    for (const item of data.items.slice(0, 3)) await publish(context, item.id);
+    const read = policyRepository.readPolicy;
+    vi.spyOn(policyBoundary, "readPolicy").mockImplementationOnce(
+      async (tx) => {
+        const policy = await read(tx);
+        // A separate service transaction commits after the public snapshot is established.
+        await settings(
+          context,
+          change === "pause"
+            ? { publicCollectionEnabled: false }
+            : { showNotes: false },
+        );
+        return policy;
+      },
+    );
+    const admitted = await getPublicConsole({ id: data.items[0].id });
+    expect(admitted).toMatchObject({
+      id: data.items[0].id,
+      notes: "PRIVATE-NOTE-0",
+    });
+    if (change === "pause") {
+      await expect(
+        getPublicConsole({ id: data.items[0].id }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(getPublicCollection()).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    } else {
+      expect(
+        await getPublicConsole({ id: data.items[0].id }),
+      ).not.toHaveProperty("notes");
+      expect((await getPublicCollection()).counts.total).toBe(3);
+    }
+    expect((await getDashboard(context)).counts.total).toBe(12);
+  },
+);

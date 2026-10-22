@@ -53,7 +53,7 @@ test.afterAll(async () => {
   await fixture("reset-game-creation");
   await fixture("reset");
 });
-test("editor prepares a review, admin accepts it, and the original copy draft refreshes without losing photos", async ({
+test("@critical editor prepares a review, admin accepts it, and the original copy draft refreshes without losing photos", async ({
   page,
   context,
   browser,
@@ -213,7 +213,7 @@ test("editor prepares a review, admin accepts it, and the original copy draft re
     }),
   ).toBeVisible();
 });
-test("enforces review ownership, viewer denial and keyboard-driven ignore", async ({
+test("@critical enforces review ownership, viewer denial and keyboard-driven ignore", async ({
   page,
   context,
 }, info) => {

@@ -2366,7 +2366,7 @@ Sol fixes all findings.
 
 Status: **Completed 2026-10-22.** Added 67 unit cases across six dedicated suites for shared copy validation, publication review intent, public filter links, public metadata mapping, enrichment value helpers and proposal preparation. Tests assert established boundary values, retained manual data, source/scope requirements, safe metadata output and rejected authority-bearing input. A synthetic normalized enrichment fixture is validated against the neutral provider contract; throwing database stubs keep these service-helper tests isolated. The existing role/permission matrix remains part of the full suite. No production logic, dependencies, schema, runner configuration or timeouts changed. Documentation: [Unit coverage expansion](docs/operations/TESTING.md#task-191-unit-coverage-expansion).
 
-Verification: all 1,459 unit/component cases across 109 files pass, with all 12 proposal cases rechecked after removing a provider-specific test import flagged by lint. Lint, typecheck, formatting, documentation links/fences and whitespace pass. Database integration and browser suites were not rerun for this tests-and-documentation-only task; integration expansion follows in Task 19.2 and has not started.
+Verification: all 1,459 unit/component cases across 109 files pass, with all 12 proposal cases rechecked after removing a provider-specific test import flagged by lint. Lint, typecheck, formatting, documentation links/fences and whitespace pass. Database integration and browser suites were not rerun for this tests-and-documentation-only task; integration expansion follows in Task 19.2.
 
 MODEL:
 
@@ -2383,6 +2383,10 @@ Do not rewrite production logic to satisfy poorly designed tests.
 ---
 
 ## TASK 19.2 — Integration Tests
+
+Status: **Completed 2026-10-22 with an existing search benchmark limitation.** Added 19 PostgreSQL cases covering narrow collection repository identities, caller-transaction visibility/rollback, revision compare-and-swap for every owned subtype, explicit publication preservation/invalidation, policy and copy rollback after real writes, exact review-intent binding, current administrator revalidation and public/private snapshot boundaries. Fault hooks observe actual intermediate writes and assert outside sanitized service handlers; failed publication reviews remain retryable. Bounded the existing 6,000-copy scale fixture into six complete 1,000-copy transactions after its single setup transaction repeatedly exceeded the unchanged five-second limit. The corpus, deferred constraints, query budgets and runner timeouts are retained. No production logic, dependency, schema, migration or personal database change. Documentation: [Integration coverage expansion](docs/operations/TESTING.md#task-192-integration-expansion).
+
+Verification: all 19 additions pass. The full 674-case integration run initially passed 672 cases; both consumers of the batched scale fixture then pass all 57 cases, bringing passing distinct integration coverage to 673 of 674. Five affected fault/snapshot cases also pass after typed-spy cleanup. The remaining complete-search benchmark fails with PostgreSQL 57014 at the existing two-second statement budget; a clean source archive of baseline commit `b4b2928` with the same installed dependencies reproduces that timeout in the filtered-search EXPLAIN. Search implementation, benchmark, assertions and limits are unchanged; the failure remains visible and is not counted as a pass. All 1,459 unit/component cases, lint, typecheck, formatting, documentation links/fences and whitespace pass. Disposable test databases and the temporary baseline checkout are removed. Browser/storage checks were not rerun for this integration-tests-and-fixtures task. Critical browser coverage follows in Task 19.3.
 
 MODEL:
 
@@ -2403,6 +2407,10 @@ Focus on:
 ---
 
 ## TASK 19.3 — Playwright Critical Paths
+
+Status: **Completed 2026-10-22.** Added `pnpm test:e2e:critical`, selecting 54 desktop/mobile checks across all twelve required areas through the existing isolated production-browser runner. Labeled 23 established scenarios with `@critical` while retaining their assertions and added four scenarios: configured anonymous login/recovery and console/game/accessory publication lifecycles. The new journeys use real publication/edit/delete controls and a separate anonymous browser context; no-op saves preserve approval, meaningful edits immediately remove public availability, fresh review republishes only safe content, and deletion preserves an independently published copy. Added a [critical-path coverage map and operations guide](docs/operations/CRITICAL_PATHS.md). No production code, dependency, schema, migration, provider, fixture or runner policy changed; existing Task 19.2 work remains intact.
+
+Verification: all 54 critical Chromium checks pass in the first full desktop/mobile run, with real production build, disposable PostgreSQL/MinIO, local TLS and Secure session-cookie validation. The new cases account for eight checks; 46 checks reuse the established critical scenarios. Lint, typecheck, all 1,459 unit/component cases, formatting, documentation links/fences and whitespace pass. The runner removed disposable database/storage/TLS resources. Fixture sessions verify application authorization; live OAuth consent and metadata-provider availability are not claimed. Standalone integration/storage suites were not repeated for this browser-only expansion; Task 19.2's known independently reproduced search benchmark limitation remains unchanged and documented. Task 19.4 — Additional E2E Coverage has not started.
 
 MODEL:
 

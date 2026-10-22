@@ -16,21 +16,25 @@ export async function seedDashboardScale(
 ) {
   if (!process.env.DATABASE_URL?.includes("/gemukore_test?schema=public"))
     throw new Error("Scale fixtures require the disposable database.");
-  await db.$transaction(async (tx) => {
-    await tx.$executeRaw`CREATE TEMP TABLE dashboard_probe ON COMMIT DROP AS SELECT gen_random_uuid() id, n FROM generate_series(1,6000) n`;
-    await tx.$executeRaw`INSERT INTO collection_item(id,type,"hasBox",notes,"createdAt")
+  // Keep each setup transaction bounded while retaining all 6,000 copies and
+  // checking the deferred root/subtype constraints at every batch commit.
+  for (let start = 1; start <= 6000; start += 1000) {
+    await db.$transaction(async (tx) => {
+      await tx.$executeRaw`CREATE TEMP TABLE dashboard_probe ON COMMIT DROP AS SELECT gen_random_uuid() id, n FROM generate_series(${start}::int,${start + 999}::int) n`;
+      await tx.$executeRaw`INSERT INTO collection_item(id,type,"hasBox",notes,"createdAt")
       SELECT id, (CASE n%3 WHEN 0 THEN 'CONSOLE' WHEN 1 THEN 'GAME' ELSE 'ACCESSORY' END)::"CollectionItemType",
         CASE n%4 WHEN 0 THEN true WHEN 1 THEN false ELSE NULL END,
         repeat('Private fixture notes. ',16), '2026-10-21 01:00:00+00'::timestamptz+n*interval '1 second' FROM dashboard_probe`;
-    await tx.$executeRaw`INSERT INTO owned_console("collectionItemId","consoleModelId") SELECT id,${ids.modelId}::uuid FROM dashboard_probe WHERE n%3=0`;
-    await tx.$executeRaw`INSERT INTO owned_game("collectionItemId","gameReleaseId") SELECT id,${ids.releaseId}::uuid FROM dashboard_probe WHERE n%3=1`;
-    await tx.$executeRaw`INSERT INTO owned_accessory("collectionItemId","accessoryVariantId") SELECT id,${ids.variantId}::uuid FROM dashboard_probe WHERE n%3=2`;
-    await tx.$executeRaw`INSERT INTO defect("collectionItemId",title,severity,status)
+      await tx.$executeRaw`INSERT INTO owned_console("collectionItemId","consoleModelId") SELECT id,${ids.modelId}::uuid FROM dashboard_probe WHERE n%3=0`;
+      await tx.$executeRaw`INSERT INTO owned_game("collectionItemId","gameReleaseId") SELECT id,${ids.releaseId}::uuid FROM dashboard_probe WHERE n%3=1`;
+      await tx.$executeRaw`INSERT INTO owned_accessory("collectionItemId","accessoryVariantId") SELECT id,${ids.variantId}::uuid FROM dashboard_probe WHERE n%3=2`;
+      await tx.$executeRaw`INSERT INTO defect("collectionItemId",title,severity,status)
       SELECT p.id,'Synthetic active defect','MINOR','ACTIVE' FROM dashboard_probe p CROSS JOIN generate_series(1,2) d WHERE p.n%10=0`;
-    await tx.$executeRaw`INSERT INTO defect("collectionItemId",title,severity,status,"resolvedAt")
+      await tx.$executeRaw`INSERT INTO defect("collectionItemId",title,severity,status,"resolvedAt")
       SELECT id,'Synthetic historical defect','MINOR',CASE n%10 WHEN 1 THEN 'ACCEPTED'::"DefectStatus" ELSE 'REPAIRED'::"DefectStatus" END,
         CASE WHEN n%10=2 THEN now() ELSE NULL END FROM dashboard_probe WHERE n%10 IN (1,2)`;
-  });
+    });
+  }
   // Metadata-only media graph for query plans; no files are delivered here.
   await db.$transaction(async (tx) => {
     await tx.$executeRaw`CREATE TEMP TABLE dashboard_media_probe ON COMMIT DROP AS

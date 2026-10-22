@@ -93,7 +93,7 @@ async function create(page: Page, photo = false) {
   ).toBeVisible();
   return page.url();
 }
-test("editor views and edits a copy, corrects its release and deletes only the confirmed copy", async ({
+test("@critical editor views and edits a copy, corrects its release and deletes only the confirmed copy", async ({
   page,
   context,
 }, info) => {

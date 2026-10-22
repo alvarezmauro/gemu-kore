@@ -8,6 +8,11 @@ import {
   findGameReleaseIdentity,
 } from "@/server/repositories/catalog/identities";
 import { findCollectionItemIdentity } from "@/server/repositories/collection/identities";
+import {
+  advanceCollectionItem,
+  findCollectionItem,
+  listCollectionItemOptions,
+} from "@/server/repositories/collection/items";
 import { findGrantByEmail, insertGrant } from "@/server/repositories/access";
 
 const db = getDatabase();
@@ -111,6 +116,9 @@ beforeEach(async () => {
 afterEach(async () => {
   // Fixture maintenance in the disposable test database, never personal data.
   await db.$executeRaw`TRUNCATE TABLE company, region, console_platform, console_model, game, game_release, accessory, accessory_variant, collection_item, location CASCADE`;
+  await db.user.deleteMany({
+    where: { email: { endsWith: "@repository-probe.example" } },
+  });
 });
 afterAll(disconnectDatabase);
 
@@ -284,4 +292,181 @@ it("keeps existing access writes and reads inside their caller-owned transaction
     }),
   ).rejects.toThrow("Rollback probe");
   expect(await findGrantByEmail(email)).toBeNull();
+});
+
+it("lists all owned subtypes in stable order with only their display identities", async () => {
+  const createdAt = new Date("2026-10-22T00:00:00Z");
+  await db.collectionItem.updateMany({ data: { createdAt } });
+  const rows = await listCollectionItemOptions();
+  expect(rows.map((row) => row.id)).toEqual([...copies.values()].sort());
+  for (const row of rows) {
+    const type = row.type;
+    expect(row).toEqual({
+      id: copies.get(type),
+      type,
+      ownedConsole:
+        type === "CONSOLE"
+          ? { consoleModel: { name: "Model", platform: { name: "Platform" } } }
+          : null,
+      ownedGame:
+        type === "GAME"
+          ? {
+              gameRelease: {
+                editionName: null,
+                game: { name: "Game" },
+                platform: { name: "Platform" },
+              },
+            }
+          : null,
+      ownedAccessory:
+        type === "ACCESSORY"
+          ? {
+              accessoryVariant: {
+                name: "Black",
+                accessory: { name: "Controller" },
+              },
+            }
+          : null,
+    });
+  }
+  expect(JSON.stringify(rows)).not.toContain(privateMarker);
+  expect(await findCollectionItem(randomUUID())).toBeNull();
+});
+
+it("uses the caller transaction for collection options and detail reads without exposing uncommitted changes", async () => {
+  const id = copies.get("GAME")!;
+  const before = await findCollectionItem(id);
+  await expect(
+    withTransaction(async (tx) => {
+      await tx.game.update({
+        where: { id: gameId },
+        data: { name: "Uncommitted title" },
+      });
+      await tx.collectionItem.update({ where: { id }, data: { revision: 2 } });
+      expect(await findCollectionItem(id, tx)).toMatchObject({
+        revision: 2,
+        ownedGame: { gameRelease: { game: { name: "Uncommitted title" } } },
+      });
+      expect(
+        (await listCollectionItemOptions(tx)).find((r) => r.id === id),
+      ).toMatchObject({
+        ownedGame: { gameRelease: { game: { name: "Uncommitted title" } } },
+      });
+      expect(await findCollectionItem(id)).toEqual(before);
+      expect(
+        (await listCollectionItemOptions()).find((r) => r.id === id),
+      ).toMatchObject({
+        ownedGame: { gameRelease: { game: { name: "Game" } } },
+      });
+      throw new Error("Collection read rollback probe");
+    }),
+  ).rejects.toThrow("Collection read rollback probe");
+  expect(await findCollectionItem(id)).toEqual(before);
+});
+
+async function repositoryActor() {
+  return db.user.create({
+    data: {
+      email: `${randomUUID()}@repository-probe.example`,
+      name: "Repository transaction fixture",
+    },
+  });
+}
+
+it.each(["CONSOLE", "GAME", "ACCESSORY"] as const)(
+  "advances only the expected %s revision and clears publication only when requested",
+  async (type) => {
+    const actor = await repositoryActor();
+    const id = copies.get(type)!;
+    const publishedAt = new Date("2026-10-22T00:00:00Z");
+    await db.collectionItem.update({
+      where: { id },
+      data: {
+        publicationStatus: "PUBLISHED",
+        publishedAt,
+        publishedById: actor.id,
+      },
+    });
+    const siblings = await db.collectionItem.findMany({
+      where: { id: { not: id } },
+      orderBy: { id: "asc" },
+    });
+    expect(
+      await withTransaction((tx) =>
+        advanceCollectionItem(id, 1, actor.id, false, tx),
+      ),
+    ).toEqual({ count: 1 });
+    const retained = await db.collectionItem.findUniqueOrThrow({
+      where: { id },
+    });
+    expect(retained).toMatchObject({
+      revision: 2,
+      updatedById: actor.id,
+      publicationStatus: "PUBLISHED",
+      publishedAt,
+      publishedById: actor.id,
+      notes: privateMarker,
+      serialNumber: privateMarker,
+    });
+    expect(
+      await withTransaction((tx) =>
+        advanceCollectionItem(id, 1, actor.id, true, tx),
+      ),
+    ).toEqual({ count: 0 });
+    expect(
+      await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+    ).toEqual(retained);
+    expect(
+      await withTransaction((tx) =>
+        advanceCollectionItem(id, 2, actor.id, true, tx),
+      ),
+    ).toEqual({ count: 1 });
+    expect(
+      await db.collectionItem.findUniqueOrThrow({ where: { id } }),
+    ).toMatchObject({
+      revision: 3,
+      publicationStatus: "PRIVATE",
+      publishedAt: null,
+      publishedById: null,
+      notes: privateMarker,
+      serialNumber: privateMarker,
+    });
+    expect(
+      await db.collectionItem.findMany({
+        where: { id: { not: id } },
+        orderBy: { id: "asc" },
+      }),
+    ).toEqual(siblings);
+  },
+);
+
+it("rolls back the aggregate revision, actor and publication when a later operation fails", async () => {
+  const actor = await repositoryActor();
+  const id = copies.get("GAME")!;
+  const before = await db.collectionItem.update({
+    where: { id },
+    data: {
+      publicationStatus: "PUBLISHED",
+      publishedAt: new Date("2026-10-22T00:00:00Z"),
+      publishedById: actor.id,
+    },
+  });
+  await expect(
+    withTransaction(async (tx) => {
+      expect(await advanceCollectionItem(id, 1, actor.id, true, tx)).toEqual({
+        count: 1,
+      });
+      expect(
+        await tx.collectionItem.findUniqueOrThrow({ where: { id } }),
+      ).toMatchObject({
+        revision: 2,
+        publicationStatus: "PRIVATE",
+        updatedById: actor.id,
+      });
+      throw new Error("Aggregate rollback probe");
+    }),
+  ).rejects.toThrow("Aggregate rollback probe");
+  expect(await db.collectionItem.findUniqueOrThrow({ where: { id } })).toEqual(
+    before,
+  );
 });

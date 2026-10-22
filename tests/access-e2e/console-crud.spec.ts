@@ -131,7 +131,7 @@ test("opens individual console copies from collection/search and shows private/c
   await expect(page).toHaveURL(new RegExp(`/app/consoles/${id}$`));
   expect(errors).toEqual([]);
 });
-test("edits private details and explicitly corrects a model without touching a sibling copy", async ({
+test("@critical edits private details and explicitly corrects a model without touching a sibling copy", async ({
   page,
   context,
 }) => {
@@ -177,7 +177,7 @@ test("edits private details and explicitly corrects a model without touching a s
     serialNumber: "COPY-TWO",
   });
 });
-test("rejects another tab's stale edit, preserves the draft and confirms deletion with cancel focus restoration", async ({
+test("@critical rejects another tab's stale edit, preserves the draft and confirms deletion with cancel focus restoration", async ({
   page,
   context,
 }) => {

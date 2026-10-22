@@ -55,7 +55,7 @@ for (const [role, label] of [
   ["EDITOR", "Editor"],
   ["VIEWER", "Viewer"],
 ] as const) {
-  test(`allows the current enabled ${role} grant`, async ({
+  test(`@critical allows the current enabled ${role} grant`, async ({
     page,
     context,
   }) => {
@@ -75,7 +75,7 @@ for (const [role, label] of [
   });
 }
 
-test("denies identity without a grant even with forged role/email headers", async ({
+test("@critical denies identity without a grant even with forged role/email headers", async ({
   page,
   context,
 }) => {
@@ -88,7 +88,7 @@ test("denies identity without a grant even with forged role/email headers", asyn
   await expect(page).toHaveURL(/\/access-denied$/);
 });
 
-test("reads role, disabled and deleted grants again for the same browser session", async ({
+test("@critical reads role, disabled and deleted grants again for the same browser session", async ({
   page,
   context,
 }) => {
@@ -110,7 +110,7 @@ test("reads role, disabled and deleted grants again for the same browser session
   expect(await fixture("sessions")).toBe(1);
 });
 
-test("signs out through the real auth route and removes private access", async ({
+test("@critical signs out through the real auth route and removes private access", async ({
   page,
   context,
 }) => {
@@ -252,3 +252,37 @@ for (const secondRole of ["VIEWER", undefined] as const) {
     }
   });
 }
+
+test("@critical anonymous entry reaches configured login and keeps callback errors private", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/app?returnTo=https://untrusted.example");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(
+    page.getByRole("heading", { name: "Welcome to GemuKore", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Continue with GitHub" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("heading", { name: "Your collection", exact: true }),
+  ).toHaveCount(0);
+  await page.goto(
+    "/login?error=provider_rejected&error_description=PRIVATE-PROVIDER-DETAIL",
+  );
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "We couldn't complete sign-in.",
+  );
+  await expect(page.locator("body")).not.toContainText(
+    "PRIVATE-PROVIDER-DETAIL",
+  );
+  await page.goto("/access-denied");
+  await page.getByRole("link", { name: "Back to sign in" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(errors).toEqual([]);
+});

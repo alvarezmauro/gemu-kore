@@ -69,7 +69,7 @@ async function chooseRelease(page: Page) {
     .click();
   await next(page);
 }
-test("editor creates a private game with canonical release filters, defects and a personal photo", async ({
+test("@critical editor creates a private game with canonical release filters, defects and a personal photo", async ({
   page,
   context,
 }, info) => {

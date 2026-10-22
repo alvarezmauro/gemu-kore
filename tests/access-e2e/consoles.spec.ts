@@ -77,7 +77,7 @@ function glb() {
   json.copy(bytes, 20);
   return bytes;
 }
-test("editor creates a private console, defects, photo and both copy-only overrides", async ({
+test("@critical editor creates a private console, defects, photo and both copy-only overrides", async ({
   page,
   context,
 }, info) => {

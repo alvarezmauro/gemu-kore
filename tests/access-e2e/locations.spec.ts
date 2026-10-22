@@ -49,7 +49,7 @@ const row = (page: Page, name: string) =>
     .getByRole("listitem")
     .filter({ has: page.getByRole("heading", { name, exact: true }) });
 
-test("creates a complete nested hierarchy through the forms and retains it after reload", async ({
+test("@critical creates a complete nested hierarchy through the forms and retains it after reload", async ({
   page,
   context,
 }) => {
@@ -90,7 +90,7 @@ test("creates a complete nested hierarchy through the forms and retains it after
   );
 });
 
-test("renames, moves, reorders and deletes with updated descendant breadcrumbs", async ({
+test("@critical renames, moves, reorders and deletes with updated descendant breadcrumbs", async ({
   page,
   context,
 }) => {

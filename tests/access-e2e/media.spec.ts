@@ -80,7 +80,7 @@ test("shows an empty collection without offering detached photo creation", async
     0,
   );
 });
-test("uploads actual images privately, edits classification and description, inspects then removes a use", async ({
+test("@critical uploads actual images privately, edits classification and description, inspects then removes a use", async ({
   page,
   context,
 }, testInfo) => {
