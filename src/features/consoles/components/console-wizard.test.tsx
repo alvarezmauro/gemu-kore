@@ -110,7 +110,13 @@ async function next() {
   });
 }
 async function physical() {
-  fireEvent.click(screen.getByRole("option", { name: "Select PlayStation" }));
+  const choice = screen.getByRole("option", {
+    name: /^Select PlayStation(?:\s|$)/,
+  });
+  expect(choice).toHaveAccessibleName(
+    "Select PlayStation Sony · Generation 5 · 1994",
+  );
+  fireEvent.click(choice);
   await next();
   await next();
 }
@@ -184,13 +190,17 @@ it("requires a choice when there are multiple models", async () => {
     },
   });
   mount();
-  fireEvent.click(screen.getByRole("option", { name: "Select PlayStation" }));
+  fireEvent.click(
+    screen.getByRole("option", { name: /^Select PlayStation(?:\s|$)/ }),
+  );
   await next();
   await next();
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Choose a hardware model",
   );
-  fireEvent.click(screen.getByRole("option", { name: "Select SCPH-1000" }));
+  fireEvent.click(
+    screen.getByRole("option", { name: /^Select SCPH-1000(?:\s|$)/ }),
+  );
   await next();
   expect(screen.getByLabelText("Serial number")).toBeVisible();
 });

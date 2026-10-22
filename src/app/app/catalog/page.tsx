@@ -214,6 +214,7 @@ export default async function CatalogPage({
               </ul>
             ) : (
               <EmptyState
+                headingLevel={2}
                 title={
                   page > 1
                     ? "No records on this page"

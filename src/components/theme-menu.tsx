@@ -18,7 +18,7 @@ export function ThemeMenu() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -29,7 +29,11 @@ export function ThemeMenu() {
           Theme
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        portalled={false}
+        aria-label="Appearance"
+      >
         <DropdownMenuLabel>Appearance</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>

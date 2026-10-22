@@ -62,19 +62,17 @@ test("@critical editor prepares a review, admin accepts it, and the original cop
   const catalog = await fixture("seed-game-creation");
   const editor = await signIn(context, "EDITOR");
   await page.goto("/app/games/new");
-  await page.getByRole("option", { name: "Select SNES", exact: true }).click();
+  await page.getByRole("option", { name: /^Select SNES(?:\s|$)/ }).click();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page
     .getByRole("option", {
-      name: "Select Chrono Trigger (chrono-trigger)",
-      exact: true,
+      name: /^Select Chrono Trigger \(chrono-trigger\)(?:\s|$)/,
     })
     .click();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page
     .getByRole("option", {
-      name: "Select Standard Edition (chrono-snes-na)",
-      exact: true,
+      name: /^Select Standard Edition \(chrono-snes-na\)(?:\s|$)/,
     })
     .click();
   await page.getByRole("button", { name: "Continue", exact: true }).click();

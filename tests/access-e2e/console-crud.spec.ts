@@ -155,11 +155,9 @@ test("@critical edits private details and explicitly corrects a model without to
     .getByRole("button", { name: "Correct model identification" })
     .click();
   await page
-    .getByRole("option", { name: "Select PlayStation", exact: true })
+    .getByRole("option", { name: /^Select PlayStation(?:\s|$)/ })
     .click();
-  await page
-    .getByRole("option", { name: "Select PS one", exact: true })
-    .click();
+  await page.getByRole("option", { name: /^Select PS one(?:\s|$)/ }).click();
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByText("CORRECTED", { exact: true })).toBeVisible();

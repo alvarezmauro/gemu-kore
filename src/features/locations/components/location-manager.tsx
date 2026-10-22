@@ -75,6 +75,7 @@ export function LocationManager({
       )}
       {locations.length === 0 ? (
         <EmptyState
+          headingLevel={2}
           title="Make room for your collection"
           description="Start with a home or room, then add the cabinets, shelves and boxes inside it."
         />

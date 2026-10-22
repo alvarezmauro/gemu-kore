@@ -50,12 +50,11 @@ test.afterAll(async () => {
 const next = (page: Page) =>
   page.getByRole("button", { name: "Continue", exact: true }).click();
 async function chooseIdentity(page: Page) {
-  await page.getByRole("option", { name: "Select SNES", exact: true }).click();
+  await page.getByRole("option", { name: /^Select SNES(?:\s|$)/ }).click();
   await next(page);
   await page
     .getByRole("option", {
-      name: "Select Chrono Trigger (chrono-trigger)",
-      exact: true,
+      name: /^Select Chrono Trigger \(chrono-trigger\)(?:\s|$)/,
     })
     .click();
   await next(page);
@@ -63,8 +62,7 @@ async function chooseIdentity(page: Page) {
 async function chooseRelease(page: Page) {
   await page
     .getByRole("option", {
-      name: "Select Standard Edition (chrono-snes-na)",
-      exact: true,
+      name: /^Select Standard Edition \(chrono-snes-na\)(?:\s|$)/,
     })
     .click();
   await next(page);
@@ -95,8 +93,7 @@ test("@critical editor creates a private game with canonical release filters, de
     .click();
   await expect(
     page.getByRole("option", {
-      name: "Select Deluxe Edition (chrono-snes-unknown)",
-      exact: true,
+      name: /^Select Deluxe Edition \(chrono-snes-unknown\)(?:\s|$)/,
     }),
   ).toHaveCount(0);
   await chooseRelease(page);

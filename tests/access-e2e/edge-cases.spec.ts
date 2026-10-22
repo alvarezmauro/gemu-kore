@@ -53,29 +53,25 @@ async function prepareCopy(page: Page, kind: "console" | "game") {
   await page.goto(`/app/${kind}s/new`);
   if (kind === "console") {
     await page
-      .getByRole("option", { name: "Select PlayStation", exact: true })
+      .getByRole("option", { name: /^Select PlayStation(?:\s|$)/ })
       .click();
     await next(page);
     await page
-      .getByRole("option", { name: "Select SCPH-1000", exact: true })
+      .getByRole("option", { name: /^Select SCPH-1000(?:\s|$)/ })
       .click();
     await next(page);
   } else {
-    await page
-      .getByRole("option", { name: "Select SNES", exact: true })
-      .click();
+    await page.getByRole("option", { name: /^Select SNES(?:\s|$)/ }).click();
     await next(page);
     await page
       .getByRole("option", {
-        name: "Select Chrono Trigger (chrono-trigger)",
-        exact: true,
+        name: /^Select Chrono Trigger \(chrono-trigger\)(?:\s|$)/,
       })
       .click();
     await next(page);
     await page
       .getByRole("option", {
-        name: "Select Standard Edition (chrono-snes-na)",
-        exact: true,
+        name: /^Select Standard Edition \(chrono-snes-na\)(?:\s|$)/,
       })
       .click();
     await next(page);

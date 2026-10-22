@@ -48,7 +48,7 @@ Use semantic CSS variables through Tailwind/shadcn. The following values are the
 | `--heading`                          | `#343433` | `#ecebe8` |
 | `--body`                             | `#474645` | `#c9c6c1` |
 | `--muted`                            | `#f6f4ef` | `#2a2930` |
-| `--muted-foreground`                 | `#6f6b66` | `#aca6a0` |
+| `--muted-foreground`                 | `#69655f` | `#aca6a0` |
 | `--primary`                          | `#171717` | `#f6f4ef` |
 | `--primary-foreground`               | `#ffffff` | `#16151a` |
 | `--secondary`                        | `#f6f4ef` | `#2a2930` |
@@ -73,7 +73,7 @@ Use accessible foreground/background pairs for success, warning, error and infor
 
 ### Contrast corrections to the reference
 
-The supplied muted `#848281` is approximately **3.82:1 on white**, insufficient for normal small text. Use `#6f6b66` instead; it is approximately **5.07:1 on `#fbfaf9`**. The dark muted pair above is approximately **6.87:1**. These are calculated sRGB contrast ratios, not a completed screen audit.
+The supplied muted `#848281` is approximately **3.82:1 on white**, insufficient for normal small text. Task 20.1 refined the initial `#6f6b66` to `#69655f` after rendered checks found 4.46:1 on stone and 4.24:1 on the selected surface. The current token is approximately **5.55:1 on `#fbfaf9`**, **4.89:1 on stone** and **4.65:1 on accent**. The dark muted pair above is approximately **6.87:1**. These sRGB ratios complement the scoped [accessibility audit](docs/operations/ACCESSIBILITY_AUDIT.md); they do not by themselves certify every rendered state.
 
 Target at least 4.5:1 for normal text, 3:1 for large text and 3:1 for essential control boundaries/focus indicators against adjacent colors. Pale `--border` is for nonessential separators, not the only indication that an input exists. Do not fade required text with opacity or assume the source's bright labels are accessible. Check actual rendered states, including images behind text.
 

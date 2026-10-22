@@ -51,19 +51,17 @@ const next = (page: Page) =>
   page.getByRole("button", { name: "Continue", exact: true }).click();
 async function create(page: Page) {
   await page.goto("/app/games/new");
-  await page.getByRole("option", { name: "Select SNES", exact: true }).click();
+  await page.getByRole("option", { name: /^Select SNES(?:\s|$)/ }).click();
   await next(page);
   await page
     .getByRole("option", {
-      name: "Select Chrono Trigger (chrono-trigger)",
-      exact: true,
+      name: /^Select Chrono Trigger \(chrono-trigger\)(?:\s|$)/,
     })
     .click();
   await next(page);
   await page
     .getByRole("option", {
-      name: "Select Standard Edition (chrono-snes-na)",
-      exact: true,
+      name: /^Select Standard Edition \(chrono-snes-na\)(?:\s|$)/,
     })
     .click();
   await next(page);

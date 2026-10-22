@@ -29,6 +29,7 @@ Unit/component tests need only Node.js. Integration tests also need a running Do
 | `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
 | `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.        |
 | `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.             |
+| `pnpm test:e2e:a11y`               | Run the 22 desktop/mobile accessibility journeys with light/dark axe scans, keyboard checks and contrast targets. |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
 
 Run lint, typechecking and formatting alongside the applicable suites:
@@ -119,6 +120,12 @@ Verified 2026-10-22: all 19 additions pass. The full integration run initially r
 `pnpm test:e2e:edge` adds twelve desktop/mobile checks for committed-but-unacknowledged copy saves, photo uploads and publication changes, plus public forms whose policy changes before submission. See the [edge-case journeys, failure simulation and commands](E2E_EDGE_CASES.md). The critical selection remains 54 checks; these six additional scenarios run separately and through the full authenticated suite.
 
 The copy-approval regression exposed a fragment-only “Reload copy” link that retained stale approval after a committed response was lost. The recovery control now reloads the page through the existing button primitive; both desktop and mobile verify the current approval before explicitly reviewing withdrawal.
+
+## Task 20.1 accessibility audit
+
+`pnpm test:e2e:a11y` runs eleven journeys in both Chromium projects using the established isolated production runner. Scans cover public/private pages, all three copy wizards, catalog and metadata forms, dialogs, command search, publication reviews and a real 3D model. Default axe rules remain enabled; reports retain complete results and inconclusive checks. Keyboard focus, modal wrapping/return, native required-field validation, rendered choice names, reduced motion and shared contrast targets have additional assertions.
+
+The audit corrects muted text contrast, command search focus and listbox structure, picker names that omitted visible content, appearance-menu modality, heading order and names on generic layout containers. See the [findings, scope, commands and evidence boundaries](ACCESSIBILITY_AUDIT.md). Axe is a development-only dependency. This scoped assessment does not claim actual VoiceOver/NVDA testing or WCAG certification; Task 20.2's mobile workflow review remains separate.
 
 ## Browser tests
 

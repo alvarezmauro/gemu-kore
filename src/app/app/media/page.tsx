@@ -90,6 +90,7 @@ export default async function MediaPage({
           </>
         ) : (
           <EmptyState
+            headingLevel={2}
             title="No collection items yet"
             description="Photos belong to physical copies. Once a copy is in your collection, you can add its photos here."
           />

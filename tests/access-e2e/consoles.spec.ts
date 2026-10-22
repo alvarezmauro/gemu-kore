@@ -90,7 +90,7 @@ test("@critical editor creates a private console, defects, photo and both copy-o
   await page.getByRole("combobox", { name: "Find consoles" }).fill("psx");
   await page.getByRole("combobox", { name: "Find consoles" }).press("Enter");
   await expect(
-    page.getByRole("option", { name: "Select PlayStation", exact: true }),
+    page.getByRole("option", { name: /^Select PlayStation(?:\s|$)/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Find matches" }),
@@ -107,7 +107,7 @@ test("@critical editor creates a private console, defects, photo and both copy-o
   await modelSearch.fill("SCPH");
   await modelSearch.press("Enter");
   await expect(
-    page.getByRole("option", { name: "Select SCPH-1000", exact: true }),
+    page.getByRole("option", { name: /^Select SCPH-1000(?:\s|$)/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Find matches" }),
@@ -314,7 +314,7 @@ test("shows empty choices and remains usable at 320px in dark reduced-motion mod
   await fixture("seed-console-creation");
   await page.reload();
   await page
-    .getByRole("option", { name: "Select No hardware yet", exact: true })
+    .getByRole("option", { name: /^Select No hardware yet(?:\s|$)/ })
     .click();
   await next(page);
   await expect(page.getByRole("status")).toContainText("No active models");

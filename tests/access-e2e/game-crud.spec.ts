@@ -51,19 +51,17 @@ const next = (page: Page) =>
   page.getByRole("button", { name: "Continue", exact: true }).click();
 async function create(page: Page, photo = false) {
   await page.goto("/app/games/new");
-  await page.getByRole("option", { name: "Select SNES", exact: true }).click();
+  await page.getByRole("option", { name: /^Select SNES(?:\s|$)/ }).click();
   await next(page);
   await page
     .getByRole("option", {
-      name: "Select Chrono Trigger (chrono-trigger)",
-      exact: true,
+      name: /^Select Chrono Trigger \(chrono-trigger\)(?:\s|$)/,
     })
     .click();
   await next(page);
   await page
     .getByRole("option", {
-      name: "Select Standard Edition (chrono-snes-na)",
-      exact: true,
+      name: /^Select Standard Edition \(chrono-snes-na\)(?:\s|$)/,
     })
     .click();
   await next(page);
@@ -123,8 +121,7 @@ test("@critical editor views and edits a copy, corrects its release and deletes 
     .click();
   await dialog
     .getByRole("option", {
-      name: "Select Deluxe Edition (chrono-snes-unknown)",
-      exact: true,
+      name: /^Select Deluxe Edition \(chrono-snes-unknown\)(?:\s|$)/,
     })
     .click();
   await dialog

@@ -60,7 +60,7 @@ export function ConsolePicker<
   }
   return (
     <div className="min-w-0 space-y-3">
-      <Command shouldFilter={false} aria-label={`Choose ${label}`}>
+      <Command role="group" shouldFilter={false} aria-label={`Choose ${label}`}>
         <CommandInput
           aria-label={`Find ${label}`}
           value={query}
@@ -93,7 +93,6 @@ export function ConsolePicker<
               value={item.id}
               disabled={busy}
               onSelect={() => choose(item)}
-              aria-label={`Select ${optionName ? optionName(item) : item.name}`}
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-stone">
                 {item.logoUrl ? (
@@ -111,9 +110,10 @@ export function ConsolePicker<
               </div>
               <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                 <span className="block font-medium">
-                  {item.name}
+                  <span className="sr-only">Select</span>{" "}
+                  {optionName ? optionName(item) : item.name}
                   {selectedId === item.id ? " · Selected" : ""}
-                </span>
+                </span>{" "}
                 <span className="block text-muted-foreground">
                   {detail(item)}
                 </span>

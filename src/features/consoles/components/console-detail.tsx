@@ -325,7 +325,11 @@ export function ConsoleDetail({
             empty="No catalog images available."
           />
         </div>
-        <div className="space-y-4" aria-labelledby="console-photos-title">
+        <div
+          role="group"
+          className="space-y-4"
+          aria-labelledby="console-photos-title"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3
               id="console-photos-title"

@@ -29,7 +29,7 @@ export function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex items-center gap-2 border-b px-4 pr-14"
+      className="flex items-center gap-2 border-b px-4 pr-14 focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring"
     >
       <Search
         aria-hidden="true"

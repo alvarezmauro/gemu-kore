@@ -15,11 +15,11 @@ const next = (page: Page) =>
 async function choose(page: Page) {
   await page.goto("/app/accessories/new");
   await page
-    .getByRole("option", { name: "Select DualShock 2", exact: true })
+    .getByRole("option", { name: /^Select DualShock 2(?:\s|$)/ })
     .click();
   await next(page);
   await page
-    .getByRole("option", { name: "Select Black (black)", exact: true })
+    .getByRole("option", { name: /^Select Black \(black\)(?:\s|$)/ })
     .click();
   await expect(
     page.getByRole("region", { name: "Selected accessory" }),
@@ -143,7 +143,7 @@ test("@critical editor creates, edits, reidentifies and deletes a private copy w
     .getByRole("button", { name: "Find variants", exact: true })
     .click();
   await dialog
-    .getByRole("option", { name: "Select Silver (silver)", exact: true })
+    .getByRole("option", { name: /^Select Silver \(silver\)(?:\s|$)/ })
     .click();
   await dialog
     .getByRole("button", { name: "Save changes", exact: true })

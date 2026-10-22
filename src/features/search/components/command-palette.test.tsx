@@ -134,8 +134,14 @@ it("groups copies separately from catalog, previews canonical data and routes ex
   });
   expect(screen.getByText("Games", { exact: true })).toBeVisible();
   expect(screen.getByText("Catalog", { exact: true })).toBeVisible();
+  expect(screen.getByRole("listbox")).not.toContainElement(
+    screen.getByRole("status"),
+  );
   fireEvent.click(options[1]);
   expect(screen.getByText(/Canonical identity/)).toBeVisible();
+  expect(screen.getByRole("listbox")).not.toContainElement(
+    screen.getByRole("heading", { name: "Chrono Trigger" }),
+  );
   expect(push).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("option", { name: "Back to results" }));
   fireEvent.click(screen.getAllByRole("option", { name: /Chrono Trigger/ })[0]);
@@ -174,6 +180,13 @@ it("retains errors for retry and does not retry invalid queries", async () => {
   open();
   fireEvent.change(input(), { target: { value: "chrono" } });
   expect(await screen.findByRole("alert")).toHaveTextContent("unavailable");
+  expect(screen.getByRole("listbox")).not.toContainElement(
+    screen.getByRole("alert"),
+  );
+  expect(input()).toHaveAttribute(
+    "aria-describedby",
+    "palette-help palette-error",
+  );
   expect(input()).toHaveValue("chrono");
   fireEvent.click(screen.getByRole("option", { name: "Try search again" }));
   await screen.findAllByRole("option", { name: /Chrono Trigger/ });

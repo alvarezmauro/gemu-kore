@@ -189,34 +189,55 @@ function PaletteSession({ close }: { close: () => void }) {
           ? "Identity preview · Choose an action below."
           : "Search copies or catalog names. Enter at least two characters."}
       </p>
+      {selected ? (
+        <div className="space-y-2 px-3 py-3">
+          <p className="text-xs text-muted-foreground">
+            {selected.scope === "copy"
+              ? `Owned copy · ${selected.item.id.slice(0, 8)}`
+              : `Catalog · ${kinds[selected.item.kind]}`}
+          </p>
+          <h2 className="break-words font-heading text-lg">
+            {selected.item.title}
+          </h2>
+          <p className="break-words text-sm text-muted-foreground">
+            {selected.item.context}
+          </p>
+          {selected.item.identificationStatus === "INCOMPLETE" && (
+            <p className="text-sm">Identity incomplete</p>
+          )}
+          {selected.scope === "catalog" && (
+            <p className="text-xs text-muted-foreground">
+              Canonical identity; this record does not represent a physical
+              copy.
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
+          <div role="status" className="px-3 text-sm text-muted-foreground">
+            {state.status === "pending"
+              ? "Searching…"
+              : result
+                ? `${result.collection.items.length} ${result.collection.items.length === 1 ? "copy" : "copies"} and ${result.catalog.length} catalog ${result.catalog.length === 1 ? "match" : "matches"}`
+                : ""}
+          </div>
+          {state.status === "error" && (
+            <p
+              id="palette-error"
+              role="alert"
+              className="px-3 py-3 text-sm text-destructive"
+            >
+              {state.message}
+            </p>
+          )}
+        </>
+      )}
       <CommandList
         aria-label="Quick search results"
         aria-busy={state.status === "pending"}
       >
         {selected ? (
           <>
-            <div className="space-y-2 px-3 py-3">
-              <p className="text-xs text-muted-foreground">
-                {selected.scope === "copy"
-                  ? `Owned copy · ${selected.item.id.slice(0, 8)}`
-                  : `Catalog · ${kinds[selected.item.kind]}`}
-              </p>
-              <h2 className="break-words font-heading text-lg">
-                {selected.item.title}
-              </h2>
-              <p className="break-words text-sm text-muted-foreground">
-                {selected.item.context}
-              </p>
-              {selected.item.identificationStatus === "INCOMPLETE" && (
-                <p className="text-sm">Identity incomplete</p>
-              )}
-              {selected.scope === "catalog" && (
-                <p className="text-xs text-muted-foreground">
-                  Canonical identity; this record does not represent a physical
-                  copy.
-                </p>
-              )}
-            </div>
             <CommandGroup heading="Actions">
               <CommandItem value="back" onSelect={() => setSelected(null)}>
                 <ArrowLeft aria-hidden="true" />
@@ -254,22 +275,8 @@ function PaletteSession({ close }: { close: () => void }) {
           </>
         ) : (
           <>
-            <div role="status" className="px-3 text-sm text-muted-foreground">
-              {state.status === "pending"
-                ? "Searching…"
-                : result
-                  ? `${result.collection.items.length} ${result.collection.items.length === 1 ? "copy" : "copies"} and ${result.catalog.length} catalog ${result.catalog.length === 1 ? "match" : "matches"}`
-                  : ""}
-            </div>
             {state.status === "error" && (
               <>
-                <p
-                  id="palette-error"
-                  role="alert"
-                  className="px-3 py-3 text-sm text-destructive"
-                >
-                  {state.message}
-                </p>
                 {valid && (
                   <CommandItem value="retry" onSelect={retry}>
                     Try search again
@@ -325,18 +332,6 @@ function PaletteSession({ close }: { close: () => void }) {
                     ))}
                   </CommandGroup>
                 )}
-                {!result.collection.items.length && !result.catalog.length && (
-                  <p className="px-3 py-4 text-sm">
-                    No matching copies or catalog identities. Try another name
-                    or fewer words.
-                  </p>
-                )}
-                {(result.collection.hasMore || result.catalogHasMore) && (
-                  <p className="px-3 py-3 text-xs text-muted-foreground">
-                    More matches available. Add another word to narrow your
-                    search.
-                  </p>
-                )}
               </BlurFade>
             )}
             {visiblePages.length > 0 && (
@@ -355,6 +350,21 @@ function PaletteSession({ close }: { close: () => void }) {
           </>
         )}
       </CommandList>
+      {!selected && result && (
+        <>
+          {!result.collection.items.length && !result.catalog.length && (
+            <p className="px-3 py-4 text-sm">
+              No matching copies or catalog identities. Try another name or
+              fewer words.
+            </p>
+          )}
+          {(result.collection.hasMore || result.catalogHasMore) && (
+            <p className="px-3 py-3 text-xs text-muted-foreground">
+              More matches available. Add another word to narrow your search.
+            </p>
+          )}
+        </>
+      )}
       <p className="border-t px-4 py-3 text-xs text-muted-foreground">
         ↑ ↓ Navigate · Enter Select · Esc Close
       </p>

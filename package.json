@@ -23,6 +23,7 @@
     "test:e2e:access": "pnpm db:generate && tsx tests/helpers/run-access-browser.ts",
     "test:e2e:critical": "pnpm test:e2e:access --grep @critical",
     "test:e2e:edge": "pnpm test:e2e:access --grep @edge",
+    "test:e2e:a11y": "pnpm test:e2e:access --grep @a11y",
     "test:e2e:install": "playwright install chromium",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
@@ -74,6 +75,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/dom": "10.4.2",

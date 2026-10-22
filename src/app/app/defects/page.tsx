@@ -90,6 +90,7 @@ export default async function DefectsPage({
           </>
         ) : (
           <EmptyState
+            headingLevel={2}
             title="No collection items yet"
             description="Defects belong to physical copies. Once a copy is in your collection, its condition can be recorded here."
           />

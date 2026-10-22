@@ -162,7 +162,7 @@ export function PublicationSettingsForm({
           tabIndex={-1}
           className="space-y-4 rounded-xl border bg-muted/40 p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <h3 className="font-heading text-xl">Review before saving</h3>
+          <h2 className="font-heading text-xl">Review before saving</h2>
           <p>
             The collection will be{" "}
             <strong>
