@@ -28,6 +28,7 @@ Unit/component tests need only Node.js. Integration tests also need a running Do
 | `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                  |
 | `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
 | `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.        |
+| `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.             |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
 
 Run lint, typechecking and formatting alongside the applicable suites:
@@ -112,6 +113,12 @@ Verified 2026-10-22: all 19 additions pass. The full integration run initially r
 ## Task 19.3 critical browser gate
 
 `pnpm test:e2e:critical` selects 54 desktop/mobile Chromium checks across all twelve Task 19.3 areas using the established isolated production-browser runner. Four new scenarios cover configured login and publication/edit/deletion across every owned subtype; existing critical CRUD, upload, search, filter, enrichment and privacy tests retain their assertions. See the [coverage map, commands and evidence boundaries](CRITICAL_PATHS.md). The full authenticated suite remains available through `pnpm test:e2e:access`; Task 19.4 edge-case expansion is separate.
+
+## Task 19.4 browser edge cases
+
+`pnpm test:e2e:edge` adds twelve desktop/mobile checks for committed-but-unacknowledged copy saves, photo uploads and publication changes, plus public forms whose policy changes before submission. See the [edge-case journeys, failure simulation and commands](E2E_EDGE_CASES.md). The critical selection remains 54 checks; these six additional scenarios run separately and through the full authenticated suite.
+
+The copy-approval regression exposed a fragment-only “Reload copy” link that retained stale approval after a committed response was lost. The recovery control now reloads the page through the existing button primitive; both desktop and mobile verify the current approval before explicitly reviewing withdrawal.
 
 ## Browser tests
 

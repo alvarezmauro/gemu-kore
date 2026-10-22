@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "test:e2e:access": "pnpm db:generate && tsx tests/helpers/run-access-browser.ts",
     "test:e2e:critical": "pnpm test:e2e:access --grep @critical",
+    "test:e2e:edge": "pnpm test:e2e:access --grep @edge",
     "test:e2e:install": "playwright install chromium",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",

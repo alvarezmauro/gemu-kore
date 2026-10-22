@@ -141,12 +141,13 @@ export function ItemPublication({ initial }: { initial: ItemReview }) {
         </div>
         {message && <p role={failed ? "alert" : "status"}>{message}</p>}
         {failed && (
-          <a
-            className="inline-flex min-h-11 items-center underline"
-            href={`/app/settings/public?item=${initial.item.id}#copy-review`}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.location.reload()}
           >
             Reload copy
-          </a>
+          </Button>
         )}
       </form>
     </section>
