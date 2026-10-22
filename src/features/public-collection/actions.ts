@@ -44,8 +44,7 @@ async function perform<T>(
   }
 }
 
-// These capabilities must remain off until their contextual delivery and SEO
-// implementations exist. Enforce this on the server, not only disabled controls.
+// Indexing remains closed until Task 18.6.
 function availableSettings<
   T extends {
     settings: {
@@ -54,10 +53,7 @@ function availableSettings<
     };
   },
 >(data: T) {
-  if (
-    data.settings.showPersonalPhotos ||
-    data.settings.allowSearchEngineIndexing
-  )
+  if (data.settings.allowSearchEngineIndexing)
     throw new PublicCollectionError("INVALID_INPUT");
   return data;
 }
@@ -91,6 +87,39 @@ export async function reviewItemPublication(input: unknown) {
 export async function saveItemPublication(input: unknown) {
   const result = await perform((context) =>
     publication.setItemPublication(context, input),
+  );
+  if (result.status === "success") revalidatePath("/app/settings/public");
+  return result;
+}
+
+export async function reviewPublicMedia(input: unknown) {
+  return perform(async (context) =>
+    (
+      await import("@/server/services/public-collection/media-reviews")
+    ).reviewMediaUse(context, input),
+  );
+}
+export async function savePublicMedia(input: unknown) {
+  const result = await perform(async (context) =>
+    (
+      await import("@/server/services/public-collection/media-reviews")
+    ).saveMediaUse(context, input),
+  );
+  if (result.status === "success") revalidatePath("/app/settings/public");
+  return result;
+}
+export async function reviewPublicComponent(input: unknown) {
+  return perform(async (context) =>
+    (
+      await import("@/server/services/public-collection/media-reviews")
+    ).reviewComponentUse(context, input),
+  );
+}
+export async function savePublicComponent(input: unknown) {
+  const result = await perform(async (context) =>
+    (
+      await import("@/server/services/public-collection/media-reviews")
+    ).saveComponentUse(context, input),
   );
   if (result.status === "success") revalidatePath("/app/settings/public");
   return result;

@@ -95,6 +95,10 @@ export async function reviewToken(intent: object, tx: TransactionClient) {
     UNION ALL SELECT 'variant:'||id::text,revision::text FROM accessory_variant
     UNION ALL SELECT 'location:'||id::text,"updatedAt"::text FROM location
     UNION ALL SELECT 'site:'||id::text,revision::text FROM app_settings
+    UNION ALL SELECT 'asset:'||id::text,"updatedAt"::text FROM asset
+    UNION ALL SELECT 'personal-use:'||id::text,"updatedAt"::text FROM collection_item_media
+    UNION ALL SELECT 'catalog-use:'||id::text,"updatedAt"::text FROM catalog_asset
+    UNION ALL SELECT 'app-use:'||id::text,"updatedAt"::text FROM app_asset
     UNION ALL SELECT 'policy:'||id::text,revision::text FROM public_settings
   ) SELECT md5(${JSON.stringify(intent)}||COALESCE(string_agg(identity||':'||version,',' ORDER BY identity),'')) token FROM versions`);
   return row.token;

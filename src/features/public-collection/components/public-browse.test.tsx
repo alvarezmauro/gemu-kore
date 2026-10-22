@@ -58,14 +58,14 @@ it("restores native form values from the URL after clearing filters, including u
     "name-asc",
   );
 });
-it("server-renders separate physical copies, native GET controls and accurate paging without private media or unfinished detail links", () => {
+it("server-renders separate physical copies, native GET controls and accurate paging with public detail links and no private media", () => {
   const html = renderToStaticMarkup(
     <PublicBrowse category="games" input={input} page={1} data={data} />,
   );
   expect(html).toContain('method="get"');
   expect(html).toContain('action="/collection/games"');
   expect(html).not.toContain("/api/media/private");
-  expect(html).not.toContain('href="/collection/games/one"');
+  expect(html).toContain('href="/collection/games/one"');
   expect(html).not.toContain("<canvas");
   render(<PublicBrowse category="games" input={input} page={1} data={data} />);
   expect(

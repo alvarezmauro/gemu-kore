@@ -82,7 +82,7 @@ it("rejects cross-site requests even with an otherwise valid origin", async () =
   expect((await saveItemPublication({})).status).toBe("error");
   expect(state.itemSave).not.toHaveBeenCalled();
 });
-it.each(["showPersonalPhotos", "allowSearchEngineIndexing"] as const)(
+it.each(["allowSearchEngineIndexing"] as const)(
   "cannot enable an unfinished capability through action input: %s",
   async (key) => {
     const input = {
@@ -146,4 +146,13 @@ it("sanitizes unexpected errors and preserves stale-review and revoked-role fail
     message: expect.stringContaining("not permitted"),
   });
   expect(state.revalidate).not.toHaveBeenCalled();
+});
+
+it("allows reviewed personal-media settings now that contextual delivery is implemented", async () => {
+  const input = {
+    expectedRevision: 1,
+    settings: { ...settings, showPersonalPhotos: true },
+  };
+  expect((await reviewPublicationSettings(input)).status).toBe("success");
+  expect(state.settingsReview).toHaveBeenCalledWith(state.context, input);
 });

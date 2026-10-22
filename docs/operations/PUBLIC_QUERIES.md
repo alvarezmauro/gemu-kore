@@ -1,6 +1,6 @@
 # Public collection query layer
 
-Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. The public home and administrator review UI are now documented in [Public home operations](PUBLIC_HOME.md); [browse/search pages and their public JSON endpoint](PUBLIC_BROWSING.md) are implemented in Task 18.4, with detail/media entry points following in Task 18.5. Existing database defaults and the personal collection's publication choices are unchanged.
+Task 18.2 implements server-only public reads and private administrator publication commands against the [Public Privacy Architecture](../architecture/PUBLIC_PRIVACY_ARCHITECTURE.md). It adds no public page, browser-search endpoint, settings UI or public media handler. The public home and administrator review UI are now documented in [Public home operations](PUBLIC_HOME.md); [browse/search pages and their public JSON endpoint](PUBLIC_BROWSING.md) are implemented in Task 18.4, and [detail/contextual media entry points](PUBLIC_DETAILS.md) are implemented in Task 18.5. Existing database defaults and the personal collection's publication choices are unchanged.
 
 ## Public reads
 
@@ -38,7 +38,7 @@ Personal detail selects include serialNumber, notes and locationId only when the
 
 Related markets/credits/expected contents/compatibility use 100-row display limits plus sentinels and a truthful `relatedTruncated` flag; defects have their own 100-row limit and `hasMore`. Language lists are bounded too. Canonical source scope is retained, including regional release credits, variant compatibility and whole GameRelease/Game playtime fallback. Zero minutes remains zero; an all-unknown release override never borrows game-level estimates. Expected contents never imply actual owned component presence.
 
-Every card/detail currently has `photo: null`. This intentionally remains a safe placeholder even for an approved use: contextual public delivery is not implemented until 18.5. No private URL, original, thumbnail sibling, template, trailer URL or raw specification JSON is substituted. The richer detail UI may extend these explicit DTOs with validated specifications, reviewed links and eligible media only through the established public contracts. Retained archived canonical identities still describe published owned copies.
+Cards retain `photo: null`. Task 18.5 extends public details with individually eligible contextual photos, galleries, model availability and approved component summaries; see [public detail operations](PUBLIC_DETAILS.md). No private URL, original, thumbnail sibling, template, trailer URL or raw specification JSON is substituted. The richer detail UI may extend these explicit DTOs with validated specifications, reviewed links and eligible media only through the established public contracts. Retained archived canonical identities still describe published owned copies.
 
 ## Private administrator commands
 
@@ -64,11 +64,11 @@ Settings and item approval commands use the exclusive side for a short Read Comm
 
 Location renames, type changes and moves additionally invalidate published copies assigned anywhere in the affected subtree when showLocations is true, including while global publication is paused. Existing hierarchy serialization and stale-location tokens remain in force. Reordering or editing a private location description does not invalidate unrelated item approvals. Existing stricter copy/media/defect invalidation is preserved.
 
-The guarantee covers application service transactions, not independent raw database writers. Access grants/sessions remain current server checks. Public reads admitted before a committed change keep a consistent snapshot; later requests re-evaluate current policy. Direct public media revocation/HEAD/range/conditional checks remain mandatory implementation work in 18.5.
+The guarantee covers application service transactions, not independent raw database writers. Access grants/sessions remain current server checks. Public reads admitted before a committed change keep a consistent snapshot; later requests re-evaluate current policy. Task 18.5 implements direct public media revocation/HEAD/range/conditional checks.
 
 ## Verification and reproduction
 
-Tests use synthetic copies, metadata-only media graphs and disposable PostgreSQL/MinIO. The public integration suite covers disabled/missing/failed policy, real published-only counts/facets, all categories, wrong identities, conditional detail fields, search noninterference, bounded paging, review/no-op/pause/widening behavior, stale and revoked administrators, concurrent writer/settings coordination, ancestor location edits, snapshot deletion, database read-only enforcement, scoped credits/playtime, media placeholders and 6,012-copy execution plans. Unit selection tests exercise all sixteen combinations of the four personal-field gates to verify that forbidden columns are not fetched, in addition to checking DTOs.
+Tests use synthetic copies, metadata-only media graphs and disposable PostgreSQL/MinIO. The public integration suite covers disabled/missing/failed policy, real published-only counts/facets, all categories, wrong identities, conditional detail fields, search noninterference, bounded paging, review/no-op/pause/widening behavior, stale and revoked administrators, concurrent writer/settings coordination, ancestor location edits, snapshot deletion, database read-only enforcement, scoped credits/playtime, media admission/revocation and 6,012-copy execution plans. Unit selection tests exercise all sixteen combinations of the four personal-field gates to verify that forbidden columns are not fetched, in addition to checking DTOs.
 
 Useful focused commands:
 

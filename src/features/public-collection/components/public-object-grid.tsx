@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Disc3, Gamepad2, Monitor } from "lucide-react";
 import type { PublicCard } from "../contracts";
 const icons = { CONSOLE: Monitor, GAME: Disc3, ACCESSORY: Gamepad2 };
@@ -42,7 +43,13 @@ export function PublicObjectGrid({
                 {labels[item.type]}
               </p>
               <h3 className="font-heading text-xl leading-snug">
-                {item.title}
+                <Link
+                  href={item.href}
+                  prefetch={false}
+                  className="underline decoration-transparent underline-offset-4 hover:decoration-current focus-visible:decoration-current"
+                >
+                  {item.title}
+                </Link>
               </h3>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {item.context}

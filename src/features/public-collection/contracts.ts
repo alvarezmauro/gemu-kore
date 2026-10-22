@@ -1,4 +1,12 @@
 export type PublicItemType = "CONSOLE" | "GAME" | "ACCESSORY";
+export type PublicImage = {
+  url: string;
+  alt: string;
+  caption: string | null;
+  width: number;
+  height: number;
+  source: string;
+};
 export type PublicCard = {
   id: string;
   type: PublicItemType;
@@ -7,8 +15,7 @@ export type PublicCard = {
   href: string;
   hasBox: boolean | null;
   identificationStatus: "INCOMPLETE" | "CONFIRMED";
-  // Public delivery is introduced in 18.5. Never substitute a private URL.
-  photo: null;
+  photo: PublicImage | null;
 };
 export type PublicCounts = {
   total: number;
@@ -35,6 +42,9 @@ export type PublicCollection = {
   hasMore: boolean;
 };
 export type PublicDetail = PublicCard & {
+  gallery?: { images: PublicImage[]; hasMore: boolean };
+  model?: boolean;
+  components?: { id: string; name: string }[];
   description: string | null;
   facts: { label: string; value: string }[];
   markets: string[];

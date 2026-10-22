@@ -12,27 +12,28 @@ datasource db {
 // Core catalog/collection: DOMAIN_MODEL.md §10. Deferred features have no placeholder FKs.
 
 model User {
-  packagingTemplates     PackagingTemplate[]     @relation("PackagingCurator")
-  physicalMediaTemplates PhysicalMediaTemplate[] @relation("PhysicalMediaCurator")
-  enrichmentRuns         EnrichmentRun[]         @relation("EnrichmentRequester")
-  enrichmentReviews      EnrichmentSuggestion[]  @relation("EnrichmentReviewer")
-  uploadedAssets         Asset[]                 @relation("AssetUploader")
-  reviewedAssets         Asset[]                 @relation("AssetReviewer")
-  approvedCatalogAssets  CatalogAsset[]          @relation("CatalogAssetApprover")
-  approvedItemMedia      CollectionItemMedia[]   @relation("ItemMediaApprover")
-  approvedAppAssets      AppAsset[]              @relation("AppAssetApprover")
-  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  componentReviews       GameReleaseIncludedItem[] @relation("ComponentReviewer")
+  packagingTemplates     PackagingTemplate[]       @relation("PackagingCurator")
+  physicalMediaTemplates PhysicalMediaTemplate[]   @relation("PhysicalMediaCurator")
+  enrichmentRuns         EnrichmentRun[]           @relation("EnrichmentRequester")
+  enrichmentReviews      EnrichmentSuggestion[]    @relation("EnrichmentReviewer")
+  uploadedAssets         Asset[]                   @relation("AssetUploader")
+  reviewedAssets         Asset[]                   @relation("AssetReviewer")
+  approvedCatalogAssets  CatalogAsset[]            @relation("CatalogAssetApprover")
+  approvedItemMedia      CollectionItemMedia[]     @relation("ItemMediaApprover")
+  approvedAppAssets      AppAsset[]                @relation("AppAssetApprover")
+  id                     String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                   String
   email                  String
-  emailVerified          Boolean                 @default(false)
+  emailVerified          Boolean                   @default(false)
   image                  String?
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
   sessions               Session[]
   accounts               Account[]
-  createdItems           CollectionItem[]        @relation("ItemCreator")
-  updatedItems           CollectionItem[]        @relation("ItemUpdater")
-  publishedItems         CollectionItem[]        @relation("ItemPublisher")
+  createdItems           CollectionItem[]          @relation("ItemCreator")
+  updatedItems           CollectionItem[]          @relation("ItemUpdater")
+  publishedItems         CollectionItem[]          @relation("ItemPublisher")
   metadataChanges        MetadataChange[]
 
   @@unique([email])
@@ -1112,25 +1113,30 @@ enum ReleaseComponentKind {
 }
 
 model GameReleaseIncludedItem {
-  physicalMediaTemplateId String?                       @db.Uuid
-  physicalMediaTemplate   PhysicalMediaTemplate?        @relation(fields: [physicalMediaTemplateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  physicalMediaBindings   PhysicalMediaTextureBinding[]
-  packagingTemplateId     String?                       @db.Uuid
-  packagingTemplate       PackagingTemplate?            @relation(fields: [packagingTemplateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  packagingBindings       PackagingTextureBinding[]
-  presentationApproved    Boolean                       @default(false)
-  id                      String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gameReleaseId           String                        @db.Uuid
-  gameRelease             GameRelease                   @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  name                    String
-  kind                    ReleaseComponentKind
-  description             String?
-  quantity                Int                           @default(1)
-  sortOrder               Int                           @default(0)
-  assets                  CatalogAsset[]
+  physicalMediaTemplateId      String?                       @db.Uuid
+  physicalMediaTemplate        PhysicalMediaTemplate?        @relation(fields: [physicalMediaTemplateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  physicalMediaBindings        PhysicalMediaTextureBinding[]
+  packagingTemplateId          String?                       @db.Uuid
+  packagingTemplate            PackagingTemplate?            @relation(fields: [packagingTemplateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  packagingBindings            PackagingTextureBinding[]
+  presentationApproved         Boolean                       @default(false)
+  presentationReviewedAt       DateTime?                     @db.Timestamptz(3)
+  presentationReviewedById     String?                       @db.Uuid
+  presentationReviewedBy       User?                         @relation("ComponentReviewer", fields: [presentationReviewedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  presentationTemplateRevision Int?
+  id                           String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gameReleaseId                String                        @db.Uuid
+  gameRelease                  GameRelease                   @relation(fields: [gameReleaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  name                         String
+  kind                         ReleaseComponentKind
+  description                  String?
+  quantity                     Int                           @default(1)
+  sortOrder                    Int                           @default(0)
+  assets                       CatalogAsset[]
 
   @@unique([id, physicalMediaTemplateId], map: "component_physical_media_template_key")
   @@unique([id, packagingTemplateId], map: "component_packaging_template_key")
+  @@index([presentationReviewedById], map: "component_reviewer")
   @@index([physicalMediaTemplateId])
   @@index([packagingTemplateId])
   @@index([gameReleaseId, sortOrder, id], map: "game_release_included_item_release_order")

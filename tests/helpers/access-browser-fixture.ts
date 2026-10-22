@@ -38,6 +38,26 @@ async function main() {
         where: { id: 1 },
         data: { collectionName: "GemuKore", collectionDescription: null },
       });
+    } else if (command === "seed-public-detail") {
+      const { seedPublicDetailData } = await import("./public-detail-data");
+      result = await seedPublicDetailData(
+        database,
+        Boolean(argument && JSON.parse(argument).longTitle),
+      );
+    } else if (command === "public-revoke-asset") {
+      await database.asset.update({
+        where: { id: argument! },
+        data: { rightsStatus: "RESTRICTED" },
+      });
+    } else if (command === "public-unpublish") {
+      await database.collectionItem.update({
+        where: { id: argument! },
+        data: {
+          publicationStatus: "PRIVATE",
+          publishedAt: null,
+          publishedById: null,
+        },
+      });
     } else if (command === "seed-public-browse") {
       const { seedPublicBrowseData } = await import("./public-browse-data");
       result = await seedPublicBrowseData(

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { resourceUrl, publicResourcePattern } from "./resource-url";
 import {
   artworkResource,
   boxDimensions,
@@ -18,7 +19,13 @@ const finite = z.number().finite();
 const point = z.tuple([finite, finite, finite]);
 const privateImage = z
   .object({
-    url: z.string().regex(/^\/api\/media\/private\/[0-9a-f-]{36}$/i),
+    url: z
+      .string()
+      .refine(
+        (url) =>
+          /^\/api\/media\/private\/[0-9a-f-]{36}$/i.test(url) ||
+          publicResourcePattern.test(url),
+      ),
     alt: z.string().max(500),
     width: z.number().int().positive(),
     height: z.number().int().positive(),
@@ -65,7 +72,7 @@ export const modelPresentation = z
           .max(50 * 1024 * 1024),
       })
       .strict()
-      .refine((r) => r.url === `/api/media/private/${r.id}`),
+      .refine((r) => resourceUrl(r.id, r.url)),
     poster: privateImage.nullable(),
     settings: modelSettings,
   })
@@ -259,7 +266,7 @@ export type ModelPresentationResult =
   | { status: "error"; message: string };
 export class ModelError extends Error {
   constructor(
-    message = "This file cannot be previewed in 3D. Its private download is still available.",
+    message = "This file cannot be previewed in 3D. Details and static images remain available.",
   ) {
     super(message);
     this.name = "ModelError";
@@ -279,3 +286,19 @@ export const modelLimits = {
   textureBytes: 64 * 1024 * 1024,
   canvasPixels: 2_000_000,
 } as const;
+
+// The public boundary requires a single contextual item, with no private URLs.
+export const publicViewerPresentation = viewerPresentation.refine((p) => {
+  const urls: string[] = [];
+  if (p.poster) urls.push(p.poster.url);
+  if (p.schemaVersion === 1) urls.push(p.resource.url);
+  else {
+    if (p.content.rendererVersion !== "box-v1")
+      urls.push(p.content.geometry.url);
+    for (const slot of p.content.slots)
+      if (slot.resource) urls.push(slot.resource.url);
+  }
+  if (!urls.every((url) => publicResourcePattern.test(url))) return false;
+  const items = new Set(urls.map((url) => url.split("/")[5]));
+  return items.size <= 1;
+});

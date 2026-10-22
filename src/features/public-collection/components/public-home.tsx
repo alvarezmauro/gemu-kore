@@ -187,7 +187,13 @@ export function PublicHome({ data }: { data: HomeData }) {
                       {itemLabels[item.type]}
                     </p>
                     <h3 className="font-heading text-xl leading-snug sm:text-2xl">
-                      {item.title}
+                      <Link
+                        href={item.href}
+                        prefetch={false}
+                        className="underline decoration-transparent underline-offset-4 hover:decoration-current focus-visible:decoration-current"
+                      >
+                        {item.title}
+                      </Link>
                     </h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                       {item.context}

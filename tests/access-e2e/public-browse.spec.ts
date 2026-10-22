@@ -28,7 +28,7 @@ test("home and category links browse published copies with the same safe HTML, F
   );
   const objects = page.getByRole("list", { name: "Collection objects" });
   await expect(objects.getByRole("listitem")).toHaveCount(20);
-  await expect(objects.getByRole("link")).toHaveCount(0);
+  await expect(objects.getByRole("link")).toHaveCount(20);
   await page.screenshot({
     path: info.outputPath("public-browse-light.png"),
     fullPage: true,

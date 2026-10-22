@@ -716,7 +716,7 @@ it("keeps whole release playtime overrides, zero estimates and unknown values tr
     /provider|sourceUrl|observedAt|private=token/i,
   );
 });
-it("does not reuse private or approved media URLs while public delivery is unavailable", async () => {
+it("serves exact contextual approved photos only after personal-media enablement and copy re-review", async () => {
   const { context, data } = await seedPublished();
   const image = await db.asset.create({
     data: {
@@ -750,9 +750,11 @@ it("does not reuse private or approved media URLs while public delivery is unava
   await settings(context, { showPersonalPhotos: true });
   await publish(context, data.items[0].id);
   const detail = await getPublicConsole({ id: data.items[0].id });
-  expect(detail.photo).toBeNull();
+  expect(detail.photo?.url).toMatch(
+    new RegExp(`^/api/media/public/items/${data.items[0].id}/personal/`),
+  );
   expect(JSON.stringify(detail)).not.toMatch(
-    /\/api\/media|private-fixture|objectKey|publicDisplayAssetId/,
+    /private-fixture|objectKey|publicDisplayAssetId|api\/media\/private/,
   );
   expect(JSON.stringify(await getPublicCollection())).not.toContain(image.id);
 });
@@ -863,4 +865,396 @@ it("keeps aggregate reads in PostgreSQL and public result pages bounded on 6,012
       "Actual Loops"
     ],
   ).toBe(1);
+});
+
+import { mediaDelivery } from "@/server/services/public-collection/media";
+import {
+  reviewMediaUse,
+  saveMediaUse,
+  reviewComponentUse,
+  saveComponentUse,
+} from "@/server/services/public-collection/media-reviews";
+import { getPublicPresentation } from "@/server/services/public-collection/viewer";
+import { PermissionError, requirePermission } from "@/server/auth/permissions";
+import { fullArtwork, boxFaces } from "@/lib/three/packaging-contracts";
+async function approvedImage(
+  scope: "COLLECTION" | "CATALOG" = "CATALOG",
+  kind: "IMAGE" | "MODEL_3D" = "IMAGE",
+) {
+  const source = await db.asset.create({
+    data: {
+      kind,
+      scope,
+      state: "READY",
+      deliveryClass: "ORIGINAL",
+      storageNamespace: "private-source",
+      objectKey: randomUUID(),
+      mimeType: kind === "IMAGE" ? "image/png" : "model/gltf-binary",
+      width: 80,
+      height: 60,
+      sizeBytes: 100,
+      sha256: "a".repeat(64),
+      rightsStatus: "APPROVED",
+    },
+  });
+  const output = await db.asset.create({
+    data: {
+      kind,
+      scope,
+      deliveryClass: "DISPLAY",
+      storageNamespace: "public-display",
+      objectKey: randomUUID(),
+      mimeType: source.mimeType,
+      width: 80,
+      height: 60,
+      sizeBytes: 100,
+      sha256: "b".repeat(64),
+      rightsStatus: "APPROVED",
+      publicSafe: true,
+      reviewedAt: new Date(),
+      inputs: { create: { sourceAssetId: source.id, purpose: "SANITIZE" } },
+    },
+  });
+  await db.asset.update({ where: { id: output.id }, data: { state: "READY" } });
+  return { source, output };
+}
+it("contextual delivery rechecks exact use, policy, publication, category association and recursive source rights", async () => {
+  const { context, data } = await seedPublished(),
+    { source, output } = await approvedImage();
+  const use = await db.catalogAsset.create({
+    data: {
+      consoleModelId: data.model.id,
+      role: "GALLERY",
+      assetId: source.id,
+      publicDisplayAssetId: output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  const input = {
+    context: "item",
+    itemId: data.items[0].id,
+    kind: "catalog",
+    useId: use.id,
+  };
+  expect((await mediaDelivery(input)).locator.objectKey).toBe(output.objectKey);
+  for (const override of [
+    { itemId: data.items[1].id },
+    { itemId: data.items[3].id },
+    { kind: "personal" },
+    { useId: output.id },
+  ])
+    await expect(
+      mediaDelivery({ ...input, ...override }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await expect(
+    mediaDelivery({ ...input, assetId: source.id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "RESTRICTED" },
+  });
+  await expect(mediaDelivery(input)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  expect(
+    (await getPublicConsole({ id: input.itemId })).gallery?.images,
+  ).toEqual([]);
+  await db.asset.update({
+    where: { id: source.id },
+    data: { rightsStatus: "APPROVED" },
+  });
+  await db.catalogAsset.update({
+    where: { id: use.id },
+    data: { caption: "Changed public caption" },
+  });
+  await expect(mediaDelivery(input)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+  await settings(context, { publicCollectionEnabled: false });
+  await expect(mediaDelivery(input)).rejects.toMatchObject({
+    code: "NOT_FOUND",
+  });
+});
+it("keeps serial uses and unapproved derivatives private and falls back to independently approved catalog photos", async () => {
+  const { context, data } = await seedPublished(),
+    personal = await approvedImage("COLLECTION"),
+    catalog = await approvedImage();
+  await settings(context, { showPersonalPhotos: true });
+  await publish(context, data.items[0].id);
+  const serial = await db.collectionItemMedia.create({
+    data: {
+      collectionItemId: data.items[0].id,
+      type: "SERIAL",
+      assetId: personal.source.id,
+      publicDisplayAssetId: personal.output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+      isPrimary: true,
+    },
+  });
+  const use = await db.catalogAsset.create({
+    data: {
+      consoleModelId: data.model.id,
+      role: "COVER",
+      assetId: catalog.source.id,
+      publicDisplayAssetId: catalog.output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  const result = await getPublicConsole({ id: data.items[0].id });
+  expect(result.gallery?.images).toHaveLength(1);
+  expect(result.photo?.url).toContain(`/catalog/${use.id}`);
+  await expect(
+    mediaDelivery({
+      context: "item",
+      itemId: result.id,
+      kind: "personal",
+      useId: serial.id,
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await expect(
+    mediaDelivery({
+      context: "item",
+      itemId: result.id,
+      kind: "catalog",
+      useId: catalog.source.id,
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  const sibling = await approvedImage();
+  await expect(
+    mediaDelivery({
+      context: "item",
+      itemId: result.id,
+      kind: "catalog",
+      useId: sibling.output.id,
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(JSON.stringify(result)).not.toContain(personal.source.id);
+});
+it("requires current ADMIN and a fresh exact media review, pins the display output and invalidates personal copies", async () => {
+  const { context, data } = await seedPublished(),
+    { source, output } = await approvedImage("COLLECTION");
+  const use = await db.collectionItemMedia.create({
+    data: {
+      collectionItemId: data.items[0].id,
+      assetId: source.id,
+      type: "PHOTO",
+      altText: "A safe console",
+    },
+  });
+  const input = {
+    kind: "personal",
+    useId: use.id,
+    displayAssetId: output.id,
+    approved: true,
+  };
+  for (const role of ["EDITOR", "VIEWER"] as const)
+    await expect(
+      reviewMediaUse((await actor(role)).context, input),
+    ).rejects.toBeInstanceOf(PermissionError);
+  const preview = await reviewMediaUse(context, input);
+  await db.collectionItemMedia.update({
+    where: { id: use.id },
+    data: { caption: "Updated caption" },
+  });
+  await expect(
+    saveMediaUse(context, {
+      ...input,
+      reviewToken: preview.reviewToken,
+      reviewed: true,
+    }),
+  ).rejects.toMatchObject({ code: "STALE" });
+  const fresh = await reviewMediaUse(context, input);
+  await expect(
+    saveMediaUse(context, {
+      ...input,
+      reviewToken: fresh.reviewToken,
+      reviewed: true,
+      approvedById: randomUUID(),
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  await saveMediaUse(context, {
+    ...input,
+    reviewToken: fresh.reviewToken,
+    reviewed: true,
+  });
+  expect(
+    await db.collectionItemMedia.findUnique({ where: { id: use.id } }),
+  ).toMatchObject({ publicApproved: true, publicDisplayAssetId: output.id });
+  expect(
+    await db.collectionItem.findUnique({ where: { id: data.items[0].id } }),
+  ).toMatchObject({ publicationStatus: "PRIVATE" });
+  expect(await db.asset.findUnique({ where: { id: source.id } })).toMatchObject(
+    { publicSafe: false },
+  );
+  await publish(context, data.items[0].id);
+  const unchanged = await reviewMediaUse(context, input);
+  await saveMediaUse(context, {
+    ...input,
+    reviewToken: unchanged.reviewToken,
+    reviewed: true,
+  });
+  expect(
+    (await db.collectionItem.findUnique({ where: { id: data.items[0].id } }))
+      ?.publicationStatus,
+  ).toBe("PUBLISHED");
+  await db.asset.update({
+    where: { id: output.id },
+    data: { rightsStatus: "RESTRICTED" },
+  });
+  const withdraw = { ...input, approved: false },
+    withdrawReview = await reviewMediaUse(context, withdraw);
+  await saveMediaUse(context, {
+    ...withdraw,
+    reviewToken: withdrawReview.reviewToken,
+    reviewed: true,
+  });
+  expect(
+    await db.collectionItemMedia.findUnique({ where: { id: use.id } }),
+  ).toMatchObject({ publicApproved: false, publicDisplayAssetId: null });
+});
+it("delivers whole public models on demand with contextual descriptors and no private resource fallback", async () => {
+  const { data } = await seedPublished(),
+    { source, output } = await approvedImage("CATALOG", "MODEL_3D");
+  const use = await db.catalogAsset.create({
+    data: {
+      consoleModelId: data.model.id,
+      role: "MODEL_3D",
+      assetId: source.id,
+      publicDisplayAssetId: output.id,
+      publicApproved: true,
+      approvedAt: new Date(),
+    },
+  });
+  expect((await getPublicConsole({ id: data.items[0].id })).model).toBe(true);
+  const presentation = await getPublicPresentation({
+    itemId: data.items[0].id,
+  });
+  expect(presentation.schemaVersion).toBe(1);
+  expect(JSON.stringify(presentation)).toContain(`/catalog/${use.id}`);
+  expect(JSON.stringify(presentation)).not.toContain("/api/media/private");
+  await db.asset.update({
+    where: { id: output.id },
+    data: { publicSafe: false },
+  });
+  await expect(
+    getPublicPresentation({ itemId: data.items[0].id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect((await getPublicConsole({ id: data.items[0].id })).model).toBe(false);
+});
+it("requires reviewed component/template revision, exact slot bindings and eligible required artwork for public 3D", async () => {
+  const { context, data } = await seedPublished(),
+    { output } = await approvedImage();
+  const t = await db.packagingTemplate.create({
+    data: {
+      name: "Public synthetic box",
+      slug: randomUUID(),
+      revisionNumber: 1,
+      familyKey: "snes-cardboard",
+      geometryType: "PROCEDURAL_BOX",
+      dimensions: {
+        schemaVersion: 1,
+        widthMm: 180,
+        heightMm: 125,
+        depthMm: 30,
+      },
+      materialSettings: { schemaVersion: 1 },
+      cameraSettings: { preset: "package" },
+      metadata: {
+        schemaVersion: 1,
+        synthetic: true,
+        measurementNote: "Synthetic measurements",
+      },
+      slots: {
+        create: boxFaces.map((f) => ({
+          name: f.name,
+          required: f.required,
+          materialName: `box:${f.name}`,
+          target: { schemaVersion: 1, kind: "PROCEDURAL_FACE", face: f.face },
+        })),
+      },
+    },
+    include: { slots: true },
+  });
+  await db.packagingTemplate.update({
+    where: { id: t.id },
+    data: { status: "READY" },
+  });
+  const c = await db.gameReleaseIncludedItem.create({
+    data: {
+      gameReleaseId: data.release.id,
+      name: "Expected box",
+      kind: "PACKAGING",
+      packagingTemplateId: t.id,
+    },
+  });
+  for (const slot of t.slots)
+    await db.packagingTextureBinding.create({
+      data: {
+        includedItemId: c.id,
+        packagingTemplateId: t.id,
+        packagingTextureSlotId: slot.id,
+        assetId: output.id,
+        transform: fullArtwork,
+      },
+    });
+  const input = { componentId: c.id, approved: true };
+  const review = await reviewComponentUse(context, input);
+  await saveComponentUse(context, {
+    ...input,
+    reviewToken: review.reviewToken,
+    reviewed: true,
+  });
+  const state = await db.gameReleaseIncludedItem.findUnique({
+    where: { id: c.id },
+  });
+  expect(state?.presentationReviewedById).toBe(
+    (await requirePermission(context, "publication.manage")).userId,
+  );
+  expect(state?.presentationReviewedAt).not.toBeNull();
+  const itemId = data.items[1].id;
+  const view = await getPublicPresentation({ itemId, componentId: c.id });
+  expect(view.schemaVersion).toBe(2);
+  expect(JSON.stringify(view)).not.toContain("/api/media/private");
+  await expect(
+    mediaDelivery({
+      context: "component",
+      itemId: data.items[0].id,
+      componentId: c.id,
+      slotKey: "FRONT",
+    }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(
+    (
+      await mediaDelivery({
+        context: "component",
+        itemId,
+        componentId: c.id,
+        slotKey: "FRONT",
+      })
+    ).sizeBytes,
+  ).toBe(100);
+  await db.asset.update({
+    where: { id: output.id },
+    data: { rightsStatus: "RESTRICTED" },
+  });
+  await expect(
+    getPublicPresentation({ itemId, componentId: c.id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  await db.asset.update({
+    where: { id: output.id },
+    data: { rightsStatus: "APPROVED" },
+  });
+  await db.packagingTextureBinding.deleteMany({
+    where: { includedItemId: c.id, packagingTextureSlotId: t.slots[0].id },
+  });
+  expect(
+    (await db.gameReleaseIncludedItem.findUnique({ where: { id: c.id } }))
+      ?.presentationApproved,
+  ).toBe(false);
+  await expect(
+    getPublicPresentation({ itemId, componentId: c.id }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
 });

@@ -22,11 +22,11 @@ const data: HomeData = {
     },
   ],
 };
-it("renders complete static exhibit text and real counts without exposing unavailable destinations or media", () => {
+it("renders complete static exhibit text and real counts with public detail links and no unapproved media", () => {
   const html = renderToStaticMarkup(<PublicHome data={data} />);
   expect(html).toContain("A physical game");
   expect(html).toContain("Objects worth keeping.");
-  expect(html).not.toContain('href="/collection/games/');
+  expect(html).toContain('href="/collection/games/public-copy"');
   expect(html).not.toContain("/api/media");
   expect(html).not.toContain("<canvas");
   render(<PublicHome data={data} />);

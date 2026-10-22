@@ -29,6 +29,11 @@ const fields = [
     "Notes on approved copies become public text.",
   ],
   [
+    "showPersonalPhotos",
+    "Show approved personal media",
+    "Individually reviewed photos and custom models may appear on published copies. Widening this setting returns affected copies to private.",
+  ],
+  [
     "showDefects",
     "Show defects",
     "Includes defect titles, descriptions, severity and status.",
@@ -47,7 +52,7 @@ export function PublicationSettingsForm({
     showLocations: initial.showLocations,
     showNotes: initial.showNotes,
     showDefects: initial.showDefects,
-    showPersonalPhotos: false,
+    showPersonalPhotos: initial.showPersonalPhotos,
     allowSearchEngineIndexing: false,
   });
   const [review, setReview] = useState<SettingsReview | null>(null);
@@ -142,8 +147,7 @@ export function PublicationSettingsForm({
           </label>
         ))}
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Personal photos and search engine indexing are unavailable. Photos
-          stay hidden and search engines are asked not to index the collection.
+          Search engines are asked not to index the collection.
         </p>
       </fieldset>
       {review && (

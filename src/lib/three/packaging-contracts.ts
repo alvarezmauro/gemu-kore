@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { resourceUrl } from "./resource-url";
 
 // Explicit supported contracts, never inferred from a release/platform name.
 // Dimensions and variant suitability still require curator evidence.
@@ -83,7 +84,7 @@ export const artworkResource = z
     width: z.number().int().positive().max(packagingLimits.edge),
     height: z.number().int().positive().max(packagingLimits.edge),
   })
-  .refine((r) => r.url === `/api/media/private/${r.id}`);
+  .refine((r) => resourceUrl(r.id, r.url));
 export type ArtworkResource = z.infer<typeof artworkResource>;
 
 // The geometry uses physical aspect; output stays within the preview/source budget.
@@ -214,6 +215,6 @@ export const packageModelResource = z
       .positive()
       .max(8 * 1024 * 1024),
   })
-  .refine((r) => r.url === `/api/media/private/${r.id}`);
+  .refine((r) => resourceUrl(r.id, r.url));
 
 export type PackageModelResource = z.infer<typeof packageModelResource>;

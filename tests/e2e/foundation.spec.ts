@@ -69,3 +69,31 @@ test("public browse failure preserves the requested search and its API returns a
     error: "The collection is unavailable right now.",
   });
 });
+
+test("public detail and media failures keep generic recovery without exposing database diagnostics", async ({
+  page,
+  request,
+}) => {
+  const id = "11111111-1111-4111-8111-111111111111",
+    url = `/collection/games/${id}`;
+  const response = await page.goto(url);
+  expect(response?.headers()["cache-control"]).toContain("no-store");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "The collection is unavailable right now.",
+  );
+  await expect(
+    page.getByRole("link", { name: "Try again", exact: true }),
+  ).toHaveAttribute("href", url);
+  expect(await response!.text()).not.toMatch(/postgresql:\/\/|gemukore_e2e/);
+  for (const path of [
+    `/api/media/public/items/${id}/catalog/${id}`,
+    `/api/collection/public/${id}/presentation`,
+  ]) {
+    const result = await request.get(path);
+    expect(result.status()).toBe(503);
+    expect(result.headers()["cache-control"]).toBe("no-store");
+    expect(await result.json()).toEqual({
+      error: "The collection is unavailable right now.",
+    });
+  }
+});

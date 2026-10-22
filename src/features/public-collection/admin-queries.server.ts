@@ -38,7 +38,19 @@ export async function getPublicationPageData(input: unknown) {
       }),
       item ? getItemPublicationReview(context, { id: item }) : null,
     ]);
-    return { status: "authorized" as const, settings, copies, selected, q };
+    const media = item
+      ? await (
+          await import("@/server/services/public-collection/media-reviews")
+        ).mediaReviewChoices(context, item)
+      : null;
+    return {
+      status: "authorized" as const,
+      settings,
+      copies,
+      selected,
+      q,
+      media,
+    };
   } catch (error) {
     if (error instanceof PrivateAccessError) return { status: error.code };
     if (error instanceof PermissionError) return { status: "DENIED" as const };

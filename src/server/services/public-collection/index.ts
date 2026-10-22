@@ -23,6 +23,8 @@ import {
 import type { TransactionClient } from "@/server/db/transaction";
 import { publicRead, enabled, count, PublicCollectionError } from "./common";
 import { detailProjection } from "./presentation";
+import { publicItemMedia } from "./media";
+import { publicComponentViews } from "./components";
 export { PublicCollectionError } from "./common";
 
 export function publicCard(row: repository.CardRow): PublicCard {
@@ -124,7 +126,13 @@ function detail(type: PublicItemType, input: unknown) {
     if (!parsed.success) throw new PublicCollectionError("NOT_FOUND");
     const row = await findPublicDetail(parsed.data.id, type, policy, tx);
     if (!row) throw new PublicCollectionError("NOT_FOUND");
-    return detailProjection(row, policy, tx);
+    const result = await detailProjection(row, policy, tx);
+    const media = await publicItemMedia(row.id, policy, tx);
+    result.photo = media.images[0] ?? null;
+    result.gallery = { images: media.images, hasMore: media.hasMore };
+    result.model = Boolean(media.model);
+    result.components = await publicComponentViews(row.id, tx);
+    return result;
   });
 }
 export const getPublicConsole = (input: unknown) => detail("CONSOLE", input);

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getPublicationPageData } from "@/features/public-collection/admin-queries.server";
 import { PublicationSettingsForm } from "@/features/public-collection/components/publication-settings";
+import { MediaPublication } from "@/features/public-collection/components/media-publication";
 import { ItemPublication } from "@/features/public-collection/components/item-publication";
 
 export const dynamic = "force-dynamic";
@@ -159,6 +160,12 @@ export default async function PublicSettingsPage({
             <ItemPublication
               key={`${result.selected.item.id}-${result.selected.revision}-${result.selected.settingsRevision}`}
               initial={result.selected}
+            />
+          )}
+          {result.media && (
+            <MediaPublication
+              key={result.selected?.reviewToken}
+              choices={result.media}
             />
           )}
           <noscript>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   viewerPresentation,
+  publicViewerPresentation,
   modelLimits,
   ModelError,
   type ViewerPresentation,
@@ -59,8 +60,10 @@ export function ModelViewer({
   poster = null,
   available = true,
   load,
+  audience = "private",
 }: {
   title: string;
+  audience?: "private" | "public";
   source: string;
   poster?: Poster | null;
   available?: boolean;
@@ -119,7 +122,9 @@ export function ModelViewer({
         setError(result.message);
         return;
       }
-      const parsed = viewerPresentation.safeParse(result.data);
+      const parsed = (
+        audience === "public" ? publicViewerPresentation : viewerPresentation
+      ).safeParse(result.data);
       if (!parsed.success) {
         setError(
           "This model preview is unavailable. Refresh before trying again.",

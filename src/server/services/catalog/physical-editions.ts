@@ -122,7 +122,7 @@ export function boxTemplateDto(
     asset.state === "READY" &&
     asset.scope === "CATALOG" &&
     asset.kind === "MODEL_3D" &&
-    asset.deliveryClass === "ORIGINAL"
+    ["ORIGINAL", "DISPLAY"].includes(asset.deliveryClass)
       ? packageModelResource.safeParse({
           id: asset.id,
           url: `/api/media/private/${asset.id}`,
