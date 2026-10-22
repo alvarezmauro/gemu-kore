@@ -45,6 +45,28 @@ The initial examples validate accepted/rejected database URLs and check the star
 
 Synchronous components can be rendered by React Testing Library. Exercise async Server Components through Playwright; do not change them into Client Components for the test runner. No fake production authorization or server/client bypass is added to the application.
 
+## Task 19.1 unit coverage expansion
+
+Task 19.1 adds 67 cases across six modules without dedicated unit suites. Assertions use established product contracts and explicit expected results; production logic, dependencies, runner configuration and timeouts are unchanged.
+
+| Contract                           | Added coverage                                                                                                                                                                                                                                                                           | Tests                                                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Shared copy observations           | Unknown versus known box state, leading serial zeroes, retained manual line breaks, trimmed field limits, twenty structured defects and rejected authority/repair fields.                                                                                                                | [Copy validation](../../src/features/collection/copy-validation.test.ts)                        |
+| Publication review intent          | Separate personal/catalog/site/component identities, explicit approve/withdraw booleans, required review evidence and rejected actor/rights/settings injection. Tokens remain opaque here; services verify freshness and authorization separately.                                       | [Media review validation](../../src/features/public-collection/media-review-validation.test.ts) |
+| Public filter links                | Remove exactly one filter, retain all other controls and Unicode query text, reset paging, preserve fixed category routes and use safe labels when public facets lack the selected option.                                                                                               | [Browse presentation](../../src/features/public-collection/browse-presentation.test.ts)         |
+| Public metadata adapter            | Await request context, map only admitted canonical fields, explicitly clear social images/canonical output, retain noindex and sanitize service failures.                                                                                                                                | [Metadata adapter](../../src/features/public-collection/seo.server.test.ts)                     |
+| Enrichment value/freshness helpers | Object-key order independence, meaningful array/scalar changes, serialized UTF-8 byte limits and safe domain/permission/error propagation.                                                                                                                                               | [Enrichment helpers](../../src/server/services/enrichment/common.test.ts)                       |
+| Enrichment proposal preparation    | Preserve manual input, append aliases/references/developers without loss or duplicates, omit no-ops, retain scope and source evidence, refuse unsupported/missing evidence or unchosen trailers, and replace a whole playtime estimate set without filling unknown values from old data. | [Proposal preparation](../../src/server/services/enrichment/proposals.test.ts)                  |
+
+The existing explicit ADMIN/EDITOR/VIEWER permission matrix and fresh-login boundaries continue to run in the full suite. The enrichment cases use a synthetic normalized fixture validated against the neutral metadata contract; database construction is replaced with a throwing test stub. Metadata adapter tests mock the public service and Next.js request-context entry point, so they verify output mapping rather than claim database authorization or framework rendering coverage. No database, object storage, live provider, development server or browser is started by these cases. Existing integration/browser evidence remains separate; their expansion belongs to Tasks 19.2–19.4.
+
+Run the focused additions or the entire suite:
+
+```sh
+pnpm exec vitest run src/features/collection/copy-validation.test.ts src/features/public-collection/media-review-validation.test.ts src/features/public-collection/browse-presentation.test.ts src/features/public-collection/seo.server.test.ts src/server/services/enrichment/common.test.ts src/server/services/enrichment/proposals.test.ts --maxWorkers=1
+pnpm exec vitest run --maxWorkers=1
+```
+
 ## Database integration tests
 
 `vitest.integration.config.mts` includes only `tests/integration/**/*.test.ts`. Its global setup starts a uniquely named PostgreSQL container using the same pinned image as development. Each run uses:
@@ -56,7 +78,7 @@ Synchronous components can be rendered by React Testing Library. Exercise async 
 
 The example checks the actual application database health function and transaction helper. A test-only probe table verifies both committed writes and rollback on failure. It is not a domain model and requires no application migration. The database pool is disconnected afterward. Integration files run serially against that run's database; future tests must clean up their own fixtures.
 
-Only the Node integration runners map `server-only` to an empty test helper so server modules can run outside Next.js. The unit/component runner keeps the real module by default; storage-specific unit files explicitly mock its marker to test pure helpers/configuration. Application builds retain the real server-only protection.
+Only the Node integration runners map `server-only` to an empty test helper so server modules can run outside Next.js. The unit/component runner keeps the real module by default; individual server-helper unit files explicitly mock its marker locally and replace external boundaries as needed. Application builds retain the real server-only protection.
 
 Normal completion, failed assertions and setup failures after container creation remove the test container. A forcibly killed runner or stopped Docker engine can prevent cleanup. Inspect `docker ps -a --filter label=gemukore.test=true` and remove only the abandoned `gemukore-test-…` container by its exact name. Never reset the development database to run tests.
 
