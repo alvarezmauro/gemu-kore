@@ -47,6 +47,10 @@ The [production security review](docs/architecture/PRODUCTION_SECURITY_REVIEW.md
 records hardening, verification and unresolved image advisories that block release
 approval.
 
+The [whole repository review](docs/architecture/WHOLE_REPOSITORY_REVIEW.md)
+records the final architecture assessment and scoped remediation handoff for
+Task 23.2. Review completion does not grant production approval.
+
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
 ```sh

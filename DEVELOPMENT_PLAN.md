@@ -2629,6 +2629,8 @@ Status: **Completed 2026-10-23 — review complete; production approval withheld
 
 ## TASK 23.1 — Whole Repository Review
 
+Status: **Completed 2026-10-23 — review complete; production approval withheld.** Reviewed domain/schema integrity, transactions, authorization, public privacy, Next.js boundaries, uploads/storage, 3D resources, enrichment/providers, performance, deployment and recovery at application commit `e81b4ea`. The [Whole Repository Review](docs/architecture/WHOLE_REPOSITORY_REVIEW.md) records two carried High artifact assessments, three Medium findings and one lower-exposure dependency observation. Newly reproduced: the database lineage eligibility guard times out at ten seconds on a 53-node shared-source graph that application admission accepts in about 134 ms. New source-confirmed gap: structured, redacted operational events required by the specification are missing. All 1,479 unit/component, 678 PostgreSQL, 45 asset-pipeline, 32 storage and three backup cases pass; all 54 distinct critical desktop/mobile cases pass across the initial run and a serialized focused rerun after a generated-client fixture collision. Lint, types, production builds, schema/seeds, renderer bundle limits, formatting and documentation checks pass. The workspace security audit still reports one High tooling advisory; earlier proxy/storage/image assessments remain open. Only review documentation and links changed; no application, dependency, configuration, schema or migration changes. Task 23.2 applies the review, only when requested.
+
 MODEL:
 
 `GPT-6 Astra`
