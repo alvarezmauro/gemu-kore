@@ -145,6 +145,8 @@ it("returns an honest empty collection without creating placeholder copies", asy
   const { context } = await actor();
   expect(await getDefectManagement(context)).toEqual({
     items: [],
+    hasMoreCopies: false,
+    copyPage: 0,
     selected: null,
     defects: [],
     canManage: true,

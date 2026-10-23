@@ -1,4 +1,5 @@
 import "server-only";
+import { managementPage } from "@/features/collection/copy-choices";
 import type { MediaItem, Photo, PhotoType } from "@/features/media/contracts";
 import { mediaItemId, mediaMutation } from "@/features/media/validation";
 import type { PrivateAccessContext } from "../../auth/access";
@@ -79,20 +80,30 @@ function photoSummary(
 export async function getMediaManagement(
   context: PrivateAccessContext,
   itemId?: unknown,
+  page: unknown = 0,
 ) {
-  const current = await requirePermission(context, "private.read");
+  await requirePermission(context, "private.read");
   if (itemId !== undefined && !mediaItemId.safeParse(itemId).success)
     throw new MediaError("NOT_FOUND");
+  const parsedPage = managementPage.safeParse(page);
+  if (!parsedPage.success) throw new MediaError("NOT_FOUND");
   try {
     return await withTransaction(
       async (tx) => {
-        const items = (await listCollectionItemOptions(tx)).map(itemOption);
+        const current = await requirePermission(context, "private.read", tx);
+        const choices = await listCollectionItemOptions(tx, {
+          query: "",
+          page: parsedPage.data,
+        });
+        const items = choices.slice(0, 25).map(itemOption);
         const id = itemId === undefined ? items[0]?.id : (itemId as string);
         const item = id ? await findCollectionItem(id, tx) : null;
         if (id && !item) throw new MediaError("NOT_FOUND");
         const rows = item ? await listItemPhotos(item.id, tx) : [];
         return {
           items,
+          copyPage: parsedPage.data,
+          hasMoreCopies: choices.length > 25,
           selected: item
             ? ({
                 ...itemOption(item),

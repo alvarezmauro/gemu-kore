@@ -1,4 +1,5 @@
 import "server-only";
+import { managementPage } from "@/features/collection/copy-choices";
 import { itemOption } from "./items";
 
 import type { DefectSummary } from "@/features/defects/contracts";
@@ -60,17 +61,27 @@ function defectSummary(
 export async function getDefectManagement(
   context: PrivateAccessContext,
   itemId?: unknown,
+  page: unknown = 0,
 ) {
-  const current = await requirePermission(context, "private.read");
+  await requirePermission(context, "private.read");
   if (itemId !== undefined && !defectItemId.safeParse(itemId).success)
     throw new DefectError("NOT_FOUND");
+  const parsedPage = managementPage.safeParse(page);
+  if (!parsedPage.success) throw new DefectError("NOT_FOUND");
   try {
     // One snapshot keeps the aggregate revision aligned with its defect list.
     return await withTransaction(
       async (transaction) => {
-        const items = (await listDefectItemOptions(transaction)).map(
-          itemOption,
+        const current = await requirePermission(
+          context,
+          "private.read",
+          transaction,
         );
+        const rows = await listDefectItemOptions(transaction, {
+          query: "",
+          page: parsedPage.data,
+        });
+        const items = rows.slice(0, 25).map(itemOption);
         const selectedId =
           itemId === undefined ? items[0]?.id : (itemId as string);
         const item = selectedId
@@ -79,6 +90,8 @@ export async function getDefectManagement(
         if (selectedId && !item) throw new DefectError("NOT_FOUND");
         return {
           items,
+          copyPage: parsedPage.data,
+          hasMoreCopies: rows.length > 25,
           selected: item
             ? { ...itemOption(item), revision: item.revision }
             : null,

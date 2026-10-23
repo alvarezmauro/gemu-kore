@@ -1,5 +1,7 @@
 # Application performance investigation — Task 21.1
 
+Task 21.1 baseline retained below. The implementation and subsequent verification are recorded in [Task 21.2 — performance improvements](APPLICATION_PERFORMANCE_IMPROVEMENTS.md).
+
 Investigation date: 2026-10-22. Source base: `956782d`; local changes contain diagnostic tools and evidence only. Requirements: `PROJECT_SPEC.md` §§101–107 and 117–120. Implementation of findings belongs to Task 21.2.
 
 ## Findings and implementation order

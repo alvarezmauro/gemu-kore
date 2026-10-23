@@ -16,6 +16,7 @@ export async function componentPresentation(
   itemId: string,
   c: Component,
   tx: TransactionClient,
+  admit = assetAdmission(tx),
 ): Promise<ViewerPresentation | null> {
   const packaging = c.kind === "PACKAGING",
     t = packaging
@@ -29,8 +30,16 @@ export async function componentPresentation(
     t.revision !== c.presentationTemplateRevision
   )
     return null;
-  const admit = assetAdmission(tx),
-    base = `/api/media/public/components/${itemId}/${c.id}`;
+  const base = `/api/media/public/components/${itemId}/${c.id}`;
+  const bindings = packaging ? c.packagingBindings : c.physicalMediaBindings;
+  const artwork = new Map(
+    bindings.map((b) => [b.assetId, admit(b.assetId, "IMAGE")]),
+  );
+  const geometryAdmission = t.baseModelAssetId
+    ? admit(t.baseModelAssetId, "MODEL_3D")
+    : Promise.resolve(null);
+  // Await the entire bounded set even if a required slot is invalid.
+  await Promise.all([...artwork.values(), geometryAdmission]);
   const resources = new Map<string, { id: string; url: string }>();
   const slots = [];
   for (const s of t.slots) {
@@ -39,7 +48,7 @@ export async function componentPresentation(
       : c.physicalMediaBindings.find(
           (b) => b.physicalMediaTextureSlotId === s.id,
         );
-    const a = b ? await admit(b.assetId, "IMAGE") : null;
+    const a = b ? await artwork.get(b.assetId)! : null;
     const valid =
       a &&
       a.scope === "CATALOG" &&
@@ -82,9 +91,7 @@ export async function componentPresentation(
       transform: b?.transform ?? fullArtwork,
     });
   }
-  const geometry = t.baseModelAssetId
-    ? await admit(t.baseModelAssetId, "MODEL_3D")
-    : null;
+  const geometry = await geometryAdmission;
   if (t.geometryType === "GLB" && (!geometry || geometry.scope !== "CATALOG"))
     return null;
   const m = z.object({ synthetic: z.boolean() }).safeParse(t.metadata);
@@ -143,10 +150,17 @@ export async function publicComponentViews(
   const item = await admittedItem(itemId, tx);
   if (item.type !== "GAME" || !item.ownedGame) return [];
   const views: { id: string; name: string }[] = [];
-  for (const c of await publicComponents(item.ownedGame.gameReleaseId, tx)) {
-    if (await componentPresentation(itemId, c, tx))
-      views.push({ id: c.id, name: c.name });
-    if (views.length === 12) break;
+  const components = await publicComponents(item.ownedGame.gameReleaseId, tx);
+  const admit = assetAdmission(tx);
+  for (let start = 0; start < components.length; start += 12) {
+    const batch = components.slice(start, start + 12);
+    const presentations = await Promise.all(
+      batch.map((c) => componentPresentation(itemId, c, tx, admit)),
+    );
+    for (const [index, c] of batch.entries()) {
+      if (presentations[index]) views.push({ id: c.id, name: c.name });
+      if (views.length === 12) return views;
+    }
   }
   return views;
 }
@@ -160,7 +174,10 @@ export async function resolveComponentAsset(
   const c = (await publicComponents(item.ownedGame.gameReleaseId, tx)).find(
     (c) => c.id === input.componentId,
   );
-  const presentation = c ? await componentPresentation(item.id, c, tx) : null;
+  const admit = assetAdmission(tx);
+  const presentation = c
+    ? await componentPresentation(item.id, c, tx, admit)
+    : null;
   if (!presentation || presentation.schemaVersion !== 2) return null;
   const content = presentation.content;
   const resource =
@@ -183,9 +200,6 @@ export async function resolveComponentAsset(
   const assetId =
     input.slotKey === "geometry" ? template.baseModelAssetId : binding?.assetId;
   return assetId
-    ? assetAdmission(tx)(
-        assetId,
-        input.slotKey === "geometry" ? "MODEL_3D" : "IMAGE",
-      )
+    ? admit(assetId, input.slotKey === "geometry" ? "MODEL_3D" : "IMAGE")
     : null;
 }

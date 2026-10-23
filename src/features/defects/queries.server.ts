@@ -5,13 +5,14 @@ import {
   DefectError,
   getDefectManagement,
 } from "@/server/services/collection/defects";
-export async function getDefectsPageData(itemId?: unknown) {
+export async function getDefectsPageData(itemId?: unknown, page?: unknown) {
   try {
     return {
       status: "authorized" as const,
       ...(await getDefectManagement(
         await requirePrivateAccess(await headers()),
         itemId,
+        page,
       )),
     };
   } catch (error) {

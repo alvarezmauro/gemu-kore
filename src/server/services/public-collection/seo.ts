@@ -53,16 +53,23 @@ export async function seoImage(itemId: string, tx: TransactionClient) {
   const item = await admittedItem(itemId, tx),
     admit = assetAdmission(tx);
   // Metadata deliberately excludes personal media, captions and alternative text.
-  for (const use of await media.itemMediaUses(item, false, tx)) {
-    if (!use.image || use.kind !== "catalog" || !use.publicDisplayAssetId)
-      continue;
-    const a = await admit(use.publicDisplayAssetId, "IMAGE");
-    if (a?.scope === "CATALOG")
-      return {
-        path: `/api/media/public/seo/${itemId}/${use.id}`,
-        width: a.width!,
-        height: a.height!,
-      };
+  const uses = (await media.itemMediaUses(item, false, tx)).filter(
+    (use) => use.image && use.kind === "catalog" && use.publicDisplayAssetId,
+  );
+  for (let start = 0; start < uses.length; start += 32) {
+    const batch = uses.slice(start, start + 32);
+    const assets = await Promise.all(
+      batch.map((use) => admit(use.publicDisplayAssetId!, "IMAGE")),
+    );
+    for (const [index, use] of batch.entries()) {
+      const a = assets[index];
+      if (a?.scope === "CATALOG")
+        return {
+          path: `/api/media/public/seo/${itemId}/${use.id}`,
+          width: a.width!,
+          height: a.height!,
+        };
+    }
   }
   return null;
 }

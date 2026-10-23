@@ -670,9 +670,30 @@ it("measures complete search plans with representative owned graphs and index-ba
     await withTransaction(async (tx) => {
       await configureSearch(tx);
       const terms = await parseSearchTerms(q, tx);
-      await tx.$queryRaw(
+      const filteredPlans = await tx.$queryRaw<
+        { "QUERY PLAN": { Plan: Plan }[] }[]
+      >(
         Prisma.sql`EXPLAIN(ANALYZE,BUFFERS,FORMAT JSON) ${filteredPrivateSearchQuery({ q, limit: 20, offset: 0 }, terms, { type: "game", sort: "year-desc" })}`,
       );
+      const reprocessedRows = (node: Plan): number => {
+        const scan = node as Plan & {
+          "CTE Name"?: string;
+          "Actual Rows"?: number;
+          "Actual Loops"?: number;
+          "Rows Removed by Join Filter"?: number;
+        };
+        return Math.max(
+          ["titles", "controls"].includes(scan["CTE Name"] ?? "")
+            ? (scan["Actual Rows"] ?? 0) * (scan["Actual Loops"] ?? 0)
+            : 0,
+          (scan["Rows Removed by Join Filter"] ?? 0) *
+            (scan["Actual Loops"] ?? 1),
+          ...(node.Plans ?? []).map(reprocessedRows),
+        );
+      };
+      expect(
+        reprocessedRows(filteredPlans[0]["QUERY PLAN"][0].Plan),
+      ).toBeLessThan(100_000);
     });
     const palette = await searchPrivatePalette(context, { q });
     expect(palette.collection).toEqual(result);

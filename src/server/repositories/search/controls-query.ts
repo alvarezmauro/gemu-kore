@@ -78,19 +78,19 @@ export function controlRows(input: ControlParameters, facts = false) {
   ), f AS MATERIALIZED (
     SELECT o."collectionItemId" id,ARRAY[p.slug] platforms,array_remove(ARRAY[c.slug],NULL) manufacturers,ARRAY[]::text[] publishers,ARRAY[]::text[] producers,m.slug model,
     ARRAY(SELECT x.slug FROM console_model_region r JOIN region x ON x.id=r."regionId" WHERE r."consoleModelId"=m.id) regions,
-    m."releaseYear" AS "year",NULL::uuid AS "release",NULL::text edition,p.name "platformLabel",NULL::text "publisherLabel"
+    m."releaseYear" AS "year",NULL::uuid AS "release",NULL::text edition,p.name "platformLabel",NULL::text "publisherLabel",p.name title
     FROM owned_console o JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId" LEFT JOIN company c ON c.id=m."manufacturerId"
     UNION ALL SELECT o."collectionItemId",ARRAY[p.slug],ARRAY[]::text[],
     ARRAY(SELECT c.slug FROM game_release_company rc JOIN company c ON c.id=rc."companyId" WHERE rc."gameReleaseId"=g.id AND rc.role='PUBLISHER' ${publisherScope}),ARRAY[]::text[],NULL,
     ARRAY(SELECT x.slug FROM game_release_region r JOIN region x ON x.id=r."regionId" WHERE r."gameReleaseId"=g.id),${year},g.id,g."editionType"::text,p.name,
-    (SELECT string_agg(t.name,', ' ORDER BY lower(normalize(t.name,NFC)),t.id) FROM (SELECT DISTINCT c.id,c.name FROM game_release_company rc JOIN company c ON c.id=rc."companyId" WHERE rc."gameReleaseId"=g.id AND rc.role='PUBLISHER' ${publisherScope})t)
-    FROM owned_game o JOIN game_release g ON g.id=o."gameReleaseId" JOIN console_platform p ON p.id=g."platformId"
+    (SELECT string_agg(t.name,', ' ORDER BY lower(normalize(t.name,NFC)),t.id) FROM (SELECT DISTINCT c.id,c.name FROM game_release_company rc JOIN company c ON c.id=rc."companyId" WHERE rc."gameReleaseId"=g.id AND rc.role='PUBLISHER' ${publisherScope})t),gg.name
+    FROM owned_game o JOIN game_release g ON g.id=o."gameReleaseId" JOIN game gg ON gg.id=g."gameId" JOIN console_platform p ON p.id=g."platformId"
     UNION ALL SELECT o."collectionItemId",
     ARRAY(SELECT p.slug FROM accessory_variant_platform ap JOIN console_platform p ON p.id=ap."platformId" WHERE ap."accessoryVariantId"=v.id),ARRAY[]::text[],ARRAY[]::text[],array_remove(ARRAY[pc.slug,vc.slug],NULL),NULL,
     ARRAY(SELECT x.slug FROM accessory_variant_region r JOIN region x ON x.id=r."regionId" WHERE r."accessoryVariantId"=v.id),v."releaseYear",NULL,NULL,
-    (SELECT string_agg(p.name,', ' ORDER BY lower(normalize(p.name,NFC)),p.id) FROM accessory_variant_platform ap JOIN console_platform p ON p.id=ap."platformId" WHERE ap."accessoryVariantId"=v.id),NULL
+    (SELECT string_agg(p.name,', ' ORDER BY lower(normalize(p.name,NFC)),p.id) FROM accessory_variant_platform ap JOIN console_platform p ON p.id=ap."platformId" WHERE ap."accessoryVariantId"=v.id),NULL,a.name
     FROM owned_accessory o JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId" LEFT JOIN company pc ON pc.id=a."producerId" LEFT JOIN company vc ON vc.id=v."producerId"
-  ) SELECT ${facts ? Prisma.sql`f.*` : Prisma.sql`f.id,f.year,f."platformLabel",f."publisherLabel"`},c."createdAt",lp.path "locationLabel",lp.visited "locationIds"
+  ) SELECT ${facts ? Prisma.sql`f.*` : Prisma.sql`f.id,f.title,f.year,f."platformLabel",f."publisherLabel"`},c.type,c."createdAt",lp.path "locationLabel",lp.visited "locationIds"
   FROM f JOIN collection_item c ON c.id=f.id LEFT JOIN location_paths lp ON lp.id=c."locationId"
   ${conditions.length ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}` : Prisma.empty}`;
 }
@@ -101,13 +101,13 @@ export function controlOrder(sort: ControlParameters["sort"]) {
     relevance: Prisma.sql`m.whole DESC,m.class,m.priority,m.strength DESC,${title}`,
     "name-asc": Prisma.sql`${title} ASC`,
     "name-desc": Prisma.sql`${title} DESC`,
-    newest: Prisma.sql`x."createdAt" DESC`,
-    oldest: Prisma.sql`x."createdAt" ASC`,
-    "year-asc": Prisma.sql`x.year ASC NULLS LAST,${title}`,
-    "year-desc": Prisma.sql`x.year DESC NULLS LAST,${title}`,
-    location: Prisma.sql`lower(normalize(x."locationLabel",NFC)) ASC NULLS LAST,${title}`,
-    platform: Prisma.sql`lower(normalize(x."platformLabel",NFC)) ASC NULLS LAST,${title}`,
-    publisher: Prisma.sql`lower(normalize(x."publisherLabel",NFC)) ASC NULLS LAST,${title}`,
+    newest: Prisma.sql`i."createdAt" DESC`,
+    oldest: Prisma.sql`i."createdAt" ASC`,
+    "year-asc": Prisma.sql`i.year ASC NULLS LAST,${title}`,
+    "year-desc": Prisma.sql`i.year DESC NULLS LAST,${title}`,
+    location: Prisma.sql`lower(normalize(i."locationLabel",NFC)) ASC NULLS LAST,${title}`,
+    platform: Prisma.sql`lower(normalize(i."platformLabel",NFC)) ASC NULLS LAST,${title}`,
+    publisher: Prisma.sql`lower(normalize(i."publisherLabel",NFC)) ASC NULLS LAST,${title}`,
   };
   return Prisma.sql`${keys[sort]},i.id`;
 }

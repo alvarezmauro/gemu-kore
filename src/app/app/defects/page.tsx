@@ -3,8 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ApplicationShell } from "@/components/layout/application-shell";
 import { PageContainer } from "@/components/layout/page-container";
 import { PageHeader } from "@/components/layout/page-header";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { CopySelector } from "@/features/collection/components/copy-selector";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
@@ -16,9 +15,13 @@ export const metadata = { title: "Defects | GemuKore" };
 export default async function DefectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ itemId?: string | string[] }>;
+  searchParams: Promise<{
+    itemId?: string | string[];
+    copyPage?: string | string[];
+  }>;
 }) {
-  const result = await getDefectsPageData((await searchParams).itemId);
+  const params = await searchParams;
+  const result = await getDefectsPageData(params.itemId, params.copyPage);
   if (result.status !== "authorized") {
     if (result.status === "UNAUTHENTICATED") redirect("/login");
     if (result.status === "DENIED") redirect("/access-denied");
@@ -57,30 +60,17 @@ export default async function DefectsPage({
         />
         {result.selected ? (
           <>
-            <form
+            <CopySelector
+              key={result.selected.id}
               action="/app/defects"
-              method="get"
-              className="max-w-2xl space-y-2"
-            >
-              <Label htmlFor="defect-copy">Collection copy</Label>
-              <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
-                <select
-                  className="min-h-12 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-3 text-base focus-visible:outline-2 focus-visible:outline-ring"
-                  id="defect-copy"
-                  name="itemId"
-                  defaultValue={result.selected.id}
-                >
-                  {result.items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-                <Button type="submit" variant="outline">
-                  View copy
-                </Button>
-              </div>
-            </form>
+              id="defect-copy"
+              initial={{
+                items: result.items,
+                page: result.copyPage,
+                hasMore: result.hasMoreCopies,
+              }}
+              selected={result.selected}
+            />
             <DefectManager
               key={result.selected.id}
               item={result.selected}

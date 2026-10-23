@@ -127,7 +127,7 @@ async function main() {
     boundaries,
   };
   await writeFile(
-    "docs/performance/APPLICATION_BROWSER_EVIDENCE.json",
+    process.argv[3] ?? "docs/performance/APPLICATION_BROWSER_EVIDENCE.json",
     JSON.stringify(output, null, 2) + "\n",
   );
   console.info("Recorded application browser and build evidence.");

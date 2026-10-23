@@ -883,7 +883,20 @@ async function main() {
           ownedConsole: { create: { consoleModelId: model.id } },
         },
       });
+      let lastId = second.id;
+      if (argument === "paged") {
+        for (let n = 0; n < 56; n++) {
+          const copy = await database.collectionItem.create({
+            data: {
+              type: "GAME",
+              ownedGame: { create: { gameReleaseId: release.id } },
+            },
+          });
+          lastId = copy.id;
+        }
+      }
       result = {
+        lastId,
         firstId: first.id,
         secondId: second.id,
         consoleId: consoleCopy.id,

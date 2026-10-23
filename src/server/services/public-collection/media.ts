@@ -5,15 +5,52 @@ import type { Policy } from "@/server/repositories/public-collection/policy";
 import * as repository from "@/server/repositories/public-collection/media";
 import { enabled, publicRead, PublicCollectionError } from "./common";
 import type { PublicImage } from "@/features/public-collection/contracts";
-export type PublicAsset = NonNullable<
-  Awaited<ReturnType<typeof repository.assetNode>>
->;
+export type PublicAsset = Awaited<
+  ReturnType<typeof repository.assetNodes>
+>[number];
 // Fixed lineage is immutable once ready. Still check current rights at EVERY
 // request; source originals need rights, not a public content approval.
 export function assetAdmission(tx: TransactionClient) {
   const memo = new Map<string, Promise<PublicAsset | null>>();
+  let pending = new Map<
+    string,
+    {
+      resolve: (asset: PublicAsset | null) => void;
+      reject: (error: unknown) => void;
+    }
+  >();
+  let flushing = false;
+  // Coalesce independent admissions at each traversal step. Keep the loader
+  // inside this transaction: a later request must observe revoked rights.
+  async function flush() {
+    flushing = true;
+    while (pending.size) {
+      const batch = pending;
+      pending = new Map();
+      const ids = [...batch.keys()];
+      try {
+        for (let start = 0; start < ids.length; start += 128) {
+          const chunk = ids.slice(start, start + 128);
+          const rows = new Map(
+            (await repository.assetNodes(chunk, tx)).map((a) => [a.id, a]),
+          );
+          for (const id of chunk) batch.get(id)!.resolve(rows.get(id) ?? null);
+        }
+      } catch (error) {
+        for (const entry of batch.values()) entry.reject(error);
+      }
+    }
+    flushing = false;
+  }
   const node = (id: string) => {
-    if (!memo.has(id)) memo.set(id, repository.assetNode(id, tx));
+    if (!memo.has(id)) {
+      const schedule = pending.size === 0 && !flushing;
+      memo.set(
+        id,
+        new Promise((resolve, reject) => pending.set(id, { resolve, reject })),
+      );
+      if (schedule) void Promise.resolve().then(flush);
+    }
     return memo.get(id)!;
   };
   return async (id: string, kind: "IMAGE" | "MODEL_3D") => {
@@ -45,7 +82,8 @@ export function assetAdmission(tx: TransactionClient) {
     )
       return null;
     const visited = new Set<string>(),
-      path = new Set<string>();
+      path = new Set<string>(),
+      discovered = new Set([id]);
     async function visit(id: string, depth: number): Promise<boolean> {
       if (path.has(id) || depth > 16) return false;
       if (visited.has(id)) return true;
@@ -60,6 +98,17 @@ export function assetAdmission(tx: TransactionClient) {
         return false;
       visited.add(id);
       path.add(id);
+      // Fetch siblings together; validate them in DFS order so cycle/path and
+      // unique-node accounting keep their existing fail-closed semantics.
+      if (depth < 16) {
+        for (const edge of current.inputs) {
+          discovered.add(edge.sourceAssetId);
+          if (discovered.size > 128) return false;
+        }
+        await Promise.all(
+          current.inputs.map((edge) => node(edge.sourceAssetId)),
+        );
+      }
       for (const edge of current.inputs) {
         if (
           !["RESIZE", "SANITIZE", "RENDER_INPUT"].includes(edge.purpose) ||
@@ -97,32 +146,44 @@ export async function publicItemMedia(
     kind: "personal" | "catalog";
     source: string;
   } | null = null;
-  for (const use of uses) {
-    if (!use.publicDisplayAssetId) continue;
-    const asset = await admit(
-      use.publicDisplayAssetId,
-      use.model ? "MODEL_3D" : "IMAGE",
+  for (let start = 0; start < uses.length; start += 32) {
+    const batch = uses
+      .slice(start, start + 32)
+      .filter(
+        (use) =>
+          use.publicDisplayAssetId &&
+          (use.model ? !model : use.image && images.length < 25),
+      );
+    const assets = await Promise.all(
+      batch.map((use) =>
+        admit(use.publicDisplayAssetId!, use.model ? "MODEL_3D" : "IMAGE"),
+      ),
     );
-    if (
-      !asset ||
-      asset.scope !== (use.kind === "personal" ? "COLLECTION" : "CATALOG")
-    )
-      continue;
-    if (use.model) {
-      model ??= {
-        useId: use.id,
-        kind: use.kind,
-        source: use.kind === "personal" ? "Collection model" : "Catalog model",
-      };
-    } else if (use.image && images.length < 25)
-      images.push({
-        url: `/api/media/public/items/${id}/${use.kind}/${use.id}`,
-        alt: use.altText ?? "Collection object",
-        caption: use.caption,
-        width: asset.width!,
-        height: asset.height!,
-        source: use.source,
-      });
+    for (const [index, use] of batch.entries()) {
+      const asset = assets[index];
+      if (
+        !asset ||
+        asset.scope !== (use.kind === "personal" ? "COLLECTION" : "CATALOG")
+      )
+        continue;
+      if (use.model) {
+        model ??= {
+          useId: use.id,
+          kind: use.kind,
+          source:
+            use.kind === "personal" ? "Collection model" : "Catalog model",
+        };
+      } else if (use.image && images.length < 25)
+        images.push({
+          url: `/api/media/public/items/${id}/${use.kind}/${use.id}`,
+          alt: use.altText ?? "Collection object",
+          caption: use.caption,
+          width: asset.width!,
+          height: asset.height!,
+          source: use.source,
+        });
+    }
+    if (images.length === 25 && model) break;
   }
   return { images: images.slice(0, 24), hasMore: images.length > 24, model };
 }

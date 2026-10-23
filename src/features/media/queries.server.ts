@@ -5,13 +5,14 @@ import {
   MediaError,
   getMediaManagement,
 } from "@/server/services/collection/media";
-export async function getMediaPageData(itemId?: unknown) {
+export async function getMediaPageData(itemId?: unknown, page?: unknown) {
   try {
     return {
       status: "authorized" as const,
       ...(await getMediaManagement(
         await requirePrivateAccess(await headers()),
         itemId,
+        page,
       )),
     };
   } catch (error) {

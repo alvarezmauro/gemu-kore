@@ -129,13 +129,17 @@ export async function itemMediaUses(
   }
   return result;
 }
+const assetNodeSelect = {
+  ...mediaAssetSelect,
+  inputs: { select: { sourceAssetId: true, purpose: true }, take: 129 },
+} as const;
 export function assetNode(id: string, tx: TransactionClient) {
-  return tx.asset.findUnique({
-    where: { id },
-    select: {
-      ...mediaAssetSelect,
-      inputs: { select: { sourceAssetId: true, purpose: true }, take: 129 },
-    },
+  return tx.asset.findUnique({ where: { id }, select: assetNodeSelect });
+}
+export async function assetNodes(ids: string[], tx: TransactionClient) {
+  return tx.asset.findMany({
+    where: { id: { in: ids } },
+    select: assetNodeSelect,
   });
 }
 export function assetLocator(id: string, tx: TransactionClient) {

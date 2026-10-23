@@ -23,7 +23,7 @@ import { signedSessionCookie } from "../helpers/access-session";
 import { metrics, nodes, type QueryPlan } from "../helpers/dashboard-plans";
 
 // Only this disposable diagnostic client emits SQL events. Production logging,
-// query deadlines, caching, schema and application queries remain unchanged.
+// query deadlines, caching and schema are not modified by the probe.
 const db = new PrismaClient({
   adapter: new PrismaPg({
     connectionString: process.env.DATABASE_URL,
@@ -48,6 +48,10 @@ const report: Record<string, unknown> = {
   sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], {
     encoding: "utf8",
   }).trim(),
+  includesUncommittedChanges: Boolean(
+    execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim(),
+  ),
+  recordedAt: new Date().toISOString(),
   node: process.version,
   note: "Synthetic disposable PostgreSQL; instrumented single-client local observations, not production SLOs. No SQL parameters or credentials retained.",
 };
@@ -216,6 +220,8 @@ it("records bounded private pages, public media query growth and real search pla
   const smallSelector = await sample(() =>
     getMediaManagement(context, data.consoleId),
   );
+  expect(smallSelector.value.items).toHaveLength(25);
+  expect(smallSelector.value.hasMoreCopies).toBe(true);
   report.smallCopySelector = {
     choices: smallSelector.value.items.length,
     serializedBytes: Buffer.byteLength(JSON.stringify(smallSelector.value)),
@@ -250,6 +256,7 @@ it("records bounded private pages, public media query growth and real search pla
       ...result.measurement,
     });
   }
+  expect(new Set(publicReads.map((read) => read.sqlEvents)).size).toBe(1);
   report.publicMedia = publicReads;
   await resetSearchData(db);
   const search = await seedSearchData(db);
@@ -264,6 +271,8 @@ it("records bounded private pages, public media query growth and real search pla
   const largeSelector = await sample(() =>
     getMediaManagement(context, search.consoleId),
   );
+  expect(largeSelector.value.items).toHaveLength(25);
+  expect(largeSelector.value.selected?.id).toBe(search.consoleId);
   report.largeCopySelector = {
     choices: largeSelector.value.items.length,
     serializedBytes: Buffer.byteLength(JSON.stringify(largeSelector.value)),
@@ -339,6 +348,14 @@ it("records bounded private pages, public media query growth and real search pla
         queryRows,
         queryElapsedMs,
         ...metrics(plan),
+        maxJoinFilterRemovals: Math.max(
+          ...nodes(plan.Plan).map((node) => {
+            const n = node as typeof node & {
+              "Rows Removed by Join Filter"?: number;
+            };
+            return (n["Rows Removed by Join Filter"] ?? 0) * n["Actual Loops"];
+          }),
+        ),
         hotNodes: nodes(plan.Plan)
           .map((node) => ({
             type: node["Node Type"],
@@ -364,7 +381,8 @@ it("records bounded private pages, public media query growth and real search pla
   report.search = { ownedCopies: 3004, observations: plans };
   if (process.env.PERFORMANCE_INVESTIGATION_REPORT === "1")
     await writeFile(
-      "docs/performance/APPLICATION_DATABASE_EVIDENCE.json",
+      process.env.PERFORMANCE_REPORT_OUTPUT ??
+        "docs/performance/APPLICATION_DATABASE_EVIDENCE.json",
       JSON.stringify(report, null, 2) + "\n",
     );
   console.info("Performance investigation recorded", {

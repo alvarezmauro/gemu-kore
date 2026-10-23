@@ -149,6 +149,8 @@ it("returns a real empty collection", async () => {
   const { context } = await actor();
   expect(await getMediaManagement(context)).toEqual({
     items: [],
+    hasMoreCopies: false,
+    copyPage: 0,
     selected: null,
     photos: [],
     canManage: true,
@@ -551,5 +553,95 @@ it("can edit private photo details after a formerly approved display's rights ar
     caption: "Front of my copy",
     publicApproved: false,
     publicDisplayAssetId: null,
+  });
+});
+
+it("bounds management choices, searches displayed identities literally and pages every physical copy", async () => {
+  const { context, grant } = await actor("VIEWER");
+  const data = await copies();
+  const { findCollectionCopies } =
+    await import("@/server/services/collection/items");
+  const { getDefectManagement } =
+    await import("@/server/services/collection/defects");
+  const createdAt = new Date("2020-01-01T00:00:00Z");
+  await db.$transaction(async (tx) => {
+    for (let n = 0; n < 61; n++)
+      await tx.collectionItem.create({
+        data: {
+          type: "GAME",
+          createdAt,
+          ownedGame: { create: { gameReleaseId: data.release.id } },
+        },
+      });
+  });
+  const expected = await db.collectionItem.findMany({
+    select: { id: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  const found: string[] = [];
+  for (let page = 0; page < 3; page++) {
+    const result = await findCollectionCopies(context, { query: "", page });
+    expect(result.items.length).toBeLessThanOrEqual(25);
+    expect(result.hasMore).toBe(page < 2);
+    found.push(...result.items.map((item) => item.id));
+  }
+  expect(found).toEqual(expected.map((item) => item.id));
+  for (const read of [getMediaManagement, getDefectManagement]) {
+    const result = await read(context, data.accessoryCopy.id);
+    expect(result.items).toHaveLength(25);
+    expect(result.hasMoreCopies).toBe(true);
+    expect(result.selected?.id).toBe(data.accessoryCopy.id);
+    expect(result.items.some((item) => item.id === data.accessoryCopy.id)).toBe(
+      false,
+    );
+    expect(result.canManage).toBe(false);
+    const later = await read(context, data.accessoryCopy.id, "1");
+    expect(later.copyPage).toBe(1);
+    expect(later.items.map((item) => item.id)).toEqual(
+      expected.slice(25, 50).map((item) => item.id),
+    );
+    expect(later.selected?.id).toBe(data.accessoryCopy.id);
+    await expect(
+      read(context, data.accessoryCopy.id, ["1"]),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  }
+  for (const [query, id] of [
+    ["SCPH-1001", data.consoleCopy.id],
+    ["Gray", data.accessoryCopy.id],
+    [data.accessoryCopy.id.slice(0, 8), data.accessoryCopy.id],
+  ]) {
+    expect(
+      (await findCollectionCopies(context, { query })).items.map(
+        (item) => item.id,
+      ),
+    ).toContain(id);
+  }
+  for (const query of [
+    "Do not expose",
+    "Private serial",
+    "%_\\",
+    "no such copy",
+  ])
+    expect((await findCollectionCopies(context, { query })).items).toEqual([]);
+  await db.game.update({
+    where: { id: data.release.gameId },
+    data: { name: "Literal %_\\ name", archivedAt: new Date() },
+  });
+  expect(
+    (await findCollectionCopies(context, { query: "%_\\" })).items,
+  ).toHaveLength(25);
+  await expect(
+    findCollectionCopies(context, { query: "x".repeat(201) }),
+  ).rejects.toThrow();
+  await expect(findCollectionCopies(context, { page: -1 })).rejects.toThrow();
+  await expect(
+    findCollectionCopies(context, { role: "ADMIN" }),
+  ).rejects.toThrow();
+  await db.accessGrant.update({
+    where: { id: grant.id },
+    data: { enabled: false },
+  });
+  await expect(findCollectionCopies(context, {})).rejects.toMatchObject({
+    code: "DENIED",
   });
 });

@@ -103,8 +103,13 @@ function buildQuery(
   // Request-local CTEs calculate shared identity hits and copy relationships
   // once. Inlining these unions causes repeated join work for common terms.
   // They are not persisted search documents or materialized database views.
-  // Page only complete, deduplicated matches, then hydrate market context for
+  // Filtered facts carry their title and sort keys together, avoiding a second
+  // many-row CTE join. Page complete, deduplicated matches, then hydrate market context for
   // those IDs. Joining that projection before paging repeats work on broad hits.
+  // best contains at most one row per requested ordinal, so >= is exactly
+  // "all terms". Unlike equality on an aggregate, this threshold does not make
+  // PostgreSQL estimate almost every broad result set as a single row and
+  // repeatedly rescan the materialized titles/controls with nested loops.
   const matches = Prisma.sql`WITH ${controls ? Prisma.sql`controls AS MATERIALIZED (${controlRows(controls)}),` : Prisma.empty} terms(ordinal,term,exact,prefix,fuzzy,pattern) AS (${parsed.length ? Prisma.sql`VALUES ${termValues(parsed)}` : emptyTerms}),
   roots AS MATERIALIZED (SELECT c.id,c.type FROM collection_item c WHERE true ${rootGate} ${controls ? Prisma.sql`AND c.id IN (SELECT id FROM controls)` : Prisma.empty}),
   links AS MATERIALIZED (
@@ -142,16 +147,20 @@ function buildQuery(
     }
     UNION ALL SELECT r.id,t.ordinal,1,1,'Edition',false,0::real FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release g ON g.id=o."gameReleaseId" CROSS JOIN terms t WHERE replace(lower(g."editionType"::text),'_',' ') = t.term OR to_tsvector('pg_catalog.simple',replace(lower(g."editionType"::text),'_',' ')) @@ t.exact
   ), best AS (SELECT DISTINCT ON(id,ordinal) * FROM candidates ORDER BY id,ordinal,class,priority,strength DESC,source),
-  matched AS (${parsed.length ? Prisma.sql`SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)=${parsed.length}` : Prisma.sql`SELECT id,false whole,0 class,0::bigint priority,0::real strength,ARRAY[]::text[] sources FROM roots`})`;
+  matched AS (${parsed.length ? Prisma.sql`SELECT id,bool_or(whole) whole,max(class) class,sum(priority) priority,sum(strength) strength,array_agg(DISTINCT source ORDER BY source) sources FROM best GROUP BY id HAVING count(*)>=${parsed.length}` : Prisma.sql`SELECT id,false whole,0 class,0::bigint priority,0::real strength,ARRAY[]::text[] sources FROM roots`})`;
   if (matchingIds)
     return Prisma.sql`${matches} SELECT id,whole,class,priority,strength FROM matched`;
   return Prisma.sql`${matches},
-  titles AS MATERIALIZED (
+  titles AS MATERIALIZED (${
+    controls
+      ? Prisma.sql`SELECT * FROM controls`
+      : Prisma.sql`
     SELECT r.id,r.type,p.name title FROM roots r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
     UNION ALL SELECT r.id,r.type,g.name FROM roots r JOIN owned_game o ON o."collectionItemId"=r.id JOIN game_release gr ON gr.id=o."gameReleaseId" JOIN game g ON g.id=gr."gameId"
     UNION ALL SELECT r.id,r.type,a.name FROM roots r JOIN owned_accessory o ON o."collectionItemId"=r.id JOIN accessory_variant v ON v.id=o."accessoryVariantId" JOIN accessory a ON a.id=v."accessoryId"
-  ), page AS MATERIALIZED (
-    SELECT i.id,i.type,i.title,m.sources,row_number() OVER(ORDER BY ${order}) position ${controls ? Prisma.sql`,x.year,x."locationLabel",x."platformLabel",x."publisherLabel"` : Prisma.empty} FROM matched m JOIN titles i ON i.id=m.id ${controls ? Prisma.sql`JOIN controls x ON x.id=i.id` : Prisma.empty}
+`
+  }  ), page AS MATERIALIZED (
+    SELECT i.id,i.type,i.title,m.sources,row_number() OVER(ORDER BY ${order}) position ${controls ? Prisma.sql`,i.year,i."locationLabel",i."platformLabel",i."publisherLabel"` : Prisma.empty} FROM matched m JOIN titles i ON i.id=m.id
     ORDER BY ${order} LIMIT ${input.limit + 1} OFFSET ${input.offset}
   ), identity AS (
     SELECT r.id,r.type,p.name title,concat_ws(' · ',m.name,CASE WHEN m."modelNumber" IS DISTINCT FROM m.name THEN m."modelNumber" END,(SELECT string_agg(reg.name,', ' ORDER BY reg.name,reg.id) FROM console_model_region mr JOIN region reg ON reg.id=mr."regionId" WHERE mr."consoleModelId"=m.id)) context,m."identificationStatus" status FROM page r JOIN owned_console o ON o."collectionItemId"=r.id JOIN console_model m ON m.id=o."consoleModelId" JOIN console_platform p ON p.id=m."platformId"
