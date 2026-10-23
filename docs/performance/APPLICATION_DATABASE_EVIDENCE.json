@@ -1,0 +1,2141 @@
+{
+  "sourceCommit": "956782d833ce077f38bf3011e46db53c58ae9899",
+  "node": "v24.22.0",
+  "note": "Synthetic disposable PostgreSQL; instrumented single-client local observations, not production SLOs. No SQL parameters or credentials retained.",
+  "postgres": [
+    {
+      "version": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+    }
+  ],
+  "smallCopySelector": {
+    "choices": 34,
+    "serializedBytes": 3575,
+    "elapsedMs": 41.824231000000054,
+    "sqlEvents": 33,
+    "statements": [
+      {
+        "hash": "5154b0d55de5",
+        "count": 1,
+        "durationMs": 1.2226120000000265,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "12f92da0c528",
+        "count": 1,
+        "durationMs": 0.9766349999999875,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1a7edd4125c6",
+        "count": 1,
+        "durationMs": 0.9443220000000565,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "582dfb610da6",
+        "count": 1,
+        "durationMs": 0.7197519999999713,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "068970963ec7",
+        "count": 1,
+        "durationMs": 1.1041230000000724,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "a1e0d53d07ea",
+        "count": 1,
+        "durationMs": 1.7819180000001325,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "a093cb47aaff",
+        "count": 1,
+        "durationMs": 2.755772999999863,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "da20ad44ec88",
+        "count": 1,
+        "durationMs": 3.8427050000000236,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "4207854ea9ac",
+        "count": 1,
+        "durationMs": 3.7781830000001264,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1ce10c7fbd7e",
+        "count": 1,
+        "durationMs": 3.478098999999929,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "4f2712109413",
+        "count": 1,
+        "durationMs": 3.1158590000000004,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "76dc073a0001",
+        "count": 3,
+        "durationMs": 8.300608000000238,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "6f24d7d0cb4d",
+        "count": 1,
+        "durationMs": 2.6544289999999364,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "dfc86eebefe5",
+        "count": 1,
+        "durationMs": 3.243701000000101,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "c0072b41c59f",
+        "count": 1,
+        "durationMs": 1.2285440000000563,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "71f9085cd7f9",
+        "count": 1,
+        "durationMs": 1.0501500000000306,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1fd053bece2e",
+        "count": 1,
+        "durationMs": 1.8876290000000608,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3d4b709c9323",
+        "count": 1,
+        "durationMs": 2.685159999999996,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3839b18a7487",
+        "count": 1,
+        "durationMs": 2.4844439999999395,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "da776ac6469f",
+        "count": 1,
+        "durationMs": 2.263596000000007,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "153ab3464c8d",
+        "count": 1,
+        "durationMs": 2.263480999999956,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3f3e3d3717e9",
+        "count": 1,
+        "durationMs": 2.28114800000003,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "85d282f2fc32",
+        "count": 1,
+        "durationMs": 2.984676000000036,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "e6f5b2afa81a",
+        "count": 1,
+        "durationMs": 2.9653509999998278,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "e1242b84bbd0",
+        "count": 1,
+        "durationMs": 1.167220000000043,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "be9f2f5fdbdb",
+        "count": 1,
+        "durationMs": 0.8771669999998721,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "22e1cb589391",
+        "count": 1,
+        "durationMs": 0.8262170000000424,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "18e46614c928",
+        "count": 1,
+        "durationMs": 0.8037670000001071,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "a6147e6ba888",
+        "count": 1,
+        "durationMs": 0.7930060000001049,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "82cea684d13d",
+        "count": 1,
+        "durationMs": 0.7529160000001411,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "79663c1d3b43",
+        "count": 1,
+        "durationMs": 0.697095999999874,
+        "verb": "COMMIT"
+      }
+    ]
+  },
+  "privateReads": [
+    {
+      "limit": 1,
+      "elapsedMs": 63.19207100000017,
+      "sqlEvents": 11,
+      "statements": [
+        {
+          "hash": "5154b0d55de5",
+          "count": 2,
+          "durationMs": 2.3621740000000955,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "12f92da0c528",
+          "count": 2,
+          "durationMs": 1.930422000000135,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1a7edd4125c6",
+          "count": 2,
+          "durationMs": 2.5518039999999473,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "582dfb610da6",
+          "count": 1,
+          "durationMs": 0.8801309999998921,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "8117475c2450",
+          "count": 1,
+          "durationMs": 0.852771999999959,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3e7af970a9d5",
+          "count": 1,
+          "durationMs": 29.710446000000047,
+          "verb": "WITH"
+        },
+        {
+          "hash": "73b8500952af",
+          "count": 1,
+          "durationMs": 11.384184000000005,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "79663c1d3b43",
+          "count": 1,
+          "durationMs": 1.683431000000155,
+          "verb": "COMMIT"
+        }
+      ]
+    },
+    {
+      "limit": 20,
+      "elapsedMs": 40.977666,
+      "sqlEvents": 11,
+      "statements": [
+        {
+          "hash": "5154b0d55de5",
+          "count": 2,
+          "durationMs": 2.1976019999999608,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "12f92da0c528",
+          "count": 2,
+          "durationMs": 1.8523899999997866,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1a7edd4125c6",
+          "count": 2,
+          "durationMs": 1.8466560000001664,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "582dfb610da6",
+          "count": 1,
+          "durationMs": 0.6881919999998445,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "8117475c2450",
+          "count": 1,
+          "durationMs": 0.9336179999997967,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3e7af970a9d5",
+          "count": 1,
+          "durationMs": 21.430851000000075,
+          "verb": "WITH"
+        },
+        {
+          "hash": "56c18dd10fc0",
+          "count": 1,
+          "durationMs": 5.832016999999951,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "79663c1d3b43",
+          "count": 1,
+          "durationMs": 1.3954469999998764,
+          "verb": "COMMIT"
+        }
+      ]
+    }
+  ],
+  "dashboard": {
+    "elapsedMs": 35.653868999999986,
+    "sqlEvents": 8,
+    "statements": [
+      {
+        "hash": "582dfb610da6",
+        "count": 1,
+        "durationMs": 0.9033190000000104,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "5154b0d55de5",
+        "count": 1,
+        "durationMs": 1.1491479999999683,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "12f92da0c528",
+        "count": 1,
+        "durationMs": 0.9877419999997983,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1a7edd4125c6",
+        "count": 1,
+        "durationMs": 0.9003880000000208,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "999489566bcb",
+        "count": 1,
+        "durationMs": 1.2770100000000184,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "6101906f2c9b",
+        "count": 1,
+        "durationMs": 2.6896110000000135,
+        "verb": "WITH"
+      },
+      {
+        "hash": "b3762bf0a7d9",
+        "count": 1,
+        "durationMs": 2.2324220000000423,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "79663c1d3b43",
+        "count": 1,
+        "durationMs": 1.6140510000000177,
+        "verb": "COMMIT"
+      }
+    ]
+  },
+  "publicMedia": [
+    {
+      "approvedPhotos": 1,
+      "displayedPhotos": 1,
+      "elapsedMs": 74.34027700000001,
+      "sqlEvents": 57,
+      "statements": [
+        {
+          "hash": "6c20e5345ee8",
+          "count": 1,
+          "durationMs": 0.871654000000035,
+          "verb": "SET"
+        },
+        {
+          "hash": "a36fcf60d952",
+          "count": 1,
+          "durationMs": 1.0256360000000768,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a0f6d4ee3f68",
+          "count": 1,
+          "durationMs": 2.9791179999999713,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "ae93879a0fd8",
+          "count": 1,
+          "durationMs": 1.3636229999999614,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "20785a61a201",
+          "count": 1,
+          "durationMs": 2.29128999999989,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "670bad8a52de",
+          "count": 1,
+          "durationMs": 3.2389060000000427,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "020dfa273c36",
+          "count": 1,
+          "durationMs": 2.926881999999978,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "e8123c1ccd2a",
+          "count": 1,
+          "durationMs": 2.9674129999998513,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c1d9b1e8332c",
+          "count": 1,
+          "durationMs": 3.1956720000000587,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "50973d3671d4",
+          "count": 2,
+          "durationMs": 16.80062699999985,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "907128c7a726",
+          "count": 1,
+          "durationMs": 4.220604999999978,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "d57fb47926a9",
+          "count": 1,
+          "durationMs": 5.382094999999936,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "28ac1b03ca27",
+          "count": 1,
+          "durationMs": 5.431054000000131,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "85d282f2fc32",
+          "count": 2,
+          "durationMs": 15.536520999999993,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0de4900c53c2",
+          "count": 1,
+          "durationMs": 8.08713200000011,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "977165ca034f",
+          "count": 1,
+          "durationMs": 9.129640999999992,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "787125e9ca98",
+          "count": 1,
+          "durationMs": 10.799219000000221,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3c1cb7bfd892",
+          "count": 1,
+          "durationMs": 11.80579200000011,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "adc046b05e32",
+          "count": 4,
+          "durationMs": 34.54709599999978,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "848f2df07070",
+          "count": 1,
+          "durationMs": 12.623690000000124,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71b1e9dcd9da",
+          "count": 1,
+          "durationMs": 13.600582999999915,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c03d34555ed0",
+          "count": 1,
+          "durationMs": 14.761856999999964,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f5b943450dd3",
+          "count": 1,
+          "durationMs": 13.492715999999973,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "13937afc8317",
+          "count": 3,
+          "durationMs": 27.715537000000268,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1d52baee41c7",
+          "count": 1,
+          "durationMs": 11.15320399999996,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3a90ee35d0f6",
+          "count": 1,
+          "durationMs": 9.38462400000003,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f2811e77cf07",
+          "count": 1,
+          "durationMs": 10.515522000000146,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f191897b5d7e",
+          "count": 2,
+          "durationMs": 2.0068379999997887,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71f9085cd7f9",
+          "count": 2,
+          "durationMs": 1.8406680000000506,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1fd053bece2e",
+          "count": 2,
+          "durationMs": 3.1671389999999064,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3d4b709c9323",
+          "count": 2,
+          "durationMs": 4.657192000000123,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f22b10b582a0",
+          "count": 2,
+          "durationMs": 4.450751999999966,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "4328cd23b4a5",
+          "count": 2,
+          "durationMs": 4.395665999999892,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0e4b973668ca",
+          "count": 2,
+          "durationMs": 4.225507000000107,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "290b7a2ccdce",
+          "count": 1,
+          "durationMs": 2.0755910000000313,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "74ecc72fb0fe",
+          "count": 1,
+          "durationMs": 0.9642719999999372,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a4d4b1f02219",
+          "count": 1,
+          "durationMs": 1.3050510000000486,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "acd537ce26d2",
+          "count": 1,
+          "durationMs": 0.901061000000027,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "65f607727051",
+          "count": 2,
+          "durationMs": 2.0263899999997648,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "7588ccaa75be",
+          "count": 2,
+          "durationMs": 1.9516539999999623,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "79663c1d3b43",
+          "count": 1,
+          "durationMs": 0.7857679999999618,
+          "verb": "COMMIT"
+        }
+      ]
+    },
+    {
+      "approvedPhotos": 12,
+      "displayedPhotos": 12,
+      "elapsedMs": 98.37308800000028,
+      "sqlEvents": 101,
+      "statements": [
+        {
+          "hash": "6c20e5345ee8",
+          "count": 1,
+          "durationMs": 0.7489090000003671,
+          "verb": "SET"
+        },
+        {
+          "hash": "a36fcf60d952",
+          "count": 1,
+          "durationMs": 0.9006490000001577,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a0f6d4ee3f68",
+          "count": 1,
+          "durationMs": 1.017409999999927,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "ae93879a0fd8",
+          "count": 1,
+          "durationMs": 1.3025969999998779,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "20785a61a201",
+          "count": 1,
+          "durationMs": 1.9851869999997689,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "670bad8a52de",
+          "count": 1,
+          "durationMs": 2.7203599999998005,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "020dfa273c36",
+          "count": 1,
+          "durationMs": 2.3460970000001,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "e8123c1ccd2a",
+          "count": 1,
+          "durationMs": 2.3701420000002145,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c1d9b1e8332c",
+          "count": 1,
+          "durationMs": 2.3925990000002457,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "50973d3671d4",
+          "count": 2,
+          "durationMs": 10.872895999999855,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "907128c7a726",
+          "count": 1,
+          "durationMs": 2.970025000000078,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "d57fb47926a9",
+          "count": 1,
+          "durationMs": 3.760388000000148,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "28ac1b03ca27",
+          "count": 1,
+          "durationMs": 3.743073000000095,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "85d282f2fc32",
+          "count": 2,
+          "durationMs": 11.265345999999681,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0de4900c53c2",
+          "count": 1,
+          "durationMs": 5.056028999999853,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "977165ca034f",
+          "count": 1,
+          "durationMs": 5.775474000000031,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "787125e9ca98",
+          "count": 1,
+          "durationMs": 6.534842000000026,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3c1cb7bfd892",
+          "count": 1,
+          "durationMs": 7.217933000000357,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "adc046b05e32",
+          "count": 4,
+          "durationMs": 24.692087999999785,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "848f2df07070",
+          "count": 1,
+          "durationMs": 7.99854600000026,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71b1e9dcd9da",
+          "count": 1,
+          "durationMs": 8.674055999999837,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c03d34555ed0",
+          "count": 1,
+          "durationMs": 9.329491999999846,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f5b943450dd3",
+          "count": 1,
+          "durationMs": 8.634873999999854,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "13937afc8317",
+          "count": 3,
+          "durationMs": 19.62232700000004,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1d52baee41c7",
+          "count": 1,
+          "durationMs": 7.661493999999948,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3a90ee35d0f6",
+          "count": 1,
+          "durationMs": 6.891437000000224,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f2811e77cf07",
+          "count": 1,
+          "durationMs": 7.622922000000017,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f191897b5d7e",
+          "count": 2,
+          "durationMs": 1.8203889999999774,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71f9085cd7f9",
+          "count": 2,
+          "durationMs": 1.7359870000000228,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1fd053bece2e",
+          "count": 2,
+          "durationMs": 3.000977999999577,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3d4b709c9323",
+          "count": 2,
+          "durationMs": 4.490864999999758,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f22b10b582a0",
+          "count": 2,
+          "durationMs": 4.398175000000265,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "4328cd23b4a5",
+          "count": 2,
+          "durationMs": 4.568799000000126,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0e4b973668ca",
+          "count": 2,
+          "durationMs": 4.254731999999876,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "290b7a2ccdce",
+          "count": 1,
+          "durationMs": 1.3093439999997827,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "85bf6dca867e",
+          "count": 1,
+          "durationMs": 1.050575000000208,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a4d4b1f02219",
+          "count": 1,
+          "durationMs": 1.2872600000000602,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "acd537ce26d2",
+          "count": 1,
+          "durationMs": 0.8462760000002163,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "65f607727051",
+          "count": 24,
+          "durationMs": 22.51354700000047,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "7588ccaa75be",
+          "count": 24,
+          "durationMs": 20.704225000000406,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "79663c1d3b43",
+          "count": 1,
+          "durationMs": 0.7801720000002206,
+          "verb": "COMMIT"
+        }
+      ]
+    },
+    {
+      "approvedPhotos": 30,
+      "displayedPhotos": 24,
+      "elapsedMs": 177.5157119999999,
+      "sqlEvents": 173,
+      "statements": [
+        {
+          "hash": "6c20e5345ee8",
+          "count": 1,
+          "durationMs": 0.6656170000001111,
+          "verb": "SET"
+        },
+        {
+          "hash": "a36fcf60d952",
+          "count": 1,
+          "durationMs": 1.08280300000024,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a0f6d4ee3f68",
+          "count": 1,
+          "durationMs": 1.144242999999733,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "ae93879a0fd8",
+          "count": 1,
+          "durationMs": 0.9500969999999143,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "20785a61a201",
+          "count": 1,
+          "durationMs": 1.7859090000001743,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "670bad8a52de",
+          "count": 1,
+          "durationMs": 2.6612119999999777,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "020dfa273c36",
+          "count": 1,
+          "durationMs": 2.7598109999998996,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "e8123c1ccd2a",
+          "count": 1,
+          "durationMs": 2.674337999999807,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c1d9b1e8332c",
+          "count": 1,
+          "durationMs": 2.714010000000144,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "50973d3671d4",
+          "count": 2,
+          "durationMs": 11.871730000000753,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "907128c7a726",
+          "count": 1,
+          "durationMs": 3.5779720000000452,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "d57fb47926a9",
+          "count": 1,
+          "durationMs": 4.746544999999969,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "28ac1b03ca27",
+          "count": 1,
+          "durationMs": 4.745218000000023,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "85d282f2fc32",
+          "count": 2,
+          "durationMs": 13.436959000000115,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0de4900c53c2",
+          "count": 1,
+          "durationMs": 6.212989999999991,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "977165ca034f",
+          "count": 1,
+          "durationMs": 6.994330999999875,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "787125e9ca98",
+          "count": 1,
+          "durationMs": 7.746196999999938,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3c1cb7bfd892",
+          "count": 1,
+          "durationMs": 8.42031599999973,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "adc046b05e32",
+          "count": 4,
+          "durationMs": 27.563150000000405,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "848f2df07070",
+          "count": 1,
+          "durationMs": 9.09742899999992,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71b1e9dcd9da",
+          "count": 1,
+          "durationMs": 9.88256599999977,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "c03d34555ed0",
+          "count": 1,
+          "durationMs": 10.836812999999893,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f5b943450dd3",
+          "count": 1,
+          "durationMs": 9.707186000000092,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "13937afc8317",
+          "count": 3,
+          "durationMs": 22.001690999999482,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1d52baee41c7",
+          "count": 1,
+          "durationMs": 8.402082000000064,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3a90ee35d0f6",
+          "count": 1,
+          "durationMs": 7.83326500000021,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f2811e77cf07",
+          "count": 1,
+          "durationMs": 8.707556999999724,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f191897b5d7e",
+          "count": 2,
+          "durationMs": 1.8292649999993955,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "71f9085cd7f9",
+          "count": 2,
+          "durationMs": 1.648689000000104,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "1fd053bece2e",
+          "count": 2,
+          "durationMs": 2.947657000000163,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "3d4b709c9323",
+          "count": 2,
+          "durationMs": 4.380094999999983,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "f22b10b582a0",
+          "count": 2,
+          "durationMs": 4.326594999999543,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "4328cd23b4a5",
+          "count": 2,
+          "durationMs": 4.245502999999644,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "0e4b973668ca",
+          "count": 2,
+          "durationMs": 4.1018739999999525,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "290b7a2ccdce",
+          "count": 1,
+          "durationMs": 1.336247000000185,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "9a8f9b8b12e5",
+          "count": 1,
+          "durationMs": 1.2930169999999634,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "a4d4b1f02219",
+          "count": 1,
+          "durationMs": 1.1194949999999153,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "acd537ce26d2",
+          "count": 1,
+          "durationMs": 0.8636820000001535,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "65f607727051",
+          "count": 60,
+          "durationMs": 57.090447999999924,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "7588ccaa75be",
+          "count": 60,
+          "durationMs": 49.24520600000005,
+          "verb": "SELECT"
+        },
+        {
+          "hash": "79663c1d3b43",
+          "count": 1,
+          "durationMs": 0.7508749999997235,
+          "verb": "COMMIT"
+        }
+      ]
+    }
+  ],
+  "largeCopySelector": {
+    "choices": 3004,
+    "serializedBytes": 326498,
+    "elapsedMs": 183.81005800000003,
+    "sqlEvents": 33,
+    "statements": [
+      {
+        "hash": "5154b0d55de5",
+        "count": 1,
+        "durationMs": 1.2905729999997675,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "12f92da0c528",
+        "count": 1,
+        "durationMs": 0.9464060000000245,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1a7edd4125c6",
+        "count": 1,
+        "durationMs": 1.214911999999913,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "582dfb610da6",
+        "count": 1,
+        "durationMs": 1.0848390000001018,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "068970963ec7",
+        "count": 1,
+        "durationMs": 6.860928000000058,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "8359687db6f4",
+        "count": 1,
+        "durationMs": 19.962412999999742,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "14aa8b2db2af",
+        "count": 1,
+        "durationMs": 35.48227999999972,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "c352c4aed662",
+        "count": 1,
+        "durationMs": 44.13554500000009,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3839b18a7487",
+        "count": 2,
+        "durationMs": 36.70874700000013,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "19db4e879f0f",
+        "count": 1,
+        "durationMs": 25.23172199999999,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "4f2712109413",
+        "count": 1,
+        "durationMs": 21.732582999999977,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "76dc073a0001",
+        "count": 2,
+        "durationMs": 25.34288400000014,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "b87e4a6d65f6",
+        "count": 1,
+        "durationMs": 16.28631099999984,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "001592cd2683",
+        "count": 1,
+        "durationMs": 21.752359999999953,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "dfc86eebefe5",
+        "count": 1,
+        "durationMs": 34.034842000000026,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "c0072b41c59f",
+        "count": 1,
+        "durationMs": 6.285906999999952,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "71f9085cd7f9",
+        "count": 1,
+        "durationMs": 1.6587949999998273,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "1fd053bece2e",
+        "count": 1,
+        "durationMs": 2.7752370000002884,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3d4b709c9323",
+        "count": 1,
+        "durationMs": 3.9242770000000746,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "da776ac6469f",
+        "count": 1,
+        "durationMs": 3.223316999999952,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "153ab3464c8d",
+        "count": 1,
+        "durationMs": 2.9953989999999067,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "3f3e3d3717e9",
+        "count": 1,
+        "durationMs": 2.758494000000155,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "85d282f2fc32",
+        "count": 1,
+        "durationMs": 3.6111699999996745,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "e6f5b2afa81a",
+        "count": 1,
+        "durationMs": 3.6177809999999226,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "e1242b84bbd0",
+        "count": 1,
+        "durationMs": 2.051266999999825,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "be9f2f5fdbdb",
+        "count": 1,
+        "durationMs": 1.790516000000025,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "22e1cb589391",
+        "count": 1,
+        "durationMs": 1.4847239999999147,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "18e46614c928",
+        "count": 1,
+        "durationMs": 0.9826160000002346,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "a6147e6ba888",
+        "count": 1,
+        "durationMs": 0.8430029999999533,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "82cea684d13d",
+        "count": 1,
+        "durationMs": 0.8863950000004479,
+        "verb": "SELECT"
+      },
+      {
+        "hash": "79663c1d3b43",
+        "count": 1,
+        "durationMs": 0.9189760000003844,
+        "verb": "COMMIT"
+      }
+    ]
+  },
+  "search": {
+    "ownedCopies": 3004,
+    "observations": [
+      {
+        "query": "chrono",
+        "filtered": false,
+        "explainBudget": "within-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 2,
+        "queryElapsedMs": 70.14086299999963,
+        "executionMs": 50.224,
+        "planningMs": 11.094,
+        "sharedBlocks": 1051,
+        "rows": 2,
+        "indexes": [
+          "console_model_region_pkey",
+          "accessory_variant_platform_pkey",
+          "owned_accessory_accessoryVariantId_idx",
+          "accessory_variant_region_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "collection_item_notes_fts",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_game_gameReleaseId_idx",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 21,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 47.295
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 21,
+            "rowsRemovedByJoinFilter": 2,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 47.212
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 21,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 46.572
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 45,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 46.57
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 45,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 46.559
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 21,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 46.558
+          },
+          {
+            "type": "Hash Join",
+            "estimatedRows": 45,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 46.543
+          },
+          {
+            "type": "Hash",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 39.791
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 39.784
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 39.782
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 200,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 39.77
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 200,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 39.76
+          }
+        ]
+      },
+      {
+        "query": "chrono",
+        "filtered": true,
+        "explainBudget": "within-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 2,
+        "queryElapsedMs": 140.6035850000003,
+        "executionMs": 211.819,
+        "planningMs": 13.53,
+        "sharedBlocks": 84913,
+        "rows": 2,
+        "indexes": [
+          "location_root_name_key",
+          "console_model_region_pkey",
+          "game_release_company_gameReleaseId_regionId_idx",
+          "company_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_platform_pkey",
+          "accessory_variant_region_pkey",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_company_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "game_pkey",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_console_collectionItemId_type_key",
+          "owned_game_collectionItemId_type_key",
+          "owned_accessory_collectionItemId_type_key"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.373
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 2,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.246
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.047
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.046
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.035
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.031
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 6002,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 207.018
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 6002,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 206.261
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 193.212
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 8,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 193.197
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 8,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 193.175
+          },
+          {
+            "type": "Unique",
+            "estimatedRows": 8,
+            "rows": 2,
+            "loops": 1,
+            "totalMsAcrossLoops": 193.174
+          }
+        ]
+      },
+      {
+        "query": "fixture",
+        "filtered": false,
+        "explainBudget": "within-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 21,
+        "queryElapsedMs": 296.80357600000025,
+        "executionMs": 342.759,
+        "planningMs": 14.374,
+        "sharedBlocks": 1234,
+        "rows": 21,
+        "indexes": [
+          "console_model_region_pkey",
+          "accessory_variant_platform_pkey",
+          "owned_accessory_accessoryVariantId_idx",
+          "accessory_variant_region_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "collection_item_notes_fts",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_game_gameReleaseId_idx",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 338.717
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 21,
+            "rowsRemovedByJoinFilter": 420,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 338.598
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.117
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 45,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.113
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 45,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.096
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.094
+          },
+          {
+            "type": "Hash Join",
+            "estimatedRows": 45,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 328.929
+          },
+          {
+            "type": "Hash",
+            "estimatedRows": 1,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 314.468
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 1,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 313.455
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 313
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 200,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 309.713
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 200,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 308.773
+          }
+        ]
+      },
+      {
+        "query": "fixture",
+        "filtered": true,
+        "explainBudget": "statement-timeout-at-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 21,
+        "queryElapsedMs": 1440.364952,
+        "executionMs": 2554.656,
+        "planningMs": 13.071,
+        "sharedBlocks": 91077,
+        "rows": 21,
+        "indexes": [
+          "location_root_name_key",
+          "console_model_region_pkey",
+          "game_release_company_gameReleaseId_regionId_idx",
+          "company_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_platform_pkey",
+          "accessory_variant_region_pkey",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_company_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "game_pkey",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_console_collectionItemId_type_key",
+          "owned_game_collectionItemId_type_key",
+          "owned_accessory_collectionItemId_type_key"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.542
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 420,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.403
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2544.82
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2544.817
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2544.796
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2544.795
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 9003000,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 2537.97
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 9003000,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 1445.651
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "titles",
+            "estimatedRows": 84,
+            "rows": 3002,
+            "loops": 3000,
+            "totalMsAcrossLoops": 633
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "controls",
+            "estimatedRows": 28,
+            "rows": 3002,
+            "loops": 3000,
+            "totalMsAcrossLoops": 594
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 311.713
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 8,
+            "rows": 3000,
+            "loops": 1,
+            "totalMsAcrossLoops": 304.481
+          }
+        ]
+      },
+      {
+        "query": "fi",
+        "filtered": false,
+        "explainBudget": "within-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 21,
+        "queryElapsedMs": 349.268861999999,
+        "executionMs": 342.509,
+        "planningMs": 10.486,
+        "sharedBlocks": 1201,
+        "rows": 21,
+        "indexes": [
+          "console_model_region_pkey",
+          "accessory_variant_platform_pkey",
+          "owned_accessory_accessoryVariantId_idx",
+          "accessory_variant_region_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "collection_item_notes_fts",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_game_gameReleaseId_idx",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 339.254
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 21,
+            "rowsRemovedByJoinFilter": 420,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 339.149
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.63
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 45,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.627
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 45,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.612
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 21,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 337.611
+          },
+          {
+            "type": "Hash Join",
+            "estimatedRows": 45,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 330.815
+          },
+          {
+            "type": "Hash",
+            "estimatedRows": 1,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 318.867
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 1,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 318.154
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 317.79
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 200,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 315.377
+          },
+          {
+            "type": "Subquery Scan",
+            "estimatedRows": 200,
+            "rows": 3003,
+            "loops": 1,
+            "totalMsAcrossLoops": 314.636
+          }
+        ]
+      },
+      {
+        "query": "fi",
+        "filtered": true,
+        "explainBudget": "statement-timeout-at-2s",
+        "queryBudget": "within-2s",
+        "queryRows": 21,
+        "queryElapsedMs": 1512.9547219999986,
+        "executionMs": 2560.833,
+        "planningMs": 13.74,
+        "sharedBlocks": 91127,
+        "rows": 21,
+        "indexes": [
+          "location_root_name_key",
+          "console_model_region_pkey",
+          "game_release_company_gameReleaseId_regionId_idx",
+          "company_pkey",
+          "game_release_region_pkey",
+          "accessory_variant_platform_pkey",
+          "accessory_variant_region_pkey",
+          "console_model_pkey",
+          "console_platform_pkey",
+          "game_release_pkey",
+          "game_company_pkey",
+          "accessory_variant_pkey",
+          "accessory_pkey",
+          "company_search_fts",
+          "company_search_trgm",
+          "console_platform_search_fts",
+          "console_platform_search_trgm",
+          "console_model_search_fts",
+          "console_model_search_trgm",
+          "game_search_fts",
+          "game_search_trgm",
+          "game_release_search_fts",
+          "game_release_search_trgm",
+          "accessory_search_fts",
+          "accessory_search_trgm",
+          "accessory_variant_search_fts",
+          "accessory_variant_search_trgm",
+          "game_pkey",
+          "defect_text_fts",
+          "collection_item_serial_prefix",
+          "owned_console_collectionItemId_type_key",
+          "owned_game_collectionItemId_type_key",
+          "owned_accessory_collectionItemId_type_key"
+        ],
+        "hotNodes": [
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2556.448
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 420,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2556.307
+          },
+          {
+            "type": "Limit",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.492
+          },
+          {
+            "type": "WindowAgg",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.489
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "page",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.468
+          },
+          {
+            "type": "Sort",
+            "estimatedRows": 1,
+            "rows": 21,
+            "loops": 1,
+            "totalMsAcrossLoops": 2550.462
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 9009002,
+            "rows": 3002,
+            "loops": 1,
+            "totalMsAcrossLoops": 2543.697
+          },
+          {
+            "type": "Nested Loop",
+            "estimatedRows": 1,
+            "rowsRemovedByJoinFilter": 9009002,
+            "rows": 3002,
+            "loops": 1,
+            "totalMsAcrossLoops": 1472.654
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "titles",
+            "estimatedRows": 84,
+            "rows": 3002,
+            "loops": 3002,
+            "totalMsAcrossLoops": 624.4159999999999
+          },
+          {
+            "type": "CTE Scan",
+            "cte": "controls",
+            "estimatedRows": 28,
+            "rows": 3002,
+            "loops": 3002,
+            "totalMsAcrossLoops": 588.392
+          },
+          {
+            "type": "Aggregate",
+            "estimatedRows": 1,
+            "rows": 3002,
+            "loops": 1,
+            "totalMsAcrossLoops": 384.605
+          },
+          {
+            "type": "Incremental Sort",
+            "estimatedRows": 8,
+            "rows": 3002,
+            "loops": 1,
+            "totalMsAcrossLoops": 377.745
+          }
+        ]
+      }
+    ]
+  }
+}
