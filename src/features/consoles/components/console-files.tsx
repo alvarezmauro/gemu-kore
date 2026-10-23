@@ -58,9 +58,9 @@ export function ConsoleFileList({
     <ul aria-label="Selected files" className="space-y-3">
       {files.map((entry) => (
         <li key={entry.id} className="min-w-0 rounded-xl bg-muted p-4">
-          <div className="flex flex-wrap items-start gap-3">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap">
             {entry.type !== "CUSTOM_MODEL" && <LocalPhoto file={entry.file} />}
-            <div className="min-w-0 flex-1 space-y-1 [overflow-wrap:anywhere]">
+            <div className="w-full min-w-0 flex-1 space-y-1 [overflow-wrap:anywhere] sm:w-auto">
               <p className="font-medium">{entry.file.name}</p>
               <p className="text-sm text-muted-foreground">
                 {fileRole(entry.type)} ·{" "}

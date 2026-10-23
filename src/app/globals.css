@@ -160,14 +160,11 @@
       animation: overlay-exit var(--motion-exit) ease-out;
     }
     .motion-dialog[data-state="open"] {
-      animation: content-entry var(--motion-enter) var(--motion-ease);
+      /* Keep Tailwind's centering translate intact throughout the entrance. */
+      animation: surface-enter var(--motion-enter) ease-out;
     }
     .motion-dialog[data-state="closed"] {
       animation: surface-exit var(--motion-exit) ease-out;
-    }
-    /* Shared media needs a stationary portal surface for correct measurement. */
-    .motion-dialog[data-shared-layout][data-state="open"] {
-      animation: surface-enter var(--motion-enter) ease-out;
     }
     .motion-sheet[data-state="open"] {
       animation: sheet-enter var(--motion-enter) var(--motion-ease);

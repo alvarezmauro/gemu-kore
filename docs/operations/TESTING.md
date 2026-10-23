@@ -19,18 +19,19 @@ pnpm test:e2e:access
 
 Unit/component tests need only Node.js. Integration tests also need a running Docker engine and its CLI. Browser tests need Playwright's Chromium download. On a Linux CI runner, use `pnpm exec playwright install --with-deps chromium` to install browser system dependencies as well.
 
-| Command                            | Purpose                                                                                                           |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `pnpm test`                        | Run unit and component tests once; no Docker or database needed.                                                  |
-| `pnpm test:watch`                  | Watch unit and component tests during development.                                                                |
-| `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container. |
-| `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.          |
-| `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                  |
-| `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                |
-| `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.        |
-| `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.             |
-| `pnpm test:e2e:a11y`               | Run the 22 desktop/mobile accessibility journeys with light/dark axe scans, keyboard checks and contrast targets. |
-| `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                         |
+| Command                            | Purpose                                                                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test`                        | Run unit and component tests once; no Docker or database needed.                                                      |
+| `pnpm test:watch`                  | Watch unit and component tests during development.                                                                    |
+| `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container.     |
+| `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.              |
+| `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                      |
+| `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                    |
+| `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.            |
+| `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.                 |
+| `pnpm test:e2e:a11y`               | Run the 22 desktop/mobile accessibility journeys with light/dark axe scans, keyboard checks and contrast targets.     |
+| `pnpm test:e2e:mobile`             | Run twelve light/dark mobile workflow checks for creation, camera uploads, filters, dialogs, navigation and 3D touch. |
+| `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                             |
 
 Run lint, typechecking and formatting alongside the applicable suites:
 
@@ -126,6 +127,12 @@ The copy-approval regression exposed a fragment-only “Reload copy” link that
 `pnpm test:e2e:a11y` runs eleven journeys in both Chromium projects using the established isolated production runner. Scans cover public/private pages, all three copy wizards, catalog and metadata forms, dialogs, command search, publication reviews and a real 3D model. Default axe rules remain enabled; reports retain complete results and inconclusive checks. Keyboard focus, modal wrapping/return, native required-field validation, rendered choice names, reduced motion and shared contrast targets have additional assertions.
 
 The audit corrects muted text contrast, command search focus and listbox structure, picker names that omitted visible content, appearance-menu modality, heading order and names on generic layout containers. See the [findings, scope, commands and evidence boundaries](ACCESSIBILITY_AUDIT.md). Axe is a development-only dependency. This scoped assessment does not claim actual VoiceOver/NVDA testing or WCAG certification; Task 20.2's mobile workflow review remains separate.
+
+## Task 20.2 mobile UX review
+
+`pnpm test:e2e:mobile` runs six workflows in light and dark themes in the existing mobile Chromium project. It covers 320px/390px phones, a short viewport, landscape, tablet and desktop breakpoint transitions. The tests use real touch taps and multi-touch gestures, separate camera/library controls, actual uploads and private saves, orientation/Back preservation, filter history, scrolling and focus restoration. Layout, 44px targets, 16px editable text, usable filename width and dialog entrance frames have direct assertions; screenshots supplement them.
+
+The review fixes narrow selected-file cards, dialog entrance centering and photo-dialog intrinsic sizing/long descriptions. See [MOBILE_UX_REVIEW.md](MOBILE_UX_REVIEW.md) for findings, verification and physical-device follow-up. The desktop project excludes only this new touch-specific file; previous coverage and runner safeguards remain intact. Emulation does not verify a physical camera, native keyboard, safe-area cutouts or iOS Safari. Standalone integration/storage suites are not repeated for these presentation changes.
 
 ## Browser tests
 

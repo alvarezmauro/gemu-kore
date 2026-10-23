@@ -115,7 +115,7 @@ export function PhotoDialog({
             }}
             className="space-y-4"
           >
-            <fieldset disabled={pending} className="space-y-4">
+            <fieldset disabled={pending} className="min-w-0 space-y-4">
               {mode === "edit" && (
                 <>
                   <div className="space-y-2">
