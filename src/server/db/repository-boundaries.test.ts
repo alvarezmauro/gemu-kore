@@ -1,9 +1,15 @@
 import { ESLint } from "eslint";
-import { expect, it } from "vitest";
+import { beforeAll, expect, it } from "vitest";
 
 const lint = new ESLint();
 const repositoryPath = "src/server/repositories/catalog/identities.ts";
 const servicePath = "src/server/services/access.ts";
+
+beforeAll(async () => {
+  // Loading the complete Next/TypeScript lint configuration is suite setup,
+  // rather than part of the first boundary assertion's five-second budget.
+  await lint.calculateConfigForFile(repositoryPath);
+});
 
 async function boundaryMessages(code: string, filePath: string) {
   const [result] = await lint.lintText(code, { filePath });

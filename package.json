@@ -45,7 +45,14 @@
     "three:bundle": "tsx scripts/check-three-bundle.ts",
     "three:fixtures": "tsx scripts/write-three-fixtures.ts",
     "three:report": "tsx scripts/collect-three-performance.ts",
-    "three:device": "pnpm db:generate && tsx scripts/serve-three-device.ts"
+    "three:device": "pnpm db:generate && tsx scripts/serve-three-device.ts",
+    "test:production": "node scripts/test-production.mjs",
+    "docker:prod:prepare": "node scripts/prepare-production.mjs",
+    "docker:prod:storage": "node scripts/provision-production-storage.mjs",
+    "docker:prod:build": "docker compose --env-file .env.production -f docker-compose.production.yml build app migrate",
+    "docker:prod:up": "docker compose --env-file .env.production -f docker-compose.production.yml up --detach --wait",
+    "docker:prod:status": "docker compose --env-file .env.production -f docker-compose.production.yml ps",
+    "docker:prod:down": "docker compose --env-file .env.production -f docker-compose.production.yml down"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1146.0",

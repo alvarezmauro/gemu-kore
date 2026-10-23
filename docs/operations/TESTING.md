@@ -1,5 +1,10 @@
 # Testing
 
+For Task 22.1's production images and complete Docker stack, use
+`pnpm test:production`. It runs actual Caddy HTTPS, PostgreSQL and three Garage
+replicas with isolated credentials and retained-volume recreation checks. See
+[Production Docker](PRODUCTION_DOCKER.md#verification) for requirements and scope.
+
 Task 1.4 establishes Vitest, React Testing Library and Playwright. Tests exercise the existing foundation; collection features, authentication and storage integration will receive coverage as they are implemented.
 
 ## Setup and commands

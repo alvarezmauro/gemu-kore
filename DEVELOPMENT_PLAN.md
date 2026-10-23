@@ -2572,6 +2572,8 @@ PostgreSQL
 object storage
 ```
 
+Status: **Completed 2026-10-23.** Added a separate production Compose stack with Caddy HTTPS, a non-root/read-only standalone Next.js image, PostgreSQL runtime/migration roles and private self-hosted Garage storage. Garage uses three retained replicas on one host; provisioning generates its own scoped key and saves credentials privately without replacing existing credentials. Separate operations tooling applies committed migrations before app startup. An isolated full-stack check builds both images, validates the proxy, verifies runtime/port/role boundaries, runs desktop/mobile photo and GLB uploads, rendering, Range delivery and access revocation, then recreates containers and verifies retained database values and identical object bytes. All 1,478 unit/component tests and 133 selected database/access integration cases pass, along with lint, types, formatting and documentation checks. No live deployment, production credentials, dependency or domain migration changes. Guide: [Production Docker](docs/operations/PRODUCTION_DOCKER.md). Next: Task 22.2 — Backup Strategy, only when requested.
+
 ---
 
 ## TASK 22.2 — Backup Strategy

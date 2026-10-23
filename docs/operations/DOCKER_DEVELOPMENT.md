@@ -1,6 +1,6 @@
 # Docker development
 
-Task 1.3 provides `app`, `postgres` and `minio` services in `docker-compose.yml`. This is a local development environment; production packaging belongs to Phase 22.
+Task 1.3 provides `app`, `postgres` and `minio` services in `docker-compose.yml`. This is a local development environment; the separate [production stack](PRODUCTION_DOCKER.md) uses Caddy, standalone Next.js, PostgreSQL and Garage.
 
 ## First setup
 
@@ -84,7 +84,7 @@ No bucket is made public. [Task 5.2 storage service](STORAGE.md) provides the ad
 
 MinIO's community repository is archived, and the historical public image could not be pulled during this task. The development Dockerfile builds upstream release `RELEASE.2025-10-15T17-29-55Z`, commit `9e49d5e7a648f00e26f2246f4dc28e6b07f8c84a`, instead. Go downloads are checked through its module checksum system. The source revision and build/runtime base images are pinned; the image retains MinIO's license and runs the server as a non-root user.
 
-This keeps the requested local MinIO environment usable but does not provide ongoing upstream maintenance. Reassess the production object-storage choice before deployment. [Upstream repository and source-build guidance](https://github.com/minio/minio), [pinned release](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z).
+This keeps the requested local MinIO environment usable but does not provide ongoing upstream maintenance. Task 22.1 selects Garage for the separate production stack. [Upstream repository and source-build guidance](https://github.com/minio/minio), [pinned release](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z).
 
 Service selection and readiness follow Docker's [Compose profiles](https://docs.docker.com/compose/how-tos/profiles/) and [startup ordering](https://docs.docker.com/compose/how-tos/startup-order/) documentation.
 

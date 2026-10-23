@@ -388,6 +388,10 @@ Use one application instance initially, PostgreSQL and a private S3-compatible s
 
 Production packaging can use Next.js standalone output, with its static assets included and a reverse proxy in front. Self-hosting guidance recommends a reverse proxy for request handling protections. Exact packaging, limits, readiness and operations belong to Phase 22. [Next.js self-hosting](https://nextjs.org/docs/app/guides/self-hosting).
 
+Task 22.1 implements that packaging with Caddy, a separate operations image,
+PostgreSQL roles and private self-hosted Garage storage. See
+[Production Docker](../operations/PRODUCTION_DOCKER.md) for setup and verification.
+
 Task 1.3 defines development app, PostgreSQL and MinIO services while also allowing Next.js to run locally against containerized dependencies. Its development configuration and Phase 22's production application image are separate deliverables. Keep the deployment compatible with Docker and ordinary Node.js hosting; do not require a Vercel-only storage, function or identity service. The public health route reports liveness only. Operational scripts reuse domain services for business mutations, with an explicit trusted operator context rather than a fabricated web session or a public authorization bypass.
 
 ## 11. Persistence, migrations and tests

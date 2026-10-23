@@ -33,6 +33,12 @@ To run Next.js inside Docker as well, use `pnpm docker:app` and open [localhost:
 
 The first MinIO build compiles a pinned upstream source release because its community image is no longer available. Its repository is archived; this local development setup does not settle the production storage choice. Details and source references are in the Docker guide.
 
+Production uses a separate [Docker deployment](docs/operations/PRODUCTION_DOCKER.md):
+Caddy HTTPS, a standalone Next.js image, PostgreSQL and self-hosted Garage.
+Start with `.env.production.example` and the guide's setup steps. Production
+volumes and credentials are separate from development. Verify the disposable
+stack with `pnpm test:production`; this does not deploy a live site.
+
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
 ```sh

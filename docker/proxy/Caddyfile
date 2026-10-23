@@ -1,0 +1,17 @@
+{
+	email {$ACME_EMAIL}
+	admin off
+}
+import /etc/caddy/routes.caddy
+
+{$APP_DOMAIN} {
+	import app_routes
+}
+
+{$STORAGE_DOMAIN} {
+	import storage_routes
+}
+
+http://:8080 {
+	respond /healthz 204
+}
