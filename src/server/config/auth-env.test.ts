@@ -48,4 +48,24 @@ describe("auth configuration", () => {
       }).success,
     ).toBe(true);
   });
+  it("trusts proxy headers only through explicit configuration", () => {
+    expect(
+      configuredAuthEnvironment(authEnvironmentSchema.parse(configured))
+        ?.trustProxy,
+    ).toBe(false);
+    expect(
+      configuredAuthEnvironment(
+        authEnvironmentSchema.parse({
+          ...configured,
+          AUTH_TRUST_PROXY: "true",
+        }),
+      )?.trustProxy,
+    ).toBe(true);
+    expect(
+      authEnvironmentSchema.safeParse({
+        ...configured,
+        AUTH_TRUST_PROXY: "yes",
+      }).success,
+    ).toBe(false);
+  });
 });

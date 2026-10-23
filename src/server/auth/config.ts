@@ -44,10 +44,15 @@ export function createAuth(database: PrismaClient, env: AuthEnvironment) {
       disableOriginCheck: false,
       disableCSRFCheck: false,
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
-      // No proxy headers are trusted until a deployment proxy is configured.
-      ipAddress: { ipAddressHeaders: [] },
+      // Opt in only behind an exclusive ingress that replaces this header.
+      // The production Compose app has no published port; Caddy overwrites it.
+      ipAddress: { ipAddressHeaders: env.trustProxy ? ["x-real-ip"] : [] },
     },
-    rateLimit: { enabled: env.production, storage: "memory" },
+    rateLimit: {
+      enabled: env.production,
+      storage: "memory",
+      customRules: { "/sign-in/social": { window: 60, max: 10 } },
+    },
     hooks: {
       before: createAuthMiddleware(async (context) => {
         // Require the exact browser origin even for the first login, when

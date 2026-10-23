@@ -1,5 +1,13 @@
 # Testing
 
+Task 22.3 adds real production-proxy checks for security headers (including OAuth's
+stronger referrer policy), oversized request rejection, forwarding-header spoofing
+and filtered upstream-failure logs. The final production run passes all eight
+deployment/security browser cases and both restored-media cases; 1,479 unit/component,
+184 focused PostgreSQL and three backup cases also pass. Dependency/image findings
+remain separate from these passing tests. See the
+[production security review](../architecture/PRODUCTION_SECURITY_REVIEW.md).
+
 Task 22.2 extends `pnpm test:production` with an encrypted backup, damaged-file
 rejection, restoration into fresh volumes, complete database/READY-asset comparisons
 and restored private-media browser checks. `pnpm test:backup` covers encryption and

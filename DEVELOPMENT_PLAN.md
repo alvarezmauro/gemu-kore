@@ -2621,6 +2621,8 @@ Review:
 - headers
 - public endpoints
 
+Status: **Completed 2026-10-23 — review complete; production approval withheld.** Reviewed all ten areas and recorded eleven findings with fixes, evidence and remaining assessments in the [Production Security Review](docs/architecture/PRODUCTION_SECURITY_REVIEW.md). Updated Next.js/tool dependencies, the Node 24.22.1 and Caddy 2.11.7 image pins, available Debian packages, web-image tool exclusions, protected-ingress sign-in limits, request budgets, browser headers and OAuth-safe proxy logging. All 1,479 unit/component, 184 focused PostgreSQL, three backup and ten desktop/mobile browser cases pass, including the full encrypted restore; lint, types, formatting and documentation checks pass. Audit findings remain explicit: one workspace tooling advisory, unresolved OS/operator-image findings, critical/high proxy matches and Garage source-dependency follow-up. These do not become a clean security audit because application tests pass. No live server, credentials or scheduled jobs changed. Next: Task 23.1 — Whole Repository Review, only when requested; broader final remediation remains Task 23.2.
+
 ---
 
 # PHASE 23 — Final Architecture Review

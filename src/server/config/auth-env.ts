@@ -9,6 +9,7 @@ const optionalValue = (schema: z.ZodString) =>
 export const authEnvironmentSchema = z
   .object({
     NODE_ENV: z.enum(["development", "production", "test"]),
+    AUTH_TRUST_PROXY: z.enum(["true", "false"]).default("false"),
     BETTER_AUTH_URL: optionalValue(z.string().url()),
     BETTER_AUTH_SECRET: optionalValue(z.string().min(32)),
     GOOGLE_CLIENT_ID: optionalValue(z.string().trim().min(1)),
@@ -68,6 +69,7 @@ export type AuthEnvironment = {
   baseURL: string;
   secret: string;
   production: boolean;
+  trustProxy?: boolean;
   google?: { clientId: string; clientSecret: string };
   github?: { clientId: string; clientSecret: string };
 };
@@ -85,6 +87,7 @@ export function configuredAuthEnvironment(
     baseURL: new URL(env.BETTER_AUTH_URL).origin,
     secret: env.BETTER_AUTH_SECRET,
     production: env.NODE_ENV === "production",
+    trustProxy: env.AUTH_TRUST_PROXY === "true",
     ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
           google: {

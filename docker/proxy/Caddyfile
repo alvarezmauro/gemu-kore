@@ -1,6 +1,22 @@
 {
 	email {$ACME_EMAIL}
 	admin off
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 90s
+			idle 2m
+		}
+	}
+	# Reverse-proxy failures otherwise retain OAuth query strings in request.uri.
+	log default {
+		format filter {
+			wrap json
+			request>uri delete
+			request>headers delete
+			resp_headers delete
+		}
+	}
 }
 import /etc/caddy/routes.caddy
 

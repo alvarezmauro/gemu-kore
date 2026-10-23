@@ -11,6 +11,10 @@ networkConcurrency: 8
 # The application continues to use only PostgreSQL through PrismaPg.
 overrides:
   mysql2: 3.23.1
+  # Compatible security patches for Vite and shadcn's CLI-only dependencies.
+  vite: 8.3.3
+  "@modelcontextprotocol/sdk": 1.32.0
+  ip-address: 10.7.4
 
 # Single package; approved installation steps for Prisma, tsx and lint tooling.
 allowBuilds:

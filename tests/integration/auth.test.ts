@@ -183,6 +183,35 @@ afterAll(async () => {
 });
 
 describe("real Better Auth callback with isolated PostgreSQL and mocked providers", () => {
+  it.each([false, true])(
+    "isolates client limits only when the operator trusts the ingress header (%s)",
+    async (trustProxy) => {
+      const origin = "https://limits.example";
+      const instance = createAuth(getDatabase(), {
+        baseURL: origin,
+        secret: "rate-limit-test-only-secret-longer-than-thirty-two-characters",
+        production: true,
+        trustProxy,
+        github: credentials,
+      });
+      // Shorten the real SDK limit for this isolated instance, not its IP logic.
+      const context = await instance.$context;
+      context.rateLimit.max = 2;
+      context.rateLimit.window = 60;
+      const call = (ip: string, forwarded: string) =>
+        instance.handler(
+          new Request(`${origin}/api/auth/ok`, {
+            headers: { "x-real-ip": ip, "x-forwarded-for": forwarded },
+          }),
+        );
+      expect((await call("192.0.2.31", "198.51.100.1")).status).toBe(200);
+      expect((await call("192.0.2.31", "198.51.100.2")).status).toBe(200);
+      expect((await call("192.0.2.31", "198.51.100.3")).status).toBe(429);
+      expect((await call("192.0.2.32", "198.51.100.4")).status).toBe(
+        trustProxy ? 200 : 429,
+      );
+    },
+  );
   for (const provider of ["google", "github"] as const) {
     it.each(["ADMIN", "EDITOR", "VIEWER"] as const)(
       `${provider} matches a pre-provisioned normalized %s grant and enforces its permissions`,

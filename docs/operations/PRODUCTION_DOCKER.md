@@ -29,8 +29,10 @@ the logical object size, plus metadata, database, images and free space. Set
 `GARAGE_NODE_CAPACITY` to the intended capacity of each replica, taking the
 shared host disk into account. Docker volumes do not enforce that quota.
 Task 22.2 adds [encrypted matched backups and a tested restore procedure](BACKUP_RESTORE.md);
-configure an off-host destination before relying on them. The broader production
-security review is Task 22.3.
+configure an off-host destination before relying on them. The
+[production security review](../architecture/PRODUCTION_SECURITY_REVIEW.md) records
+the reviewed boundaries and unresolved release blockers; completing local tests
+does not approve a live deployment.
 
 The web image runs as UID 1000 with a read-only root filesystem, dropped
 capabilities and bounded temporary/cache mounts. It contains Next's traced
@@ -173,10 +175,20 @@ Credential rotation and damaged-cluster recovery require deliberate operator
 procedures; they are not automatic side effects of container startup.
 
 The proxy is intended as the directly reachable edge. Its forwarding headers
-are reset to the connected peer. Existing authentication keeps its current
-policy of not trusting client IP headers; this task does not add IP-based
-authorization or a shared rate-limit store. If another proxy/CDN is introduced,
-review trusted proxy configuration and authentication as a separate change.
+are reset to the connected peer. Compose explicitly enables `AUTH_TRUST_PROXY`
+so sign-in limits use only Caddy's overwritten `X-Real-IP`; other configurations
+default to trusting none. Do not publish the app port or enable this flag on a
+directly reachable server. If another proxy/CDN is introduced, review the exact
+trusted topology and repeat spoofing tests. These process-local counters are not
+IP-based authorization or a distributed traffic-abuse defense.
+
+The ingress limits ordinary bodies to 1 MiB, raw upload bodies to 50 MiB and S3
+transport to 64 MiB. Application image/template limits remain narrower. Headers
+must arrive within 10 seconds and bodies within 90 seconds; idle keep-alive is
+two minutes. HTTPS responses receive one-year HSTS without subdomain/preload
+opt-in. Next.js applies the reviewed framing/MIME/referrer/feature/CSP headers.
+Default proxy error logs omit request URIs/headers and response headers; access
+logging stays disabled. Review any added logging sink for OAuth/private data.
 
 For private troubleshooting, use scoped service logs and `ps`; never publish
 container inspection, resolved environments, OAuth responses or raw logs that

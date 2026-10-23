@@ -1,4 +1,13 @@
 (app_routes) {
+	header Strict-Transport-Security "max-age=31536000"
+	@upload path /api/uploads
+	@ordinary not path /api/uploads
+	request_body @upload {
+		max_size 50MiB
+	}
+	request_body @ordinary {
+		max_size 1MiB
+	}
 	encode zstd gzip
 	reverse_proxy app:3000 {
 		header_up X-Forwarded-For {remote_host}
@@ -9,6 +18,11 @@
 	}
 }
 (storage_routes) {
+	header Strict-Transport-Security "max-age=31536000"
+	# Allow S3 framing overhead above the application's 50-MiB object limit.
+	request_body {
+		max_size 64MiB
+	}
 	# Preserve the Host, URI, payload and range headers used in S3 signatures.
 	reverse_proxy garage1:3900 garage2:3900 garage3:3900 {
 		lb_policy round_robin

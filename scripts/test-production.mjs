@@ -128,17 +128,29 @@ try {
     join(directory, "certificate.pem"),
   ]);
   await chmod(join(directory, "certificate.pem"), 0o644);
+  const proxyGlobals = (await readFile("docker/proxy/Caddyfile", "utf8")).split(
+    "\nimport /etc/caddy/routes.caddy",
+  )[0];
+  if (!proxyGlobals.trim().endsWith("}"))
+    throw new Error("Production proxy globals were not found");
   await writeFile(
     join(directory, "Caddyfile"),
-    `{
-  admin off
+    `${proxyGlobals.replace(
+      "{",
+      `{
   auto_https disable_redirects
-  default_sni storage.test
-}
+  default_sni storage.test`,
+    )}
 import /etc/caddy/routes.caddy
 https://127.0.0.1 {
   tls /test/certificate.pem /test/key.pem
-  import app_routes
+  # A test-only broken upstream exercises the production error-log filter.
+  handle /__test_proxy_failure {
+    reverse_proxy 127.0.0.1:1
+  }
+  handle {
+    import app_routes
+  }
 }
 https://storage.test {
   tls /test/certificate.pem /test/key.pem
@@ -265,7 +277,7 @@ http://:8080 {
     "app",
     "node",
     "-e",
-    "const f=require('node:fs'); for(const p of ['.env.production','tests','scripts/access-admin.ts','node_modules/prisma']) if(f.existsSync(p)) process.exit(1); if(process.getuid()!==1000)process.exit(1)",
+    "const f=require('node:fs'); for(const p of ['.env.production','tests','scripts/access-admin.ts','node_modules/prisma','/usr/local/lib/node_modules/npm','/usr/local/bin/npm','/usr/local/bin/npx']) if(f.existsSync(p)) process.exit(1); if(process.getuid()!==1000 || process.version!=='v24.22.1')process.exit(1)",
   ]);
   await probe("privileges");
   await probe("seed");
@@ -294,6 +306,16 @@ http://:8080 {
       maxBuffer: 8 * 1024 * 1024,
     },
   ).then(({ stdout }) => console.info(stdout));
+  const proxyErrors = (await compose(["logs", "--no-color", "proxy"])).stdout;
+  if (
+    !proxyErrors.includes('"status":502') ||
+    [
+      "security-review-code",
+      "security-review-state",
+      "security-review-header",
+    ].some((value) => proxyErrors.includes(value))
+  )
+    throw new Error("Proxy error-log privacy check failed");
   await probe("seed");
   console.info(
     "Recreating containers with retained volumes and rerunning setup...",

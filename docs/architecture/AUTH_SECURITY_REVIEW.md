@@ -2,6 +2,10 @@
 
 Task 3.6 · Reviewed 2026-10-04 · Implemented authentication foundation only
 
+For the implemented production ingress, current dependencies and later application
+surfaces, see the [Task 22.3 production security review](PRODUCTION_SECURITY_REVIEW.md).
+The counts and future-work list below describe the earlier Task 3.6 review.
+
 The reviewed OAuth, session, AccessGrant and role boundaries do not show an authentication or role-escalation bypass. Two application hardening findings were reproduced and fixed: provider error text surviving in redirect URLs, and unnecessary session mutation endpoints. An optional dependency update removes two published MySQL advisories. Two other upstream dependency advisories remain visible and are assessed below; this is not a clean dependency audit or production certification.
 
 ## Scope and trust boundaries

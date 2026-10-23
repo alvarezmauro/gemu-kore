@@ -43,6 +43,10 @@ stack with `pnpm test:production`; this does not deploy a live site.
 matched database/asset backups, a daily server timer and restoration into fresh
 volumes. Configure an off-host destination and keep the encryption key separately.
 
+The [production security review](docs/architecture/PRODUCTION_SECURITY_REVIEW.md)
+records hardening, verification and unresolved image advisories that block release
+approval.
+
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
 ```sh
