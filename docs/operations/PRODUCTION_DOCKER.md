@@ -28,8 +28,9 @@ loss and is not a high-availability deployment. Allow approximately three times
 the logical object size, plus metadata, database, images and free space. Set
 `GARAGE_NODE_CAPACITY` to the intended capacity of each replica, taking the
 shared host disk into account. Docker volumes do not enforce that quota.
-Off-host backups and a tested restore procedure are Task 22.2; the broader
-production security review is Task 22.3.
+Task 22.2 adds [encrypted matched backups and a tested restore procedure](BACKUP_RESTORE.md);
+configure an off-host destination before relying on them. The broader production
+security review is Task 22.3.
 
 The web image runs as UID 1000 with a read-only root filesystem, dropped
 capabilities and bounded temporary/cache mounts. It contains Next's traced
@@ -143,8 +144,8 @@ replicas. The implementation has no measured production capacity guarantee.
 ## Updates, shutdown and existing data
 
 Use the runtime and operations images built from the **same revision**. Review
-migrations and take a tested backup before applying a release once Task 22.2's
-backup workflow is in place. Build the new release tags, then rerun
+migrations and take a verified matched backup using the
+[backup workflow](BACKUP_RESTORE.md) before applying a release. Build the new release tags, then rerun
 `pnpm docker:prod:up`. Compose runs the migration image before starting the app.
 To explicitly recheck setup without changing the image:
 

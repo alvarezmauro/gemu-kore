@@ -86,7 +86,7 @@ async function compose(parameters, timeout) {
   return docker([...args, ...parameters], timeout);
 }
 async function probe(command) {
-  await compose([
+  const result = await compose([
     "run",
     "--rm",
     "--no-deps",
@@ -99,6 +99,7 @@ async function probe(command) {
     "tests/helpers/production-probe.ts",
     command,
   ]);
+  return result.stdout.trim() ? JSON.parse(result.stdout.trim()) : null;
 }
 try {
   await writeFile(
@@ -307,6 +308,187 @@ http://:8080 {
   console.info(
     "Production Docker checks passed, including retained database and object bytes.",
   );
+  console.info(
+    "Testing encrypted backup and restore into entirely new volumes...",
+  );
+  const baseline = await probe("capture-backup");
+  const backupRoot = join(directory, "encrypted-backups");
+  const keyFile = join(directory, "backup.key");
+  await writeFile(keyFile, randomBytes(32).toString("hex"), { mode: 0o600 });
+  const backupArgs = ["scripts/backup/production.mjs"];
+  const backup = JSON.parse(
+    (
+      await exec(
+        process.execPath,
+        [
+          ...backupArgs,
+          "create",
+          "--env-file",
+          envFile,
+          "--directory",
+          backupRoot,
+          "--key-file",
+          keyFile,
+          "--project-name",
+          project,
+          "--compose-file",
+          override,
+        ],
+        { env: environment, timeout: 300000, maxBuffer: 1024 * 1024 },
+      )
+    ).stdout.trim(),
+  );
+  await probe("check"); // Backup's maintenance window resumed the source stack.
+  // Prove a damaged encrypted payload is rejected before creating recovery data.
+  const damaged = join(backup.directory, "database.dump.enc");
+  const original = await readFile(damaged);
+  const corrupted = Buffer.from(original);
+  corrupted[corrupted.length - 20] ^= 1;
+  await writeFile(damaged, corrupted);
+  let rejected = false;
+  try {
+    await exec(
+      process.execPath,
+      [
+        ...backupArgs,
+        "verify",
+        "--directory",
+        backup.directory,
+        "--key-file",
+        keyFile,
+      ],
+      { env: environment, timeout: 30000 },
+    );
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error("Damaged backup was accepted");
+  await writeFile(damaged, original);
+  await compose(["down"], 90000);
+  const restoredPrefix = `${project}-restored`;
+  const recoveryEnv = join(directory, "recovery.env");
+  const restoreArgs = [
+    ...backupArgs,
+    "restore",
+    "--directory",
+    backup.directory,
+    "--key-file",
+    keyFile,
+    "--volume-prefix",
+    restoredPrefix,
+    "--env-output",
+    recoveryEnv,
+    "--compose-file",
+    override,
+  ];
+  await exec(process.execPath, restoreArgs, {
+    env: environment,
+    timeout: 300000,
+    maxBuffer: 1024 * 1024,
+  });
+  // Restore must refuse a second attempt on the same target; no existing data is replaced.
+  rejected = false;
+  try {
+    await exec(process.execPath, restoreArgs, {
+      env: environment,
+      timeout: 30000,
+    });
+  } catch {
+    rejected = true;
+  }
+  if (!rejected) throw new Error("Restore reused an existing recovery target");
+  const recovery = parseEnv(await readFile(recoveryEnv, "utf8"));
+  await writeFile(
+    recoveryEnv,
+    (await readFile(recoveryEnv, "utf8"))
+      .replace(/^HTTP_PORT=.*$/m, "HTTP_PORT=3110")
+      .replace(/^HTTPS_PORT=.*$/m, "HTTPS_PORT=3111"),
+  );
+  const recoveryArgs = [
+    "compose",
+    "--project-name",
+    restoredPrefix,
+    "--env-file",
+    recoveryEnv,
+    "-f",
+    "docker-compose.production.yml",
+    "-f",
+    override,
+  ];
+  const recoveryEnvironment = {
+    ...environment,
+    ...recovery,
+    HTTP_PORT: "3110",
+    HTTPS_PORT: "3111",
+  };
+  try {
+    await exec(
+      "docker",
+      [
+        ...recoveryArgs,
+        "up",
+        "--detach",
+        "--wait",
+        "--wait-timeout",
+        "180",
+        "--no-build",
+      ],
+      { env: recoveryEnvironment, timeout: 240000 },
+    );
+    const restoredCapture = await exec(
+      "docker",
+      [
+        ...recoveryArgs,
+        "run",
+        "--rm",
+        "--no-deps",
+        "--entrypoint",
+        "node",
+        "operations",
+        "--conditions=react-server",
+        "--import",
+        "tsx",
+        "tests/helpers/production-probe.ts",
+        "capture-backup",
+      ],
+      { env: recoveryEnvironment, timeout: 60000 },
+    );
+    if (
+      JSON.stringify(JSON.parse(restoredCapture.stdout).tables) !==
+      JSON.stringify(baseline.tables)
+    )
+      throw new Error("Restored database contents differ");
+    await exec(
+      "pnpm",
+      [
+        "exec",
+        "playwright",
+        "test",
+        "--config",
+        "playwright.production.config.ts",
+        "restore.spec.ts",
+      ],
+      {
+        env: {
+          ...recoveryEnvironment,
+          PRODUCTION_TEST_PROJECT: restoredPrefix,
+          PRODUCTION_TEST_ENV: recoveryEnv,
+          PRODUCTION_TEST_OVERRIDE: override,
+          PRODUCTION_RESTORE_FIXTURE: JSON.stringify(baseline),
+          BETTER_AUTH_URL: "https://127.0.0.1:3111",
+        },
+        timeout: 180000,
+      },
+    ).then(({ stdout }) => console.info(stdout));
+    console.info(
+      "Encrypted backup/restore passed: database hashes and all READY asset bytes match, with private media verified in both browsers.",
+    );
+  } finally {
+    await exec("docker", [...recoveryArgs, "down", "--remove-orphans"], {
+      env: recoveryEnvironment,
+      timeout: 90000,
+    }).catch(() => {});
+  }
 } catch (error) {
   // Avoid dumping child-process objects or resolved configuration containing secrets.
   console.error("Production Docker checks failed.");
@@ -329,6 +511,41 @@ http://:8080 {
   process.exitCode = 1;
 } finally {
   await compose(["down", "--remove-orphans"], 90000).catch(() => {});
+  const recoveryFile = join(directory, "recovery.env");
+  await docker(
+    [
+      "compose",
+      "--project-name",
+      `${project}-restored`,
+      "--env-file",
+      recoveryFile,
+      "-f",
+      "docker-compose.production.yml",
+      "-f",
+      override,
+      "down",
+      "--remove-orphans",
+    ],
+    90000,
+  ).catch(() => {});
+  const restoredNames = (
+    await docker(["volume", "ls", "--format", "{{.Name}}"])
+  ).stdout
+    .trim()
+    .split("\n")
+    .filter((name) => name.startsWith(`${project}-restored-`));
+  for (const name of restoredNames) {
+    const marker = (
+      await docker([
+        "volume",
+        "inspect",
+        "--format",
+        '{{index .Labels "gemukore.restore"}}',
+        name,
+      ])
+    ).stdout.trim();
+    if (/^[a-f0-9-]{36}$/.test(marker)) await docker(["volume", "rm", name]);
+  }
   for (const name of volumes) {
     const { stdout } = await docker([
       "volume",

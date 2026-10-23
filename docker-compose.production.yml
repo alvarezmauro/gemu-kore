@@ -1,4 +1,4 @@
-name: gemukore-production
+name: ${PRODUCTION_PROJECT_NAME:-gemukore-production}
 
 x-app-environment: &app-environment
   NODE_ENV: production

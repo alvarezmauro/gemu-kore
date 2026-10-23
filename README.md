@@ -39,6 +39,10 @@ Start with `.env.production.example` and the guide's setup steps. Production
 volumes and credentials are separate from development. Verify the disposable
 stack with `pnpm test:production`; this does not deploy a live site.
 
+[Backup and recovery](docs/operations/BACKUP_RESTORE.md) provides encrypted,
+matched database/asset backups, a daily server timer and restoration into fresh
+volumes. Configure an off-host destination and keep the encryption key separately.
+
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
 ```sh

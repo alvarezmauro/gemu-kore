@@ -2594,6 +2594,8 @@ Implement/document:
 
 A backup without a tested restore procedure is not considered complete.
 
+Status: **Completed 2026-10-23.** Added matched, encrypted PostgreSQL/Garage/Caddy/environment backups with authenticated verification, retention and daily Linux timer templates. The coordinated cold snapshot resumes source services before encryption; recovery authenticates all payloads, requires fresh volumes, restores restricted database grants and invalidates restored sessions, then leaves the web app offline for review. The isolated production rehearsal passes database-table hashes, every READY asset's bytes, damaged-backup rejection, source resumption, recovery-target reuse refusal and desktop/mobile access to restored photos and GLBs. All 1,478 unit/component cases, three backup test cases, lint, types, formatting and documentation checks pass. Off-host storage, separately held keys and server timer activation remain deployment configuration; no live deployment or timer was changed. Guide: [Backup and recovery](docs/operations/BACKUP_RESTORE.md). Next: Task 22.3 — Production Security Review, only when requested.
+
 ---
 
 ## TASK 22.3 — Production Security Review

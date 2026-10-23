@@ -13,6 +13,52 @@ async function main() {
   const db = getDatabase();
   const [command] = process.argv.slice(2);
   try {
+    if (command === "capture-backup") {
+      const tableNames = await db.$queryRaw<{ tablename: string }[]>`
+        SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'session' ORDER BY tablename`;
+      const tables: Record<string, string> = {};
+      for (const { tablename } of tableNames) {
+        const quoted = '"' + tablename.replaceAll('"', '""') + '"';
+        const rows = await db.$queryRawUnsafe(
+          `SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) AS data FROM public.${quoted} t`,
+        );
+        tables[tablename] = createHash("sha256")
+          .update(JSON.stringify(rows))
+          .digest("hex");
+      }
+      const assets = await db.asset.findMany({
+        where: { state: "READY" },
+        orderBy: { id: "asc" },
+      });
+      assert.ok(assets.length >= 6);
+      assert.ok(assets.some((asset) => asset.deliveryClass === "ORIGINAL"));
+      assert.ok(assets.some((asset) => asset.mimeType === "model/gltf-binary"));
+      for (const asset of assets) {
+        const object = await getObjectStorage().get({
+          storageNamespace: asset.storageNamespace!,
+          objectKey: asset.objectKey!,
+        });
+        const hash = createHash("sha256");
+        let bytes = 0;
+        for await (const chunk of object.body) {
+          hash.update(chunk);
+          bytes += chunk.length;
+        }
+        assert.equal(hash.digest("hex"), asset.sha256);
+        assert.equal(bytes, Number(asset.sizeBytes));
+      }
+      const photo = assets.find(
+        (asset) =>
+          asset.mimeType === "image/webp" && asset.deliveryClass === "DISPLAY",
+      )!;
+      const model = assets.find(
+        (asset) => asset.mimeType === "model/gltf-binary",
+      )!;
+      console.info(
+        JSON.stringify({ tables, photoId: photo.id, modelId: model.id }),
+      );
+      return;
+    }
     if (command === "privileges") {
       const url = new URL(process.env.DATABASE_URL!);
       url.username = "gemukore_app";

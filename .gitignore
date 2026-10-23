@@ -42,3 +42,7 @@ next-env.d.ts
 pnpm-debug.log*
 playwright-report/
 test-results/
+
+# Encrypted backup sets and temporary database exports belong outside the checkout.
+*.enc
+*.dump

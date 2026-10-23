@@ -1,5 +1,10 @@
 # Testing
 
+Task 22.2 extends `pnpm test:production` with an encrypted backup, damaged-file
+rejection, restoration into fresh volumes, complete database/READY-asset comparisons
+and restored private-media browser checks. `pnpm test:backup` covers encryption and
+key-handling failures. See [Backup and recovery](BACKUP_RESTORE.md#verification).
+
 For Task 22.1's production images and complete Docker stack, use
 `pnpm test:production`. It runs actual Caddy HTTPS, PostgreSQL and three Garage
 replicas with isolated credentials and retained-volume recreation checks. See

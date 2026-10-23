@@ -1,0 +1,21 @@
+[Unit]
+Description=Encrypted GemuKore database and asset backup
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+RequiresMountsFor=/mnt/gemukore-backups
+
+[Service]
+Type=oneshot
+User=gemukore
+SupplementaryGroups=docker
+WorkingDirectory=/srv/gemukore
+UMask=0077
+Environment=BACKUP_WORK_DIRECTORY=/var/lib/gemukore-backup/work
+Environment=BACKUP_TIMEOUT_SECONDS=18000
+# Fail visibly rather than writing a local substitute if the off-host mount is absent.
+ExecStartPre=/usr/bin/mountpoint --quiet /mnt/gemukore-backups
+ExecStart=/usr/bin/node /srv/gemukore/scripts/backup/production.mjs create --env-file /srv/gemukore/.env.production
+TimeoutStartSec=6h
+TimeoutStopSec=8min
+KillMode=mixed
