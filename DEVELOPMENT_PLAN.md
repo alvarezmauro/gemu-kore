@@ -2744,6 +2744,8 @@ Do not perform architectural refactors.
 
 ## TASK 24.2 — Documentation
 
+Status: **Completed 2026-10-23.** Replaced the README's scaffolding-era summary with current capabilities and first-run instructions; refreshed development, storage, access, testing, migration, production-update, backup and restore guidance. Environment-template comments now explain existing capabilities and operator settings; all assignments remain unchanged. Dated test/security reports retain their evidence and limits. Lint, typechecking, schema validation, 61 configuration unit tests, 28 isolated database/access integration tests and three backup cases pass. Shell snippets parse, pnpm command names resolve, local links/heading fragments and formatting pass, and both templates validate through the actual application schemas and Compose using isolated/synthetic configuration. CLI help was checked without creating an administrator. No application code, dependency, migration, personal data, live deployment, timer or release approval changed. See [Testing](docs/operations/TESTING.md#task-242-documentation-verification) for this task's scope. This is the final planned repository task; unresolved production vendor findings and host/provider/backup verification still gate a live release.
+
 MODEL:
 
 `GPT-6 Luna`

@@ -1,6 +1,6 @@
 # Database development
 
-The foundation uses PostgreSQL **16.15** and Prisma **7.10.1**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Tasks 4.1–4.2 implement and review the approved core catalog and owned-collection structures. Findings and corrections are in [Prisma schema review](../architecture/PRISMA_SCHEMA_REVIEW.md). See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
+The application uses PostgreSQL **16.15** and Prisma **7.10.1**, with matching client and PostgreSQL adapter versions. Committed migrations cover authentication/grants, catalog and owned copies, assets, search, enrichment, physical templates and public privacy. The [core database contracts](CORE_DATABASE.md) and [schema review](../architecture/PRISMA_SCHEMA_REVIEW.md) explain the foundational invariants; later feature migrations extend them. Apply the complete migration directory on a fresh database rather than choosing only the original core migrations.
 
 ## Local connection
 
@@ -42,7 +42,40 @@ pnpm db:status
 
 Use `migrate dev` only on a dedicated development database; it uses a shadow database and can propose a reset when it finds drift. Do not accept a reset on valuable data. Applied migration files are immutable: add a new migration for subsequent changes. Commit the schema, migration SQL, migration lock and package lock together.
 
-For an existing set of reviewed migrations, use `pnpm db:deploy`. This applies pending migrations without generating schema changes or resetting data. Production migration credentials and permissions will be separated from application runtime access during deployment work. No startup hook runs migrations or creates a database automatically. Do not use `db push` or an automatic reset; they bypass the reviewed migration workflow and custom SQL constraints. Task 4.1 creates safe settings defaults, without placeholder catalog, collection or administrator seed data.
+For an existing set of reviewed migrations, use `pnpm db:deploy`. This applies pending migrations without generating schema changes or resetting data. Host development and the optional development app do not migrate automatically. Do not use `db push` or an automatic reset; they bypass the reviewed migration workflow and custom SQL constraints. Initial settings keep public collection/indexing disabled. Migrations create no placeholder catalog, owned collection or administrator; console seed validation also writes no data.
+
+## Production migrations and release recovery
+
+Production separates the `postgres` administration role, `gemukore_migrator`
+schema owner/operator role and `gemukore_app` runtime role. The production Compose
+`migrate` service applies committed migrations using the operations image, then
+revokes runtime access to `_prisma_migrations`. The app waits for this service to
+succeed. It also waits for storage setup; `/api/health` alone cannot prove either
+dependency is usable. See the [deployment workflow](PRODUCTION_DOCKER.md).
+
+Use the matching release's operations image and production environment file for
+status or an explicit reviewed migration run:
+
+```sh
+docker compose --env-file .env.production -f docker-compose.production.yml run --rm operations db:status
+docker compose --env-file .env.production -f docker-compose.production.yml run --rm migrate
+```
+
+Do not run host `pnpm db:migrate` against production, bypass the migration wrapper
+with runtime credentials, or edit `_prisma_migrations` to conceal a failure. A
+failed migration keeps the app from starting; inspect its private diagnostics and
+the migration before deciding how to repair it. Preserve applied SQL and prepare
+a reviewed forward repair when appropriate.
+
+Take a [verified matched backup](BACKUP_RESTORE.md) of the old release before
+switching revisions or applying new migrations. It includes the database,
+Garage objects/metadata, private environment and proxy state. Reverting a web
+image does not undo schema/data changes. If rollback needs data recovery, use the
+matching old release and restore the complete set into fresh volumes, then review
+the recovered installation before cutover. Database and object snapshots must
+remain paired.
+
+## Generated client and latest migration
 
 Generated Prisma files live under `src/server/db/generated/` and are ignored. The `dev`, `build`, `typecheck` and `db:check` commands generate them explicitly, so a clean checkout does not depend on an untracked client from another machine.
 
@@ -64,11 +97,14 @@ Two checks serve different purposes:
 - `GET /api/health` is public **liveness**: `{ "status": "ok" }`, with `Cache-Control: no-store`. It does not connect to PostgreSQL or disclose configuration.
 - `pnpm db:check` is an operator-only connectivity check through the actual Prisma client, using a read-only `SELECT 1`. It exits nonzero on missing/invalid configuration or connection failure and omits raw errors/credentials. It does not verify migration currency; use `pnpm db:status` for that.
 
-There is no public database-readiness endpoint before an operational authorization mechanism is introduced. ESLint prevents database/repository imports in UI and route modules, and `server-only` prevents application database modules from entering client bundles. The schema-only environment validator is shared with the standalone Prisma CLI and contains no environment values.
+There is no public database-readiness endpoint. ESLint prevents database/repository imports in UI and route modules, and `server-only` prevents application database modules from entering client bundles. The schema-only environment validator is shared with the standalone Prisma CLI and contains no environment values.
 
 Connection setup follows Prisma's [PostgreSQL adapter documentation](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql). Migration commands follow its [Prisma 7 development and production workflow](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/development-and-production).
 
 ## Task 1.2 verification
+
+The following is historical foundation evidence. Current suite commands and
+later migration coverage are recorded in [Testing](TESTING.md).
 
 Verified on 2026-10-02 against the local PostgreSQL 16.15 instance:
 

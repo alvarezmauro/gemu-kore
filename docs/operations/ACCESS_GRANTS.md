@@ -12,7 +12,7 @@ There is no User foreign key and no User.role. A grant can exist before its owne
 
 `src/server/services/access.ts` returns only the role needed by the private welcome page. Feature queries handle request headers and transport errors; React contains no grant query or permission logic. Private pages are dynamic and not shared-cached. A committed disable/delete or role change affects the next authorization check, including an existing session. Already authorized operations may finish; already delivered data cannot be recalled.
 
-Task 3.4 now implements the [role-to-permission policy and guarded grant-management services](RBAC.md), with fresh-login and last-admin safeguards. No grant-management HTTP endpoint, Server Action or screen is exposed yet. The current private page is a welcome screen, not implemented collection management.
+The [role-to-permission policy and guarded grant-management services](RBAC.md) enforce fresh-login and last-admin safeguards. There is no grant-management HTTP endpoint, Server Action or screen; use the explicit operator commands below for bootstrap/recovery. `/app` now shows the private collection dashboard, with collection management in its feature routes. Grant administration services remain server-only.
 
 ## First administrator
 
@@ -61,7 +61,7 @@ Save the recovery receipt, which includes operator, reason, previous/target emai
 
 ## Transaction convention
 
-Every application grant-policy write must use `withAccessGrantTransaction`, acquiring transaction-scoped advisory lock `(1195724117, 1094927187)` before policy reads. Read Committed ensures a competing operator sees the preceding committed grant after waiting. The lock releases automatically at transaction end. Keep provider calls and other external work outside this short transaction. Direct manual SQL does not participate in this convention and should not be used for routine grant changes. [PostgreSQL advisory lock reference](https://www.postgresql.org/docs/16/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
+Grant-policy writes go through the guarded functions in `src/server/services/access.ts`. Its internal `withAccessGrantTransaction` helper acquires transaction-scoped advisory lock `(1195724117, 1094927187)` before policy reads; it is not an exported transaction API. Read Committed ensures a competing operator sees the preceding committed grant after waiting. The lock releases automatically at transaction end. Keep provider calls and other external work outside this short transaction. Direct manual SQL does not participate in this convention and should not be used for routine grant changes. [PostgreSQL advisory lock reference](https://www.postgresql.org/docs/16/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
 
 ## Verification
 

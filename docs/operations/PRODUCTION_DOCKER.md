@@ -5,6 +5,15 @@ image, PostgreSQL 16 and Garage S3 storage. Development continues to use the
 separate [development stack](DOCKER_DEVELOPMENT.md). No real server, DNS record,
 OAuth application or production account is created by these files.
 
+**Production approval remains withheld.** The
+[Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) is the current
+disposition of the proxy, Garage and native-package findings; the older
+[security review](../architecture/PRODUCTION_SECURITY_REVIEW.md) retains its
+baseline evidence. Resolve the recorded release blockers and repeat the relevant
+artifact/ingress/recovery checks before a live release. The procedures below
+document the existing stack; this documentation update does not deploy it or
+claim fresh vendor scans.
+
 ## Services and boundaries
 
 Only Caddy publishes host ports, TCP 80 and 443. It obtains and renews HTTPS
@@ -76,6 +85,12 @@ does not inspect the globally bundled pnpm tree in the operations image. The web
 runtime still excludes package-manager tools. The operations image retains pnpm
 and Node; unused inherited npm, npx and Yarn are removed. The production test
 runner verifies these boundaries and the actual global pnpm version.
+
+Both production targets use the Node.js 24.22.1 base pinned in
+`docker/app/Dockerfile`. The host/development baseline in `.node-version` is
+separate. Use the project's compatible Node 24.x and pinned pnpm for host-side
+provisioning/backup commands. The operations image contains the trusted access
+CLI and Prisma tools; it no longer contains the unused `auth` schema generator.
 
 ## First deployment
 
@@ -151,7 +166,8 @@ replicas. The implementation has no measured production capacity guarantee.
    database status or credentials. Startup separately waits for PostgreSQL,
    committed migrations, Garage layout/bucket/key setup and the app healthcheck.
    Confirm Caddy has obtained valid certificates for **both** hostnames before
-   uploading. Check provider login and private access using the intended account.
+   uploading. A fresh installation has no administrator until the next step;
+   successful OAuth alone cannot open the private collection.
 7. Create the first administrator through the existing trusted operator CLI:
 
    ```sh
@@ -163,13 +179,55 @@ replicas. The implementation has no measured production capacity guarantee.
    Recovery uses the same command with `recover` and its explicit reason and
    identity arguments; see [access grants](ACCESS_GRANTS.md).
 
+8. Verify actual provider sign-in with the intended administrator, `/app`
+   access, a private photo/model upload and current role restrictions. The
+   public collection starts disabled; review visibility and each item's/media's
+   publication intent in `/app/settings/public` before sharing it. Configure
+   and verify the off-host backup destination and server timer using
+   [backup and recovery](BACKUP_RESTORE.md). A local rehearsal does not establish
+   real DNS, certificate renewal, external provider consent or off-host recovery.
+
 ## Updates, shutdown and existing data
 
-Use the runtime and operations images built from the **same revision**. Review
-migrations and take a verified matched backup using the
-[backup workflow](BACKUP_RESTORE.md) before applying a release. Build the new release tags, then rerun
-`pnpm docker:prod:up`. Compose runs the migration image before starting the app.
-To explicitly recheck setup without changing the image:
+Use runtime and operations images built from the **same revision**, with distinct
+release tags for each release. Coordinate updates with the backup operator so
+no backup, migration, provisioning or grant-maintenance job runs concurrently.
+
+1. While still on the old checkout and image references, create and verify a
+   matched backup using the [backup workflow](BACKUP_RESTORE.md). Retain that
+   checkout/configuration and its images for recovery. Taking the backup after
+   changing release references can record the wrong recovery release.
+2. Review the new release's migrations and configuration, select its committed
+   checkout, preserve private credentials/volume names, and set the matching new
+   runtime/operations image tags in `.env.production`.
+3. Validate and build, then use a maintenance window to recreate the stack:
+
+   ```sh
+   docker compose --env-file .env.production -f docker-compose.production.yml config --quiet
+   pnpm docker:prod:build
+   pnpm docker:prod:down
+   pnpm docker:prod:up
+   pnpm docker:prod:status
+   ```
+
+   The retained external volumes are reused. Recreating the containers reruns
+   migration and storage initialization; the app waits for both. This procedure
+   has downtime and makes no zero-downtime migration guarantee.
+
+4. Check migration status through the operations image, health, both HTTPS
+   hostnames, real sign-in, representative private media and public privacy gates.
+   Resume the backup schedule after the release is healthy.
+
+To inspect migration state and database connectivity without regenerating a
+client inside the operations image:
+
+```sh
+docker compose --env-file .env.production -f docker-compose.production.yml run --rm operations db:status
+docker compose --env-file .env.production -f docker-compose.production.yml run --rm operations exec node --conditions=react-server --import tsx scripts/check-database.ts
+```
+
+To explicitly recheck reviewed setup without changing the image, during a
+coordinated maintenance window:
 
 ```sh
 docker compose --env-file .env.production -f docker-compose.production.yml run --rm migrate
@@ -218,6 +276,12 @@ data intact. Inspect the private Garage status through an operator container
 or the Garage CLI before making layout changes.
 
 ## Verification
+
+Task 23.2 repeats the production rehearsal, including the operations-image tool
+boundaries and encrypted restore. Its [remediation report](../architecture/FINAL_REVIEW_REMEDIATION.md)
+records ten distinct browser cases and the exact scanned artifact snapshots.
+The Task 22.1 verification paragraph below is historical; no new live deployment
+or complete production rehearsal is implied by the Task 24.2 documentation work.
 
 Run `pnpm test:production` with Docker, OpenSSL and Playwright Chromium installed.
 It builds both production targets without credentials, creates unique labelled

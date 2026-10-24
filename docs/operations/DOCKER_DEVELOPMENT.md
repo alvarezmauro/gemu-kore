@@ -1,23 +1,26 @@
 # Docker development
 
-Task 1.3 provides `app`, `postgres` and `minio` services in `docker-compose.yml`. This is a local development environment; the separate [production stack](PRODUCTION_DOCKER.md) uses Caddy, standalone Next.js, PostgreSQL and Garage.
+`docker-compose.yml` provides `app`, `postgres` and `minio` services for local development. The separate [production stack](PRODUCTION_DOCKER.md) uses Caddy, standalone Next.js, PostgreSQL and Garage. Dated task verification below records historical checks; the instructions above it describe the current setup.
 
 ## First setup
 
 Install Docker with Compose and start its engine. Local Next.js development also needs the Node.js/pnpm versions in [README.md](../../README.md). Run from the repository root:
 
 ```sh
-# Keep an existing file: it contains the Task 1.2 database password.
+# Keep an existing file and its established database/storage credentials.
 test -f .env.local || cp .env.example .env.local
+chmod 600 .env.local
+pnpm install --frozen-lockfile
 pnpm docker:up
 pnpm db:deploy
+pnpm db:status
 pnpm db:check
 pnpm dev
 ```
 
 `docker:up` prepares the persistent volumes, builds MinIO and starts PostgreSQL/MinIO, waiting for their health checks. Next.js runs on the host using `.env.local` and the published service ports. The initial source/image/dependency downloads can take several minutes; subsequent builds use Docker's cache. No migrations run automatically at service startup.
 
-For a fresh environment, `.env.example` contains local-only sample credentials. For an existing Task 1.2 setup, retain `DATABASE_URL` and add the matching `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` and `POSTGRES_PORT` plus the MinIO settings from the example. Passwords used in Compose's generated database URL must be URL-safe. The current setup uses generated credentials stored only in `.env.local`.
+For a fresh environment, `.env.example` contains local-only sample credentials. For an existing setup, retain `DATABASE_URL` and the matching `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` and `POSTGRES_PORT`, plus established MinIO credentials. Add missing example fields without replacing private values. Passwords used in Compose's generated database URL must be URL-safe.
 
 Compose explicitly reads `.env.local` through `--env-file`; it does not rely on its default `.env` lookup. Shell environment values override that file. Avoid printing the fully expanded Compose configuration because it contains credentials; validate with `docker compose --env-file .env.local --profile app config --quiet`.
 
@@ -29,7 +32,7 @@ pnpm docker:app
 
 The optional `app` profile starts all three services. Open [localhost:3002](http://localhost:3002). The separate port allows a local Next.js process to keep running. `APP_PORT` can change the published Docker app port; it does not change the port used by local `pnpm dev`.
 
-The development image pins Node.js and pnpm. Source is bind-mounted for live edits. Container dependencies, `.next` output and generated Prisma files have separate volumes, so Linux dependencies/build artifacts do not replace host files. The app installs against the frozen lockfile at startup to pick up dependency changes, generates Prisma and starts the development server. Rebuild after changing the Dockerfile or toolchain; dependency-only changes are also picked up by a restart.
+The development image pins Node.js 24.20.0 and pnpm 11.28.8. Source is bind-mounted for live edits. Container dependencies, `.next` output and generated Prisma files have separate volumes, so Linux dependencies/build artifacts do not replace host files. The app installs against the frozen lockfile at startup to pick up dependency changes, generates Prisma and starts the development server. Rebuild after changing the Dockerfile or toolchain; dependency-only changes are also picked up by a restart.
 
 The startup install runs with `CI=true` so pnpm can refresh its disposable dependency volume without an interactive confirmation. It explicitly reuses the image's `/root/.local/share/pnpm/store` cache; otherwise the source bind mount can cause pnpm to choose a different store and download everything again. `CI=true` applies only to installation; Next.js still runs in development mode.
 
@@ -78,7 +81,13 @@ For another checkout still using the standalone container, stop `gemukore-postgr
 
 PostgreSQL readiness uses `pg_isready`; MinIO readiness uses `/minio/health/ready`. The app starts after both pass and has its own `/api/health` liveness check. `pnpm db:check` separately verifies an authenticated Prisma connection. Health dependencies order startup; they do not guarantee a dependency remains available afterward.
 
-No bucket is made public. [Task 5.2 storage service](STORAGE.md) provides the adapter; Asset records and upload processing remain Task 5.3. [Task 5.1 storage architecture](../architecture/STORAGE_ARCHITECTURE.md) defines private buckets, authorized application streaming and scoped production credentials. `S3_BUCKET=gemukore-dev` reserves the intended local bucket name; it is not automatically provisioned. Task 5.2 tests use independently generated credentials and disposable MinIO containers, not the development volume. Local root MinIO credentials are for this development sandbox; the production application must use a scoped storage identity.
+Create the bucket specified by `S3_BUCKET` (default `gemukore-dev`) in the MinIO console before uploading. Sign in with the private `.env.local` values for `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD`; keep anonymous access disabled. Starting Compose does not create the bucket. The [storage adapter](STORAGE.md) and [asset pipeline](ASSET_UPLOADS.md) provide validated uploads, image derivatives, private media streaming and publication-gated public delivery. A public collection never requires a public bucket.
+
+Configure at least one OAuth provider, a random auth secret and the exact browser origin before private sign-in. For host development, use the port printed by Next.js. For the Docker app, use `http://localhost:3002` or the configured `APP_PORT`; Compose supplies that default if `BETTER_AUTH_URL` is empty. Provider callback registration must match the browser origin. Apply migrations, provision the first verified-email grant using the [administrator instructions](ACCESS_GRANTS.md), then restart the app after environment changes. Missing credentials leave sign-in disabled; a successful provider login still needs an enabled grant.
+
+The `/` entry redirects to `/collection`, initially a neutral private-collection page. `/app` is the authenticated dashboard and `/design-preview` remains a separate static reference. Optional IGDB/Wikidata settings are described in the [README](../../README.md#configuration-and-optional-metadata).
+
+Tests use independently generated credentials and disposable PostgreSQL/MinIO containers, not development volumes. Local root MinIO credentials are a development sandbox convenience; production uses a separate scoped Garage identity. See the [storage architecture](../architecture/STORAGE_ARCHITECTURE.md) and [production guide](PRODUCTION_DOCKER.md).
 
 ## MinIO source build
 

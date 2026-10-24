@@ -1,24 +1,22 @@
 # Testing
 
-Task 22.3 adds real production-proxy checks for security headers (including OAuth's
-stronger referrer policy), oversized request rejection, forwarding-header spoofing
-and filtered upstream-failure logs. The final production run passes all eight
-deployment/security browser cases and both restored-media cases; 1,479 unit/component,
-184 focused PostgreSQL and three backup cases also pass. Dependency/image findings
-remain separate from these passing tests. See the
-[production security review](../architecture/PRODUCTION_SECURITY_REVIEW.md).
+Vitest, React Testing Library and Playwright cover validation, components,
+PostgreSQL repositories/services, storage, uploads, authentication, collection
+workflows and public privacy. Run the suite appropriate to the change; use
+isolated runners rather than pointing tests at development or production data.
 
-Task 22.2 extends `pnpm test:production` with an encrypted backup, damaged-file
-rejection, restoration into fresh volumes, complete database/READY-asset comparisons
-and restored private-media browser checks. `pnpm test:backup` covers encryption and
-key-handling failures. See [Backup and recovery](BACKUP_RESTORE.md#verification).
+The latest complete application baseline is [Task 24.1](CODE_CLEANUP.md):
+**1,485 unit/component tests**, **690 PostgreSQL integration tests** and
+**54 critical desktop/mobile browser cases**, all passing on 2026-10-23. The
+browser runner also builds the production application. The
+[Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) separately
+records 46 upload, 32 storage, three backup and ten distinct production/restore
+browser cases, plus exact artifact assessments. These are dated results, not a
+claim that every suite is rerun by a documentation edit.
 
-For Task 22.1's production images and complete Docker stack, use
-`pnpm test:production`. It runs actual Caddy HTTPS, PostgreSQL and three Garage
-replicas with isolated credentials and retained-volume recreation checks. See
-[Production Docker](PRODUCTION_DOCKER.md#verification) for requirements and scope.
-
-Task 1.4 establishes Vitest, React Testing Library and Playwright. Tests exercise the existing foundation; collection features, authentication and storage integration will receive coverage as they are implemented.
+Production image findings remain separate from functional tests and still block
+release approval. Dated task sections below preserve historical scope, counts and
+resolved failures; use the current command map for running the repository today.
 
 ## Setup and commands
 
@@ -35,21 +33,36 @@ pnpm test:e2e
 pnpm test:e2e:access
 ```
 
-Unit/component tests need only Node.js. Integration tests also need a running Docker engine and its CLI. Browser tests need Playwright's Chromium download. On a Linux CI runner, use `pnpm exec playwright install --with-deps chromium` to install browser system dependencies as well.
+Unit/component tests need only the repository's compatible Node.js 24.x and
+pinned pnpm 11.28.8. Database, storage, upload and authenticated browser tests
+also need a running Docker engine and CLI. Browser tests need Playwright's
+Chromium download; authenticated/production HTTPS runners also use OpenSSL.
+On a Linux runner, use `pnpm exec playwright install --with-deps chromium` to
+install browser system dependencies as well.
 
-| Command                            | Purpose                                                                                                               |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `pnpm test`                        | Run unit and component tests once; no Docker or database needed.                                                      |
-| `pnpm test:watch`                  | Watch unit and component tests during development.                                                                    |
-| `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container.     |
-| `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.              |
-| `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                      |
-| `pnpm test:e2e:access`             | Run production private-access/signout journeys against disposable PostgreSQL and local test HTTPS.                    |
-| `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.            |
-| `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.                 |
-| `pnpm test:e2e:a11y`               | Run the 22 desktop/mobile accessibility journeys with light/dark axe scans, keyboard checks and contrast targets.     |
-| `pnpm test:e2e:mobile`             | Run twelve light/dark mobile workflow checks for creation, camera uploads, filters, dialogs, navigation and 3D touch. |
-| `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                             |
+Run generators, typechecking and build/browser commands sequentially in one
+checkout. They share generated Prisma files and `.next` output. Do not start two
+browser runners together: the ordinary smoke server uses port 3100, the
+PostgreSQL/MinIO browser runner uses 3110/3111/3112, and the production rehearsal
+uses 3110/3111. Server reuse is disabled. These suites build and start their own
+production server; no `pnpm dev` process is needed.
+
+| Command                            | Purpose                                                                                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm test`                        | Run unit and component tests once; no Docker or database needed.                                                                                                               |
+| `pnpm test:watch`                  | Watch unit and component tests during development.                                                                                                                             |
+| `pnpm test:integration`            | Generate Prisma, provision isolated PostgreSQL, apply migrations, run integration tests and remove the container.                                                              |
+| `pnpm test:storage`                | Build pinned MinIO, run isolated adapter/HTTP failure tests and remove the disposable storage container.                                                                       |
+| `pnpm test:e2e`                    | Build the application, launch its production server and run desktop/mobile Chromium smoke tests.                                                                               |
+| `pnpm test:e2e:access`             | Run the full authenticated/public application journeys against disposable PostgreSQL/MinIO and local test HTTPS.                                                               |
+| `pnpm test:e2e:critical`           | Run the 54 selected critical-path browser checks against disposable PostgreSQL/MinIO and local test HTTPS.                                                                     |
+| `pnpm test:e2e:edge`               | Run the twelve recovery/privacy edge checks against disposable PostgreSQL/MinIO and local test HTTPS.                                                                          |
+| `pnpm test:e2e:a11y`               | Run the 22 desktop/mobile accessibility journeys with light/dark axe scans, keyboard checks and contrast targets.                                                              |
+| `pnpm test:e2e:mobile`             | Run twelve light/dark mobile workflow checks for creation, camera uploads, filters, dialogs, navigation and 3D touch.                                                          |
+| `pnpm test:assets`                 | Generate Prisma, run the real upload/processing/media pipeline against disposable PostgreSQL and MinIO, then clean up.                                                         |
+| `pnpm test:backup`                 | Run local encryption/key/refusal regressions; no Docker or production environment needed.                                                                                      |
+| `pnpm test:production`             | Build runtime/operations images and rehearse real Caddy/Garage/PostgreSQL deployment, retained data and encrypted fresh-volume restore. Requires Docker, OpenSSL and Chromium. |
+| `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                                                                                      |
 
 Run lint, typechecking and formatting alongside the applicable suites:
 
@@ -63,7 +76,7 @@ pnpm format:check
 
 `vitest.config.mts` separates Node.js unit tests (`src/**/*.test.ts`) from jsdom component tests (`src/**/*.test.tsx`). Tests are colocated with their implementation, use explicit Vitest imports and support the application's `@/` import alias. React Testing Library provides semantic queries; the shared DOM setup adds jest-dom matchers and cleans up after every test.
 
-The initial examples validate accepted/rejected database URLs and check the starter page's main landmark, heading and introductory text. Avoid snapshots of styling and tests that simply repeat implementation details.
+The suites cover normalization, validation, permissions, provider contracts, public transformations, media/3D admission, hooks and functional components. The original foundation page test now targets `/design-preview`. Avoid snapshots of styling and tests that simply repeat implementation details.
 
 Synchronous components can be rendered by React Testing Library. Exercise async Server Components through Playwright; do not change them into Client Components for the test runner. No fake production authorization or server/client bypass is added to the application.
 
@@ -395,3 +408,61 @@ pnpm three:bundle
 ```
 
 Run probes without other heavy checks, and collect browser evidence before rebuilding `.next`. The explicit output argument/variable is optional for existing probe callers; omitting it retains the original baseline-refresh behavior. Bare SQL and EXPLAIN results remain separate. No production query deadline, test timeout, approval/revocation assertion or renderer budget is relaxed.
+
+## Historical production test milestones
+
+Task 22.3 adds real production-proxy checks for security headers (including OAuth's
+stronger referrer policy), oversized request rejection, forwarding-header spoofing
+and filtered upstream-failure logs. The final production run passes all eight
+deployment/security browser cases and both restored-media cases; 1,479 unit/component,
+184 focused PostgreSQL and three backup cases also pass. Dependency/image findings
+remain separate from these passing tests. See the
+[production security review](../architecture/PRODUCTION_SECURITY_REVIEW.md).
+
+Task 22.2 extends `pnpm test:production` with an encrypted backup, damaged-file
+rejection, restoration into fresh volumes, complete database/READY-asset comparisons
+and restored private-media browser checks. `pnpm test:backup` covers encryption and
+key-handling failures. See [Backup and recovery](BACKUP_RESTORE.md#verification).
+
+For Task 22.1's production images and complete Docker stack, use
+`pnpm test:production`. It runs actual Caddy HTTPS, PostgreSQL and three Garage
+replicas with isolated credentials and retained-volume recreation checks. See
+[Production Docker](PRODUCTION_DOCKER.md#verification) for requirements and scope.
+
+Task 1.4 originally established the foundation runners. Collection, authentication and storage coverage have since been implemented as described above.
+
+## Task 24.2 documentation verification
+
+Verified 2026-10-23 for documentation and environment-template comments only:
+
+- Lint, TypeScript, Prisma schema validation and formatting pass.
+- All 61 configuration unit tests, 28 database/access integration tests and three
+  backup-tool tests pass. The integration runner applies every committed migration
+  to disposable PostgreSQL and exercises the documented administrator workflows;
+  it does not access personal development data.
+- Local example values expand through the actual Next.js environment loader.
+  Development Compose and a synthetic, completed production template resolve and
+  satisfy the application's database/auth/storage/provider schemas. These checks
+  start no Compose services or production volumes. Template assignments remain
+  identical to the preceding commit; only comments changed.
+- Documented shell blocks pass syntax checking, referenced pnpm commands exist,
+  and local file links and heading fragments resolve. Administrator CLI help
+  matches the documented arguments without provisioning an account.
+
+The focused executable checks are:
+
+```sh
+pnpm lint
+pnpm typecheck
+pnpm exec vitest run src/server/config --maxWorkers=2
+pnpm test:integration tests/integration/database.test.ts tests/integration/access.test.ts
+pnpm test:backup
+pnpm db:validate
+pnpm format:check
+```
+
+No new test suite mirrors documentation text. Full application/browser suites
+retain the Task 24.1 baseline above; production/restore evidence remains with
+Task 23.2. They were not repeated for this documentation-only task. No live OAuth,
+server deployment, scheduled timer, off-host mount or production recovery is
+performed, and unresolved vendor findings still withhold production approval.

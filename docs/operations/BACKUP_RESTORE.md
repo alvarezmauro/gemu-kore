@@ -90,6 +90,20 @@ The backup operator's Docker access is host-administrator authority. The web
 application keeps its restricted database/storage credentials; it never receives
 the encryption key or backup-directory access.
 
+Configuration is read in two places:
+
+| Setting                                                    | Read from                                                                                                                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BACKUP_DIRECTORY`, `BACKUP_KEY_FILE`, `BACKUP_KEEP_COUNT` | The file passed to `create --env-file`, normally `.env.production`; explicit `--directory`, `--key-file` and `--keep` options override them.                                      |
+| `BACKUP_WORK_DIRECTORY`                                    | The operator process/systemd environment; defaults to the OS temporary directory. The parent directory must already exist.                                                        |
+| `BACKUP_TIMEOUT_SECONDS`                                   | The operator process/systemd environment; defaults to 3,600 seconds per Docker command/transfer. The sample service uses 18,000 seconds and a separate six-hour service deadline. |
+
+Putting the last two settings only in `.env.production` does not configure them.
+The backup tool parses that file itself; it is not a Next.js `.env.local` loader.
+Manual runs accept ordinary destination directories, so independently verify the
+off-host mount before starting one. The systemd template additionally checks its
+configured mount and fails if it is absent.
+
 ## Create and verify
 
 ```sh
@@ -100,7 +114,10 @@ pnpm backup:verify --directory /mnt/gemukore-backups/gemukore/COMPLETED-SET --ke
 Replace `COMPLETED-SET` with the path returned by `create`. Successful commands
 return a small JSON receipt, never database contents or credentials.
 Verification also reports the recorded revision, architecture and image references
-needed to select a recovery release. Each set is a
+needed to select a recovery release. `verify` requires the explicit backup path
+and key; it does not fall back to `.env.production` for the key. It authenticates
+files without starting Docker or contacting the source deployment. `create` and
+`restore` require Docker. Each set is a
 private directory containing eight encrypted files: database dump, environment,
 five volume archives and the manifest. The files use versioned AES-256-GCM with a
 fresh random 96-bit nonce per file, an authenticated filename and a 128-bit tag.
@@ -160,11 +177,20 @@ templates; this task does not install or activate a timer on this laptop.
 
 ## Restore into a new installation
 
+Select the matching backup release before restoring. A newer checkout may be
+incompatible with the recorded configuration and data.
+The tool compares hashes of the Compose, PostgreSQL initializer, Garage setup/
+configuration and proxy files, plus backend images and Docker CPU architecture.
+After recovery is verified on that release, apply subsequent upgrades as separate
+reviewed releases. Never edit the encrypted manifest or deployment files to bypass
+an incompatibility check.
+
 1. Recover the matching repository revision, production images, full encrypted
    set and separately held key. Review a dirty-checkout manifest against your release
    records; recover any uncommitted deployment changes separately. Use a trusted
    backup only: restoring SQL executes code captured from the original database.
-2. Choose a new lowercase volume/project prefix and a new environment-file path.
+2. Choose a new lowercase volume/project prefix and a new environment-file path
+   whose private parent directory already exists.
    Keep the existing installation available for investigation; restoration refuses
    existing target volumes, target containers, an existing output file or the
    source volume prefix. It authenticates every encrypted file and checks deployment
@@ -210,6 +236,13 @@ until the recovered installation has passed checks and the operator deliberately
 retires them.
 
 ## Verification
+
+The [Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) records the
+latest complete local production/restore rehearsal. The Task 22.2 counts below
+remain historical. Task 24.2 checks documentation, configuration examples and
+backup-tool regressions; it does not activate a server timer, mount a remote
+destination or repeat a live recovery. Production release blockers still follow
+the [production guide](PRODUCTION_DOCKER.md).
 
 `pnpm test:backup` tests streaming encryption round trips, changed bytes, wrong keys,
 filename substitution, truncation, private key permissions and refusal to overwrite
