@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { screenshotUpload } from "@/features/games/screenshot-validation";
 
-export const legacyTargetSchema = z.discriminatedUnion("kind", [
+const legacyTargetSchema = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("collection"),
@@ -68,13 +68,13 @@ export const legacyTargetSchema = z.discriminatedUnion("kind", [
     })
     .strict(),
 ]);
-export const packagingGeometryTarget = z.strictObject({
+const packagingGeometryTarget = z.strictObject({
   kind: z.literal("packagingGeometry"),
   id: z.uuid(),
   expectedRevision: z.number().int().positive().max(2147483646),
   source: screenshotUpload,
 });
-export const physicalMediaGeometryTarget = packagingGeometryTarget.extend({
+const physicalMediaGeometryTarget = packagingGeometryTarget.extend({
   kind: z.literal("physicalMediaGeometry"),
 });
 export const targetSchema = z.union([

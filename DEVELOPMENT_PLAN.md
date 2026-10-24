@@ -2720,6 +2720,8 @@ Report anything intentionally not changed and explain why.
 
 ## TASK 24.1 — Dead Code and Dependency Cleanup
 
+Status: **Completed 2026-10-23.** Removed the unused Better Auth generation CLI and its 21 pruned packages, deleted nine unused type aliases, made 59 module-internal declarations private, and corrected three obsolete code comments. The [cleanup report](docs/operations/CODE_CLEANUP.md) records reference checks and why framework entry points, policy regressions, shared primitives and build/test dependencies remain. Frozen installation, lint, types (including unused-local/parameter checks), all 1,485 unit/component tests, 690 PostgreSQL integration tests and 54 critical desktop/mobile browser cases pass. The browser runner's fresh production build, seed validation, formatting, local documentation links and diff checks pass; the workspace audit reports zero known vulnerabilities. No runtime behavior, architecture, schema/migration, deployment or personal-data change. Production vendor findings remain open. Next: Task 24.2 — Documentation, only when requested.
+
 MODEL:
 
 `GPT-6 Luna`

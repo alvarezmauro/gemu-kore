@@ -45,7 +45,7 @@ export async function searchCatalogRows(
   return tx.$queryRaw<CatalogSearchRow[]>(privateCatalogSearchQuery(q, terms));
 }
 
-export type FilteredSearchRow = SearchRow & {
+type FilteredSearchRow = SearchRow & {
   details: {
     releaseYear: number | null;
     location: string | null;

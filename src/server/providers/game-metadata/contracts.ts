@@ -21,7 +21,7 @@ export const providerObjectReference = z.strictObject({
   externalId: text(128),
 });
 export type ProviderObjectRef = z.infer<typeof providerObjectReference>;
-export type ProviderId = ProviderObjectRef["provider"];
+type ProviderId = ProviderObjectRef["provider"];
 const referenceOf = (kind: ProviderObjectRef["objectType"]) =>
   providerObjectReference.refine((ref) => ref.objectType === kind);
 
@@ -82,7 +82,7 @@ export type Section<T> =
   | { state: "present" | "limited"; data: T }
   | { state: "absent" | "unsupported" | "invalid" };
 
-export const evidenceSource = z.strictObject({
+const evidenceSource = z.strictObject({
   id: text(128),
   ref: providerObjectReference,
   sourceUrl: z

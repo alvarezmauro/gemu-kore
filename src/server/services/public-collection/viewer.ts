@@ -5,7 +5,7 @@ import { publicItemMedia, resolveItemUse, admittedItem } from "./media";
 import { publicComponents } from "@/server/repositories/public-collection/components";
 import { componentPresentation } from "./components";
 import { modelSettings, publicViewerPresentation } from "@/lib/three/contracts";
-export const publicViewInput = z.strictObject({
+const publicViewInput = z.strictObject({
   itemId: z.uuid(),
   componentId: z.uuid().optional(),
 });

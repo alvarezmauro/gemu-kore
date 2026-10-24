@@ -133,7 +133,7 @@ export async function readAccessoryPresentation(
     model,
   };
 }
-export const accessoryModelRequest = z.strictObject({
+const accessoryModelRequest = z.strictObject({
   id: z.uuid(),
   expectedRevision: z.number().int().positive().max(2147483646),
   selectionKey: z.string().regex(/^[a-f0-9]{64}$/),

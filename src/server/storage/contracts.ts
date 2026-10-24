@@ -13,7 +13,7 @@ export type ObjectLocator = Readonly<{
   objectKey: string;
 }>;
 export type ObjectMetadata = Readonly<{ assetId: string; sha256: string }>;
-export type ByteRange = Readonly<{ start: number; end?: number }>;
+type ByteRange = Readonly<{ start: number; end?: number }>;
 export type ReadOptions = { signal?: AbortSignal; range?: ByteRange };
 export type ObjectInfo = {
   sizeBytes: number;
@@ -35,7 +35,8 @@ export type PutObjectInput = {
 };
 
 // Trusted server capability, not a session/permission boundary. Services must
-// authorize and reserve immutable keys before invoking it; no route exists yet.
+// authorize and reserve immutable keys before invoking it. Upload and media
+// routes reach this adapter through the asset services.
 export interface ObjectStorage {
   put(input: PutObjectInput): Promise<{ sizeBytes: number; etag?: string }>;
   get(locator: ObjectLocator, options?: ReadOptions): Promise<StoredObject>;

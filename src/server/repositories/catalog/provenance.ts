@@ -1,6 +1,6 @@
 import "server-only";
 import type { TransactionClient } from "@/server/db/transaction";
-export const metadataSourceSelect = {
+const metadataSourceSelect = {
   origin: true,
   sourceSnapshot: true,
   snapshotSchemaVersion: true,

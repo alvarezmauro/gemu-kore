@@ -1,6 +1,6 @@
 import "server-only";
 import type { TransactionClient } from "@/server/db/transaction";
-export const policySelect = {
+const policySelect = {
   publicCollectionEnabled: true,
   allowSearchEngineIndexing: true,
   showSerialNumbers: true,

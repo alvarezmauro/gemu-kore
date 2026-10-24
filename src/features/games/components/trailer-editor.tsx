@@ -9,7 +9,7 @@ import {
 } from "../trailer-validation";
 import { changeTrailer } from "../trailer-actions";
 import { TrailerPlayer } from "./trailer-player";
-export type TrailerEditorRecord = {
+type TrailerEditorRecord = {
   id: string;
   kind: "game" | "release";
   revision: number;

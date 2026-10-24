@@ -28,7 +28,7 @@ export const publicCategories = {
   },
 } as const;
 export type PublicCategory = keyof typeof publicCategories;
-export const publicPageSize = 20;
+const publicPageSize = 20;
 export const publicLastPage = 251;
 export const publicSortLabels = {
   "name-asc": "Name A–Z",

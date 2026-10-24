@@ -66,7 +66,7 @@ function fail(error: unknown): never {
     throw error;
   throw new AccessoryCopyError("UNAVAILABLE");
 }
-export function familyDto(
+function familyDto(
   row: NonNullable<Awaited<ReturnType<typeof repository.family>>>,
 ): AccessoryChoice {
   return {
@@ -79,7 +79,7 @@ export function familyDto(
     year: row.releaseYear,
   };
 }
-export function variantDto(
+function variantDto(
   row: NonNullable<Awaited<ReturnType<typeof repository.variant>>>,
 ): VariantChoice {
   return {

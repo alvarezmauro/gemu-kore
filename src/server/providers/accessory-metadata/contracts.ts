@@ -11,7 +11,7 @@ export const accessoryReference = z.strictObject({
   objectType: z.literal("ITEM"),
   externalId: itemId,
 });
-export const accessoryEvidence = z.strictObject({
+const accessoryEvidence = z.strictObject({
   id: text(128),
   sourceUrl: z
     .url()

@@ -52,7 +52,7 @@ export const emptyPlaytimeDraft = {
   sourceUrl: "",
   recordedOn: "",
 };
-export type PlaytimeDraft = typeof emptyPlaytimeDraft;
+type PlaytimeDraft = typeof emptyPlaytimeDraft;
 export function playtimeDraft(value: PlaytimeSet | null): PlaytimeDraft {
   return value
     ? {

@@ -44,12 +44,12 @@ const input = z.discriminatedUnion("kind", [
     params: params.default({}),
   }),
 ]);
-export function indexingAllowed(policy: Policy | null) {
+function indexingAllowed(policy: Policy | null) {
   return !!(
     policy?.publicCollectionEnabled && policy.allowSearchEngineIndexing
   );
 }
-export async function seoImage(itemId: string, tx: TransactionClient) {
+async function seoImage(itemId: string, tx: TransactionClient) {
   const item = await admittedItem(itemId, tx),
     admit = assetAdmission(tx);
   // Metadata deliberately excludes personal media, captions and alternative text.

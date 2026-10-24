@@ -27,7 +27,7 @@ const references = {
   },
   orderBy: { id: "asc" as const },
 };
-export const accessorySelect = {
+const accessorySelect = {
   ...common,
   description: true,
   specifications: true,

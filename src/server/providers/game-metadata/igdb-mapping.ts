@@ -29,10 +29,10 @@ type Row = Record<string, unknown>;
 const object = z.record(z.string(), z.unknown());
 const positiveId = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const name = z.string().trim().min(1).max(200);
-export const MAPPING_VERSION = "igdb-v1";
+const MAPPING_VERSION = "igdb-v1";
 const gameScope = { kind: "GAME" } as const;
 
-export function externalRef(
+function externalRef(
   type: ProviderObjectRef["objectType"],
   value: unknown,
 ): ProviderObjectRef {

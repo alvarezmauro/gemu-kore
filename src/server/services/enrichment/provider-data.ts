@@ -15,7 +15,7 @@ import {
 } from "@/server/providers/game-metadata/contracts";
 import type { Run } from "@/server/repositories/enrichment";
 import { EnrichmentError } from "./errors";
-export function accessoryRun(run: Run) {
+function accessoryRun(run: Run) {
   return Boolean(run.accessoryId || run.accessoryVariantId);
 }
 export function selectedReference(run: Run) {

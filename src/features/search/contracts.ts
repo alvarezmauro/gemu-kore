@@ -1,5 +1,5 @@
 export const searchTypes = ["CONSOLE", "GAME", "ACCESSORY"] as const;
-export type SearchType = (typeof searchTypes)[number];
+type SearchType = (typeof searchTypes)[number];
 export const matchSources = [
   "Identity",
   "Platform",
@@ -12,7 +12,7 @@ export const matchSources = [
   "Defect",
   "Repair note",
 ] as const;
-export type MatchSource = (typeof matchSources)[number];
+type MatchSource = (typeof matchSources)[number];
 export type SearchHit = {
   id: string;
   type: SearchType;
@@ -45,4 +45,3 @@ export type SearchResult = {
   offset: number;
   limit: number;
 };
-export type SearchInput = { q: string; limit: number; offset: number };

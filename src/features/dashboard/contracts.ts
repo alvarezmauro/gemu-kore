@@ -1,5 +1,5 @@
 import type { AccessRole } from "@/features/auth/contracts";
-export type DashboardCounts = {
+type DashboardCounts = {
   total: number;
   consoles: number;
   games: number;

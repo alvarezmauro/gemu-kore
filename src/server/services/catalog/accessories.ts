@@ -46,7 +46,7 @@ const specsText = (v: Prisma.JsonValue) =>
   v && typeof v === "object" && !Array.isArray(v)
     ? (JSON.stringify(v.data, null, 2) ?? "")
     : "";
-export function accessoryCatalogDto(r: Row): AccessoryCatalogRecord {
+function accessoryCatalogDto(r: Row): AccessoryCatalogRecord {
   const common = {
     id: r.id,
     revision: r.revision,

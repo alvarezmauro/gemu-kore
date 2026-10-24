@@ -63,7 +63,7 @@ const schema = z.object({
   ),
   nodes: array(z.object({ mesh: index.optional(), children: array(index) })),
 });
-export type ModelInspection = {
+type ModelInspection = {
   triangles: number;
   draws: number;
   textureCount: number;

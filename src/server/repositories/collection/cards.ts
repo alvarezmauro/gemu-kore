@@ -2,7 +2,7 @@ import "server-only";
 import { Prisma } from "../../db/generated/client";
 import type { TransactionClient } from "../../db/transaction";
 
-export type CardSummary = {
+type CardSummary = {
   id: string;
   hasBox: boolean | null;
   unresolvedDefects: number;
@@ -16,7 +16,7 @@ export type CardSummary = {
 };
 // Shared private thumbnail projection. Its outer collection-item alias is c.
 // Callers provide only their bounded, authorized page of owned-copy IDs.
-export function cardPhotoQuery() {
+function cardPhotoQuery() {
   return Prisma.sql`(SELECT jsonb_build_object('assetId',COALESCE(t.id,s.id),'altText',m."altText",'width',COALESCE(t.width,s.width,1),'height',COALESCE(t.height,s.height,1))
       FROM collection_item_media m JOIN asset s ON s.id=m."assetId"
       LEFT JOIN LATERAL (

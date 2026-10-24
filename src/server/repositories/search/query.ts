@@ -34,12 +34,6 @@ export type SearchRow = {
     | "Repair note"
   )[];
 };
-export type PublicSearchRow = Omit<SearchRow, "matchSources"> & {
-  matchSources: Exclude<
-    SearchRow["matchSources"][number],
-    "Serial number" | "Repair note"
-  >[];
-};
 const vector = (sql: Prisma.Sql) =>
   Prisma.sql`to_tsvector('pg_catalog.simple'::regconfig, ${sql})`;
 const escapePrefix = (value: string) => value.replace(/[\\%_]/g, "\\$&") + "%";
@@ -174,8 +168,8 @@ export const privateSearchQuery = (
   input: SearchParameters,
   terms: ParsedTerm[],
 ) => buildQuery(input, terms, "private");
-// Reserved query contract: no public route/service is exposed in Task 7.2.
-// Tests execute it against real current policy, never a private result filter.
+// Full-row public projection retained for policy regressions. Production public
+// browsing uses publicMatchesQuery and hydrates only publication-safe fields.
 export const publicSearchQuery = (
   input: SearchParameters,
   terms: ParsedTerm[],

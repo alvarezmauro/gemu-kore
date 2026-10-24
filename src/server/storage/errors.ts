@@ -1,6 +1,6 @@
 import "server-only";
 
-export type StorageErrorCode =
+type StorageErrorCode =
   | "NOT_FOUND"
   | "INVALID_INPUT"
   | "INVALID_RANGE"

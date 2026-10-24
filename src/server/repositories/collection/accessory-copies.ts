@@ -8,12 +8,12 @@ const identity = {
   revision: true,
   archivedAt: true,
 } as const;
-export const familySelect = {
+const familySelect = {
   ...identity,
   producer: { select: { name: true } },
   releaseYear: true,
 } satisfies Prisma.AccessorySelect;
-export const copyVariantSelect = {
+const copyVariantSelect = {
   ...identity,
   accessoryId: true,
   accessory: { select: familySelect },

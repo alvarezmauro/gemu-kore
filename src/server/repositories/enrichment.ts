@@ -104,7 +104,6 @@ export function suggestions(runId: string, tx: TransactionClient) {
     take: 33,
   });
 }
-export type Suggestion = Awaited<ReturnType<typeof suggestions>>[number];
 export async function createSuggestions(
   data: Prisma.EnrichmentSuggestionCreateManyInput[],
   tx: TransactionClient,

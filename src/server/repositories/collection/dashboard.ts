@@ -40,7 +40,7 @@ export async function counts(tx: TransactionClient) {
     activeDefects: count(row.activeDefects),
   };
 }
-export type RecentRow = {
+type RecentRow = {
   id: string;
   type: CollectionItemType;
   createdAt: Date;

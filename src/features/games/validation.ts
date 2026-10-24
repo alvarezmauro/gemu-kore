@@ -206,7 +206,6 @@ export const gamePage = z.strictObject({
 });
 export type GameFields = z.input<typeof gameFields>;
 export type ReleaseFields = z.input<typeof releaseFields>;
-export type GameSave = z.output<typeof gameSave>;
 export type GameKind = "game" | "release";
 export const emptyGame: GameFields = {
   name: "",

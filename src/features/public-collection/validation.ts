@@ -18,7 +18,7 @@ export const publicCollectionInput = searchInput
   })
   .strict();
 export const publicDetailInput = z.strictObject({ id: z.uuid() });
-export const publicSettingsValues = z.strictObject({
+const publicSettingsValues = z.strictObject({
   publicCollectionEnabled: z.boolean(),
   allowSearchEngineIndexing: z.boolean(),
   showSerialNumbers: z.boolean(),

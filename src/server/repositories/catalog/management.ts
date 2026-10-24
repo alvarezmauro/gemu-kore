@@ -207,7 +207,7 @@ export async function lockCatalogWrites(tx: TransactionClient) {
   await tx.$executeRawUnsafe("SET LOCAL lock_timeout = '3s'");
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(71482, 1)::text`;
 }
-export type CatalogWrite =
+type CatalogWrite =
   | { kind: "company"; data: Prisma.CompanyUncheckedCreateInput }
   | { kind: "region"; data: Prisma.RegionUncheckedCreateInput }
   | { kind: "platform"; data: Prisma.ConsolePlatformUncheckedCreateInput }

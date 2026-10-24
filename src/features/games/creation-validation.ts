@@ -30,4 +30,3 @@ export const gameCopyCreate = copyPhysical
     releaseRevision: revision,
   })
   .strict();
-export type GameCopyCreate = z.output<typeof gameCopyCreate>;

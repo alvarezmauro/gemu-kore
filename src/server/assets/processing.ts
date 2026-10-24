@@ -13,7 +13,7 @@ import { AssetError, type Artifact } from "./contracts";
 
 export const IMAGE_LIMIT = 25 * 1024 * 1024;
 export const MODEL_LIMIT = 50 * 1024 * 1024;
-export const PIXEL_LIMIT = 64_000_000;
+const PIXEL_LIMIT = 64_000_000;
 const imageOptions = {
   failOn: "warning",
   limitInputPixels: PIXEL_LIMIT,

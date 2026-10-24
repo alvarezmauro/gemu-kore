@@ -17,7 +17,7 @@ export type PublicCard = {
   identificationStatus: "INCOMPLETE" | "CONFIRMED";
   photo: PublicImage | null;
 };
-export type PublicCounts = {
+type PublicCounts = {
   total: number;
   consoles: number;
   games: number;

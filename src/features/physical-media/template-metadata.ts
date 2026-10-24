@@ -14,7 +14,7 @@ export const cartridgeFormatKey = z.enum([
   "nintendo-64",
   "other",
 ]);
-export type CartridgeFormatKey = z.infer<typeof cartridgeFormatKey>;
+type CartridgeFormatKey = z.infer<typeof cartridgeFormatKey>;
 export const cartridgeFormatLabels: Record<CartridgeFormatKey, string> = {
   unspecified: "Unspecified",
   "nes-us": "NES US",

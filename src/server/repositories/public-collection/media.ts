@@ -2,7 +2,7 @@ import "server-only";
 import type { TransactionClient } from "@/server/db/transaction";
 import type { Prisma } from "@/server/db/generated/client";
 // No private metadata, filenames or provenance URLs enter public resolution.
-export const mediaAssetSelect = {
+const mediaAssetSelect = {
   id: true,
   state: true,
   kind: true,
@@ -44,9 +44,7 @@ export function mediaIdentity(id: string, tx: TransactionClient) {
     },
   });
 }
-export type MediaIdentity = NonNullable<
-  Awaited<ReturnType<typeof mediaIdentity>>
->;
+type MediaIdentity = NonNullable<Awaited<ReturnType<typeof mediaIdentity>>>;
 export function catalogScopes(
   item: MediaIdentity,
 ): Prisma.CatalogAssetWhereInput[] {

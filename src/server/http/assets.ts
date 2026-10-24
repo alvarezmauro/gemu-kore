@@ -18,7 +18,7 @@ const privateHeaders = {
   "X-Content-Type-Options": "nosniff",
   Vary: "Cookie",
 };
-export function assetResponseError(error: unknown): Response {
+function assetResponseError(error: unknown): Response {
   if (error instanceof PrivateAccessError)
     return Response.json(
       { error: "Private access is unavailable." },

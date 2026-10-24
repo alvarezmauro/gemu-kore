@@ -7,7 +7,7 @@ import {
 } from "@/server/repositories/search/query";
 import type { Policy } from "./policy";
 
-export type CollectionParameters = {
+type CollectionParameters = {
   q: string;
   limit: number;
   offset: number;

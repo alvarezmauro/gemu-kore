@@ -30,7 +30,7 @@ export type DefectSummary = {
   createdAt: string;
   updatedAt: string;
 };
-export type DefectItemOption = { id: string; label: string };
+type DefectItemOption = { id: string; label: string };
 export type DefectItem = DefectItemOption & { revision: number };
 export type DefectActionResult = {
   status: "success" | "error";

@@ -34,7 +34,7 @@ export function canPerform(role: unknown, permission: unknown): boolean {
   return editorPermissions.some((allowed) => allowed === permission);
 }
 
-export const freshLoginWindowMs = 5 * 60 * 1000;
+const freshLoginWindowMs = 5 * 60 * 1000;
 
 export function isFreshLogin(createdAt: Date, now: Date): boolean {
   const age = now.getTime() - createdAt.getTime();

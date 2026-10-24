@@ -1,6 +1,6 @@
 import "server-only";
 
-export type EnrichmentErrorCode =
+type EnrichmentErrorCode =
   | "INVALID_INPUT"
   | "NOT_FOUND"
   | "FORBIDDEN"

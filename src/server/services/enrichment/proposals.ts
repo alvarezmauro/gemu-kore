@@ -20,12 +20,12 @@ import { bounded, equal, type TargetSnapshot } from "./common";
 import { EnrichmentError } from "./errors";
 
 export type Choices = z.infer<typeof prepareEnrichment>;
-export type Binding = {
+type Binding = {
   externalId: string;
   companyId: string;
   revision: number;
 };
-export type Proposal = {
+type Proposal = {
   id: string;
   fieldPath: ProposalField;
   before: EnrichmentValue;

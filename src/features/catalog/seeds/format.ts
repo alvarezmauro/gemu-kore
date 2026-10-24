@@ -318,4 +318,3 @@ export const consoleSeedSchema = bundle.superRefine((value, ctx) => {
       });
   });
 });
-export type ConsoleSeedData = z.output<typeof consoleSeedSchema>;

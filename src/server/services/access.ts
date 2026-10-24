@@ -78,7 +78,7 @@ const recoveryInput = z
       (input.previousEmail && input.previousEmail !== input.email),
   );
 
-export function withAccessGrantTransaction<T>(
+function withAccessGrantTransaction<T>(
   operation: (transaction: TransactionClient) => Promise<T>,
 ) {
   return withTransaction(
@@ -100,7 +100,7 @@ export async function getPrivateWelcome(
   return { role: context.role };
 }
 
-export class GrantManagementError extends Error {
+class GrantManagementError extends Error {
   constructor(
     public readonly code:
       "INVALID_INPUT" | "NOT_FOUND" | "CONFLICT" | "LAST_ADMIN",

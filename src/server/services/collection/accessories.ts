@@ -7,7 +7,8 @@ import { ownedAccessory } from "@/server/repositories/collection/accessories";
 import { accessoryDomainDto } from "../catalog/accessories";
 import { CatalogError } from "../catalog/management";
 import { accessoryIdentity } from "@/features/accessories/validation";
-// Domain identity only. Personal-copy CRUD and presentation belong to later tasks.
+// Domain identity only. Personal-copy management and presentation are handled by
+// accessory-copies and accessory-presentation respectively.
 export async function getOwnedAccessoryDomain(
   context: PrivateAccessContext,
   input: unknown,

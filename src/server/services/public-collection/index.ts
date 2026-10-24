@@ -27,7 +27,7 @@ import { publicItemMedia } from "./media";
 import { publicComponentViews } from "./components";
 export { PublicCollectionError } from "./common";
 
-export function publicCard(row: repository.CardRow): PublicCard {
+function publicCard(row: repository.CardRow): PublicCard {
   const category = {
     CONSOLE: "consoles",
     GAME: "games",

@@ -156,7 +156,7 @@ export const glbSlotTarget = z.strictObject({
   artHeightMm: mm,
 });
 export type GlbSlotTarget = z.infer<typeof glbSlotTarget>;
-export const clamshellSlot = z.strictObject({
+const clamshellSlot = z.strictObject({
   name: z.enum(["FRONT", "BACK", "SPINE"]),
   target: glbSlotTarget,
 });

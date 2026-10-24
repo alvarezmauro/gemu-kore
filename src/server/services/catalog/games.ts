@@ -63,7 +63,7 @@ const option = (r: {
   archived: r.archivedAt !== null,
   ...(r.slug ? { detail: r.slug } : {}),
 });
-export function gameCatalogDto(row: Row): GameCatalogRecord {
+function gameCatalogDto(row: Row): GameCatalogRecord {
   const common = {
     id: row.id,
     revision: row.revision,

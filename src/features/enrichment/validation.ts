@@ -22,7 +22,7 @@ export const runCommand = runIdentity.extend({ expectedRunVersion: version });
 export const chooseEnrichmentCandidate = runCommand.extend({
   externalId: z.string().regex(/^(?:[1-9][0-9]{0,15}|Q[1-9][0-9]{0,15})$/),
 });
-export const proposalFields = [
+const proposalFields = [
   "name",
   "description",
   "aliases",

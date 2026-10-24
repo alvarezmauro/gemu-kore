@@ -53,6 +53,10 @@ records the final architecture assessment. Task 23.2
 eligibility, redacted operational events and dependency patches. Proxy/storage
 findings still block production approval.
 
+Task **24.1** [cleanup](docs/operations/CODE_CLEANUP.md) removes the unused
+authentication schema-generation CLI and stale exports while preserving the
+application's existing behavior.
+
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
 ```sh

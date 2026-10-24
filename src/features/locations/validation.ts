@@ -24,4 +24,3 @@ export const locationMutation = z.discriminatedUnion("operation", [
     .strict(),
   z.object({ operation: z.literal("delete"), ...existing }).strict(),
 ]);
-export type LocationMutation = z.infer<typeof locationMutation>;

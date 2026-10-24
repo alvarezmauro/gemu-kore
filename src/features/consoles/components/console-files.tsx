@@ -18,7 +18,7 @@ export type ConsoleFile = {
   message?: string;
   uploadId?: string;
 };
-export function fileRole(type: CollectionUploadType) {
+function fileRole(type: CollectionUploadType) {
   return type === "CUSTOM_LOGO"
     ? "Custom logo"
     : type === "CUSTOM_MODEL"

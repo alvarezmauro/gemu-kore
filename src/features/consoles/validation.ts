@@ -14,7 +14,6 @@ export const consoleCreate = consolePhysical
     modelRevision: z.number().int().min(1).max(2147483646),
   })
   .strict();
-export type ConsoleCreate = z.output<typeof consoleCreate>;
 export type ConsolePhysicalDraft = z.input<typeof consolePhysical>;
 export const emptyConsolePhysical: ConsolePhysicalDraft = {
   serialNumber: "",

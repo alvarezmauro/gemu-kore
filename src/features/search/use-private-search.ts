@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { searchInput } from "./validation";
 
-export type SearchState<T> =
+type SearchState<T> =
   | { status: "idle" | "pending" }
   | { status: "error"; message: string }
   | { status: "ready"; result: T };

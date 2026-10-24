@@ -30,18 +30,9 @@ export type CatalogRecord = {
   manufacturer: CatalogOption | null;
   references: ReferenceInput[];
 };
-export type CatalogHistory = {
-  id: string;
-  fieldPath: string;
-  revision: number;
-  origin: string;
-  createdAt: string;
-  before: string;
-  after: string;
-};
 export type CatalogActionResult =
   { status: "success"; id: string } | { status: "error"; message: string };
-export type CatalogField = {
+type CatalogField = {
   key: string;
   label: string;
   type?: "text" | "textarea" | "year" | "decimal";

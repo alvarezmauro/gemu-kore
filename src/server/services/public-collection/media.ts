@@ -189,7 +189,7 @@ export async function publicItemMedia(
   }
   return { images: images.slice(0, 24), hasMore: images.length > 24, model };
 }
-export const publicMediaInput = z.discriminatedUnion("context", [
+const publicMediaInput = z.discriminatedUnion("context", [
   z.strictObject({
     context: z.literal("seo"),
     itemId: z.uuid(),

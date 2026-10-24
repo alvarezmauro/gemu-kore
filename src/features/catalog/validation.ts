@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { catalogKinds } from "./contracts";
-export const catalogKind = z.enum(catalogKinds);
+const catalogKind = z.enum(catalogKinds);
 const optionalText = (max = 4000) =>
   z
     .string()
