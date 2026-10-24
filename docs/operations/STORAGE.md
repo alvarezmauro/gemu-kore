@@ -41,6 +41,15 @@ The adapter supports declared JPEG/PNG/WebP/AVIF/GLB MIME types and caps object 
 
 Private buckets are tested directly. Application streaming uses private authorization or the separate public publication/rights gates, with no-store responses. Sharing a public collection does not change bucket ACLs or expose arbitrary object keys. See [public media/query boundaries](PUBLIC_QUERIES.md).
 
+Production Caddy additionally limits the public storage hostname to these four
+object operations beneath the configured bucket's `assets/` prefix. Bucket
+controls, listing, multipart and object subresource queries are rejected before
+Garage. The existing SDK's single operation `x-id` query is allowed; presigned
+URLs and general S3 administration are outside this transport contract. Bucket
+provisioning continues through the private Admin API. See the
+[post-plan review](../architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md)
+for regression coverage and the vendor findings that remain open.
+
 ## Verification
 
 Run:

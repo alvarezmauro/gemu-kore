@@ -2769,6 +2769,12 @@ restore
 
 ---
 
+## TASK 25.1 — Post-plan Security and Performance Review
+
+Status: **Completed 2026-10-23 — review and targeted fixes verified; production approval withheld.** Reviewed the whole implementation after the planned roadmap. Replaced gallery hydration in public media delivery with an exact approved-use lookup, fixing the 1,001st-association failure and reducing the measured repository result from 578,001 to 77 bytes. Restricted public S3 transport to supported object operations and rejected unused CONNECT/TRACE methods. Refreshed the official PostgreSQL image's published security packages while retaining PostgreSQL 16.15 and existing volumes/roles. Corrected one raw search test to use the application's existing transaction configuration without raising deadlines. All 1,485 unit/component, 691 PostgreSQL, 46 upload, 32 storage, 21 reported proxy, three backup, 54 critical desktop/mobile and ten distinct production/restore browser cases pass; lint, types, schema, seeds, formatting, documentation and 3D bundle checks pass. The workspace audit reports zero known vulnerabilities. Exact rebuilt-image findings, scanner coverage gaps, remaining vendor release blockers and prioritized follow-ups are recorded in the [post-plan review](docs/architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md). No application dependency, schema/migration, architecture, personal data, live deployment or scheduled operation changed.
+
+---
+
 # Recurring Rule After Every Significant Feature
 
 Use:

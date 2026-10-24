@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "9d9261eeb42e4b68d68056aedb1c66eb702cff75",
+  "includesUncommittedChanges": true,
+  "recordedAt": "2026-10-24T05:02:01.178Z",
+  "note": "Single local observation on disposable PostgreSQL; repository result sizes are server-side, not HTTP payloads or a production latency guarantee.",
+  "fixtureUses": 1001,
+  "legacyRows": 1000,
+  "exactRows": 1,
+  "legacyBytes": 578001,
+  "exactBytes": 77,
+  "legacyMs": 83.61940500000037,
+  "exactMs": 6.267810000000281
+}

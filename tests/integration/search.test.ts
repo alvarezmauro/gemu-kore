@@ -1089,6 +1089,8 @@ it("executes filter persistence with narrow columns and live hierarchical option
   await actor();
   const d = await seedFilterData(db);
   await withTransaction(async (tx) => {
+    // Match service execution: bounded interactive queries run with JIT off.
+    await configureSearch(tx);
     const options = await searchRepository.listFilterOptions(tx);
     expect(options.some((x) => x.label === "Home / Shelf")).toBe(true);
     const rows = await searchRepository.searchFilteredRows(

@@ -1,6 +1,6 @@
 import "server-only";
 import type { TransactionClient } from "@/server/db/transaction";
-import type { Prisma } from "@/server/db/generated/client";
+import type { CatalogAssetRole, Prisma } from "@/server/db/generated/client";
 // No private metadata, filenames or provenance URLs enter public resolution.
 const mediaAssetSelect = {
   id: true,
@@ -75,6 +75,51 @@ const useSelect = {
   publicDisplayAssetId: true,
   publicDisplayAsset: { select: mediaAssetSelect },
 } as const;
+const publicCatalogRoles = [
+  "COVER",
+  "GALLERY",
+  "SCREENSHOT",
+  "PREVIEW",
+  "MODEL_3D",
+  "LOGO",
+] satisfies CatalogAssetRole[];
+
+// A byte request needs one exact association, not its owner's entire gallery.
+// Keep type/scope/publication filters in SQL and never select private metadata.
+export async function itemMediaUse(
+  item: MediaIdentity,
+  kind: "personal" | "catalog",
+  useId: string,
+  personal: boolean,
+  tx: TransactionClient,
+) {
+  const where = { id: useId, publicApproved: true, approvedAt: { not: null } };
+  if (kind === "personal") {
+    if (!personal) return null;
+    const row = await tx.collectionItemMedia.findFirst({
+      where: { ...where, collectionItemId: item.id, type: { not: "SERIAL" } },
+      select: { publicDisplayAssetId: true, type: true },
+    });
+    return (
+      row && {
+        publicDisplayAssetId: row.publicDisplayAssetId,
+        model: row.type === "CUSTOM_MODEL",
+      }
+    );
+  }
+  const scopes = catalogScopes(item);
+  if (!scopes.length) return null;
+  const row = await tx.catalogAsset.findFirst({
+    where: { ...where, OR: scopes, role: { in: publicCatalogRoles } },
+    select: { publicDisplayAssetId: true, role: true },
+  });
+  return (
+    row && {
+      publicDisplayAssetId: row.publicDisplayAssetId,
+      model: row.role === "MODEL_3D",
+    }
+  );
+}
 export async function itemMediaUses(
   item: MediaIdentity,
   personal: boolean,
@@ -108,9 +153,7 @@ export async function itemMediaUses(
         ...scope,
         publicApproved: true,
         approvedAt: { not: null },
-        role: {
-          in: ["COVER", "GALLERY", "SCREENSHOT", "PREVIEW", "MODEL_3D", "LOGO"],
-        },
+        role: { in: publicCatalogRoles },
       },
       select: { ...useSelect, role: true },
       orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }, { id: "asc" }],

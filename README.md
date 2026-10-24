@@ -14,6 +14,8 @@ keyboard navigation and reduced motion.
 [final remediation report](docs/architecture/FINAL_REVIEW_REMEDIATION.md) records
 open proxy, storage and native-package findings. Completing the development plan
 or passing local tests does not clear those findings or deploy a live site.
+The [post-plan security/performance review](docs/architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md)
+records the latest media-query, public-ingress and database-package fixes and remaining work.
 
 ## Requirements
 
@@ -117,7 +119,7 @@ including storage, uploads, public smoke tests, accessibility, mobile, backup an
 the production Docker rehearsal. Database/storage/browser runners create disposable
 infrastructure; they do not use personal development data. Live OAuth consent,
 physical-device coverage and real-server operations have separate evidence limits.
-The [Task 24.1 cleanup](docs/operations/CODE_CLEANUP.md) records the latest full
+The [post-plan review](docs/architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md) records the latest full
 unit/database/critical-browser baseline; dated task reports retain historical counts.
 
 For a local production-mode build, either supply valid production HTTPS auth/storage

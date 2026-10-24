@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { writeFile } from "node:fs/promises";
 import { afterAll, beforeEach, expect, it, vi } from "vitest";
 import {
   requirePrivateAccess,
@@ -1008,6 +1010,90 @@ it("contextual delivery rechecks exact use, policy, publication, category associ
     code: "NOT_FOUND",
   });
 });
+it("resolves one contextual media use without hydrating a large gallery or imposing its window on delivery", async () => {
+  const { data } = await seedPublished(),
+    { source, output } = await approvedImage();
+  const rows = Array.from({ length: 1001 }, (_, sortOrder) => ({
+    id: randomUUID(),
+    consoleModelId: data.model.id,
+    role: "GALLERY" as const,
+    assetId: source.id,
+    publicDisplayAssetId: output.id,
+    publicApproved: true,
+    approvedAt: new Date(),
+    sortOrder,
+  }));
+  // Keep fixture writes inside normal transaction deadlines.
+  for (let start = 0; start < rows.length; start += 100)
+    await db.catalogAsset.createMany({ data: rows.slice(start, start + 100) });
+  const evidence = await withTransaction(
+    async (tx) => {
+      const item = (await mediaRepository.mediaIdentity(data.items[0].id, tx))!;
+      const start = performance.now();
+      const legacy = await mediaRepository.itemMediaUses(item, false, tx);
+      const legacyMs = performance.now() - start;
+      const exactStart = performance.now();
+      const exact = await mediaRepository.itemMediaUse(
+        item,
+        "catalog",
+        rows[0].id,
+        false,
+        tx,
+      );
+      const exactMs = performance.now() - exactStart;
+      const bytes = (value: unknown) =>
+        Buffer.byteLength(
+          JSON.stringify(value, (_key, v) =>
+            typeof v === "bigint" ? String(v) : v,
+          ),
+        );
+      expect(legacy).toHaveLength(1000);
+      expect(exact?.publicDisplayAssetId).toBe(output.id);
+      return {
+        fixtureUses: rows.length,
+        legacyRows: legacy.length,
+        exactRows: exact ? 1 : 0,
+        legacyBytes: bytes(legacy),
+        exactBytes: bytes(exact),
+        legacyMs,
+        exactMs,
+      };
+    },
+    { isolationLevel: "RepeatableRead", publicationPolicy: "read" },
+  );
+  if (process.env.PROJECT_REVIEW_EVIDENCE === "1")
+    await writeFile(
+      "docs/performance/POST_PLAN_MEDIA_EVIDENCE.json",
+      JSON.stringify(
+        {
+          sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], {
+            encoding: "utf8",
+          }).trim(),
+          includesUncommittedChanges: Boolean(
+            execFileSync("git", ["status", "--porcelain"], {
+              encoding: "utf8",
+            }).trim(),
+          ),
+          recordedAt: new Date().toISOString(),
+          note: "Single local observation on disposable PostgreSQL; repository result sizes are server-side, not HTTP payloads or a production latency guarantee.",
+          ...evidence,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+  const gallery = vi.spyOn(mediaRepository, "itemMediaUses");
+  for (const row of [rows[0], rows.at(-1)!]) {
+    const resolved = await mediaDelivery({
+      context: "item",
+      kind: "catalog",
+      itemId: data.items[0].id,
+      useId: row.id,
+    });
+    expect(resolved.locator.objectKey).toBe(output.objectKey);
+  }
+  expect(gallery).not.toHaveBeenCalled();
+});
 it("keeps serial uses and unapproved derivatives private and falls back to independently approved catalog photos", async () => {
   const { context, data } = await seedPublished(),
     personal = await approvedImage("COLLECTION"),
@@ -1662,7 +1748,7 @@ it("admits only the established snapshot during concurrent rights withdrawal and
     kind: "catalog",
     useId: use.id,
   };
-  const original = mediaRepository.itemMediaUses;
+  const original = mediaRepository.itemMediaUse;
   let release!: () => void, entered!: () => void;
   const gate = new Promise<void>((resolve) => {
     release = resolve;
@@ -1670,7 +1756,7 @@ it("admits only the established snapshot during concurrent rights withdrawal and
   const ready = new Promise<void>((resolve) => {
     entered = resolve;
   });
-  vi.spyOn(mediaRepository, "itemMediaUses").mockImplementationOnce(
+  vi.spyOn(mediaRepository, "itemMediaUse").mockImplementationOnce(
     async (...args) => {
       const uses = await original(...args);
       entered();

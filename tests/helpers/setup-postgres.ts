@@ -7,7 +7,7 @@ import type { TestProject } from "vitest/node";
 const exec = promisify(execFile);
 // Same PostgreSQL release as development, with independent disposable storage.
 const image =
-  "postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685";
+  "postgres:16-alpine@sha256:f4610795587492cd4fb887c2dc3de301b813278bb6f616992061141b5f15ac36";
 
 declare module "vitest" {
   export interface ProvidedContext {

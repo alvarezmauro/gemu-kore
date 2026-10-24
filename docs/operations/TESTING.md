@@ -5,14 +5,17 @@ PostgreSQL repositories/services, storage, uploads, authentication, collection
 workflows and public privacy. Run the suite appropriate to the change; use
 isolated runners rather than pointing tests at development or production data.
 
-The latest complete application baseline is [Task 24.1](CODE_CLEANUP.md):
-**1,485 unit/component tests**, **690 PostgreSQL integration tests** and
+The latest complete application baseline is the
+[post-plan review](../architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md):
+**1,485 unit/component tests**, **691 PostgreSQL integration tests** and
 **54 critical desktop/mobile browser cases**, all passing on 2026-10-23. The
 browser runner also builds the production application. The
-[Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) separately
-records 46 upload, 32 storage, three backup and ten distinct production/restore
-browser cases, plus exact artifact assessments. These are dated results, not a
-claim that every suite is rerun by a documentation edit.
+same review also records 46 upload, 32 storage, 21 reported proxy, three backup
+and ten distinct production/restore browser cases, plus exact artifact
+assessments. These are dated results, not a claim that every suite is rerun by
+a documentation edit. The database, upload and production suites pass on the
+refreshed PostgreSQL image; the raw-search fixture correction preserves the
+existing query deadlines.
 
 Production image findings remain separate from functional tests and still block
 release approval. Dated task sections below preserve historical scope, counts and
@@ -61,6 +64,7 @@ production server; no `pnpm dev` process is needed.
 | `pnpm test:e2e:mobile`             | Run twelve light/dark mobile workflow checks for creation, camera uploads, filters, dialogs, navigation and 3D touch.                                                          |
 | `pnpm test:assets`                 | Generate Prisma, run the real upload/processing/media pipeline against disposable PostgreSQL and MinIO, then clean up.                                                         |
 | `pnpm test:backup`                 | Run local encryption/key/refusal regressions; no Docker or production environment needed.                                                                                      |
+| `pnpm test:proxy`                  | Check production method/path/query dispatch with the pinned Caddy image, random loopback ports and no production volumes.                                                      |
 | `pnpm test:production`             | Build runtime/operations images and rehearse real Caddy/Garage/PostgreSQL deployment, retained data and encrypted fresh-volume restore. Requires Docker, OpenSSL and Chromium. |
 | `pnpm exec playwright show-report` | Open the most recent browser test report.                                                                                                                                      |
 
@@ -71,6 +75,17 @@ pnpm lint
 pnpm typecheck
 pnpm format:check
 ```
+
+## Post-plan security and performance verification
+
+The [post-plan review](../architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md)
+records the latest security/performance regression results. The new contextual
+media case proves that approved association delivery is independent of the
+1,000-entry gallery window. Set `PROJECT_REVIEW_EVIDENCE=1` when explicitly
+running `tests/integration/public-collection.test.ts` to refresh its tracked
+synthetic measurement; ordinary runs leave that JSON unchanged. The production
+rehearsal separately checks signed storage byte/range operations and denied
+signed lifecycle/tagging requests before and after recreation.
 
 ## Unit and component tests
 

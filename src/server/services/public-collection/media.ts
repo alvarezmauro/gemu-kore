@@ -216,14 +216,14 @@ export async function resolveItemUse(
   tx: TransactionClient,
 ) {
   const item = await admittedItem(input.itemId, tx);
-  const uses = await repository.itemMediaUses(
+  const use = await repository.itemMediaUse(
     item,
+    input.kind,
+    input.useId,
     policy.showPersonalPhotos,
     tx,
   );
-  const use = uses.find((u) => u.id === input.useId && u.kind === input.kind);
-  if (!use?.publicApproved || !use.approvedAt || !use.publicDisplayAssetId)
-    throw new PublicCollectionError("NOT_FOUND");
+  if (!use?.publicDisplayAssetId) throw new PublicCollectionError("NOT_FOUND");
   const asset = await assetAdmission(tx)(
     use.publicDisplayAssetId,
     use.model ? "MODEL_3D" : "IMAGE",

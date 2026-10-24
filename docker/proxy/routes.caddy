@@ -1,5 +1,8 @@
 (app_routes) {
 	header Strict-Transport-Security "max-age=31536000"
+	# The application is not a tunnel or request-reflection service.
+	@unsupported_methods method CONNECT TRACE
+	respond @unsupported_methods 405
 	@upload path /api/uploads
 	@ordinary not path /api/uploads
 	request_body @upload {
@@ -23,9 +26,21 @@
 	request_body {
 		max_size 64MiB
 	}
-	# Preserve the Host, URI, payload and range headers used in S3 signatures.
-	reverse_proxy garage1:3900 garage2:3900 garage3:3900 {
-		lb_policy round_robin
-		fail_duration 10s
+	# Only the application's private object transport crosses this edge. Bucket
+	# control, multipart and object subresource XML belong to private administration.
+	@object_transport {
+		method GET HEAD PUT DELETE
+		path /{$S3_BUCKET}/assets/*
+		vars_regexp object_query {http.request.uri.query} ^(x-id=(GetObject|HeadObject|PutObject|DeleteObject))?$
+	}
+	handle @object_transport {
+		# Preserve signed Host, URI, payload and range headers without rewrites.
+		reverse_proxy garage1:3900 garage2:3900 garage3:3900 {
+			lb_policy round_robin
+			fail_duration 10s
+		}
+	}
+	handle {
+		respond 404
 	}
 }

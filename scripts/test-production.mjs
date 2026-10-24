@@ -290,6 +290,7 @@ http://:8080 {
     "const f=require('node:fs'); for(const p of ['/usr/local/lib/node_modules/npm','/usr/local/bin/npm','/usr/local/bin/npx','/usr/local/bin/yarn','/usr/local/bin/yarnpkg']) if(f.existsSync(p)) process.exit(1); if(process.getuid()!==1000 || require('/usr/local/lib/node_modules/pnpm/package.json').version!==require('/app/package.json').engines.pnpm)process.exit(1)",
   ]);
   await probe("privileges");
+  await probe("storage-policy");
   await probe("seed");
   console.info(
     "Checking authenticated uploads, 3D delivery and public media over HTTPS...",
@@ -337,6 +338,7 @@ http://:8080 {
   );
   await probe("check");
   await probe("privileges");
+  await probe("storage-policy");
   console.info(
     "Production Docker checks passed, including retained database and object bytes.",
   );

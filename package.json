@@ -48,6 +48,7 @@
     "three:device": "pnpm db:generate && tsx scripts/serve-three-device.ts",
     "test:production": "node scripts/test-production.mjs",
     "test:backup": "node --test tests/operations/backup.test.mjs",
+    "test:proxy": "node --test tests/operations/proxy.test.mjs",
     "backup:create": "node scripts/backup/production.mjs create",
     "backup:verify": "node scripts/backup/production.mjs verify",
     "backup:restore": "node scripts/backup/production.mjs restore",

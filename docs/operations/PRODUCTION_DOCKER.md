@@ -31,6 +31,14 @@ authorization; a publicly reachable S3 endpoint does not publish the objects.
 Neither proxy route adds a media cache. Streaming and Range requests reach the
 existing application/storage adapters.
 
+The storage edge admits only GET/HEAD/PUT/DELETE under the configured bucket's
+`assets/` prefix, with an empty query or one supported SDK `x-id`. Other query
+controls, bucket/listing operations and XML/multipart subresources return 404
+before reaching Garage. Use the private Admin API for provisioning. Application
+ingress returns 405 for CONNECT/TRACE. These restrictions narrow public exposure;
+they do not clear the vendor advisories. See the
+[post-plan review](../architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md).
+
 Garage uses three storage nodes and replication factor three. **All replicas
 live on the same Docker host.** This is not protection against host or disk
 loss and is not a high-availability deployment. Allow approximately three times
@@ -50,6 +58,12 @@ development dependencies live in a separate operations image. No build receives
 database, OAuth or storage credentials. Environment files are excluded from the
 build context. Build-only type checks include the shared `tests/` directory;
 that directory is not copied into either final image.
+
+The shared PostgreSQL 16 pin now uses the official image's Alpine security
+refresh while retaining PostgreSQL 16.15. Existing installations adopt it through
+the normal reviewed backup/update process below. The
+[post-plan review](../architecture/POST_PLAN_SECURITY_PERFORMANCE_REVIEW.md#pp-04--refresh-published-postgresql-image-security-packages)
+records package versions, verification and the retained image findings.
 
 PostgreSQL initializes three distinct credentials on a **new empty volume**:
 
@@ -300,6 +314,11 @@ bytes. Fixture commands run only in a temporary operations container with the
 test directory mounted read-only; neither release image has a test login route
 or baked-in browser fixture. Cleanup targets only this run's labelled volumes.
 Ports 3110/3111 must be available.
+
+The runner also verifies signed put/stat/ranged-get/remove and rejected signed
+lifecycle/tagging requests before and after container recreation. The smaller
+`pnpm test:proxy` suite checks method/path/query dispatch against the pinned
+Caddy image on random loopback ports without app, database or storage volumes.
 
 Live DNS, ACME issuance/renewal, external OAuth consent, a real host firewall,
 host failure, load capacity and off-host restore are not established by a local

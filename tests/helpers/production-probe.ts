@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
+import {
+  PutBucketLifecycleConfigurationCommand,
+  PutObjectTaggingCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getDatabase, disconnectDatabase } from "../../src/server/db/client";
 import { getObjectStorage } from "../../src/server/storage";
 
@@ -13,6 +18,86 @@ async function main() {
   const db = getDatabase();
   const [command] = process.argv.slice(2);
   try {
+    if (command === "storage-policy") {
+      const client = new S3Client({
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+        },
+        maxAttempts: 1,
+      });
+      const id = "00000000-0000-4000-8000-000000000033";
+      const locator = {
+        storageNamespace: "primary",
+        objectKey: `assets/${id}/00000000-0000-4000-8000-000000000034.png`,
+      };
+      const storage = getObjectStorage();
+      const bytes = Buffer.from("isolated storage policy probe");
+      try {
+        await storage.put({
+          locator,
+          openBody: () => Readable.from(bytes),
+          sizeBytes: bytes.length,
+          contentType: "image/png",
+          metadata: {
+            assetId: id,
+            sha256: createHash("sha256").update(bytes).digest("hex"),
+          },
+        });
+        assert.equal((await storage.stat(locator))?.sizeBytes, bytes.length);
+        const part = await storage.get(locator, {
+          range: { start: 0, end: 7 },
+        });
+        const chunks: Buffer[] = [];
+        for await (const chunk of part.body) chunks.push(Buffer.from(chunk));
+        assert.deepEqual(Buffer.concat(chunks), bytes.subarray(0, 8));
+        // Benign control requests use a real scoped key. Neither XML body may
+        // reach Garage through the public edge, even with valid signatures.
+        for (const request of [
+          () =>
+            client.send(
+              new PutBucketLifecycleConfigurationCommand({
+                Bucket: process.env.S3_BUCKET,
+                LifecycleConfiguration: {
+                  Rules: [
+                    {
+                      ID: "blocked-probe",
+                      Status: "Disabled",
+                      Filter: { Prefix: "security-probe/" },
+                      Expiration: { Days: 365 },
+                    },
+                  ],
+                },
+              }),
+            ),
+          () =>
+            client.send(
+              new PutObjectTaggingCommand({
+                Bucket: process.env.S3_BUCKET,
+                Key: locator.objectKey,
+                Tagging: { TagSet: [] },
+              }),
+            ),
+        ])
+          await assert.rejects(request, (error: unknown) =>
+            Boolean(
+              error &&
+              typeof error === "object" &&
+              "$metadata" in error &&
+              (error.$metadata as { httpStatusCode?: number })
+                .httpStatusCode === 404,
+            ),
+          );
+      } finally {
+        client.destroy();
+        await storage.remove(locator);
+      }
+      assert.equal(await storage.stat(locator), null);
+      return;
+    }
     if (command === "capture-backup") {
       const tableNames = await db.$queryRaw<{ tablename: string }[]>`
         SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'session' ORDER BY tablename`;
