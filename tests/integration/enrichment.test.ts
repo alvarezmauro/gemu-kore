@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeEach, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, expect, it, vi } from "vitest";
 import { requirePrivateAccess } from "@/server/auth/access";
 import { getDatabase, disconnectDatabase } from "@/server/db/client";
 import type { AccessRole } from "@/features/auth/contracts";
@@ -27,6 +27,7 @@ import {
 import * as catalogRepository from "@/server/repositories/catalog/enrichment";
 import type { EnrichmentReview } from "@/features/enrichment/contracts";
 const db = getDatabase();
+afterEach(() => vi.restoreAllMocks());
 const secret = "game-creation-test-secret-longer-than-thirty-two-characters";
 const time = "2026-10-19T12:00:00.000Z";
 const metadata = mapGame(
@@ -140,6 +141,49 @@ async function prepared(
   const review = await prepareEnrichmentReview(fixture.owner.context, choice);
   return { ...fixture, searched, fetched, choice, review };
 }
+
+it("records committed enrichment failure and success without logging queries or provider payloads", async () => {
+  const fixture = await setup();
+  const info = vi.spyOn(console, "info").mockImplementation(() => {});
+  const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+  fixture.adapter.search.mockResolvedValueOnce({
+    ok: false,
+    error: { code: "UNAVAILABLE", retryable: true },
+  });
+  const review = await fixture.runner.start(fixture.owner.context, {
+    ...fixture.input,
+    query: "PRIVATE-QUERY-SENTINEL",
+  });
+  expect(review.fetchStatus).toBe("FAILED");
+  const failed = errors.mock.calls.map(([line]) => JSON.parse(String(line)));
+  expect(failed).toMatchObject([
+    {
+      operation: "enrichment.execute",
+      outcome: "failed",
+      code: "UNAVAILABLE",
+      runId: review.id,
+    },
+  ]);
+  expect(failed[0].correlationId).toBe(
+    JSON.parse(String(info.mock.calls[0][0])).correlationId,
+  );
+  await fixture.runner.retry(fixture.owner.context, {
+    runId: review.id,
+    expectedRunVersion: review.runVersion,
+  });
+  expect(
+    info.mock.calls.map(([line]) => JSON.parse(String(line))),
+  ).toContainEqual(
+    expect.objectContaining({
+      operation: "enrichment.execute",
+      outcome: "succeeded",
+      runId: review.id,
+    }),
+  );
+  expect([...info.mock.calls, ...errors.mock.calls].flat().join()).not.toMatch(
+    /PRIVATE-QUERY-SENTINEL|Manual title|Orbit Quest|summary|candidates|client_secret/,
+  );
+});
 function acceptance(
   review: EnrichmentReview,
   ids = review.suggestions.map((s) => s.id),

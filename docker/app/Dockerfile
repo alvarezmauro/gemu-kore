@@ -8,7 +8,7 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS dependencies
-RUN npm install --global pnpm@11.5.0
+RUN npm install --global pnpm@11.28.8
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
@@ -29,6 +29,8 @@ ENV NODE_ENV=production GEMUKORE_STANDALONE=1
 RUN pnpm build
 
 FROM dependencies AS operations
+# Operator commands use the pinned pnpm and Node; exclude unused base-image CLIs.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /opt/yarn* /usr/local/bin/yarn*
 ENV NODE_ENV=production
 COPY package.json prisma.config.ts tsconfig.json ./
 COPY prisma ./prisma

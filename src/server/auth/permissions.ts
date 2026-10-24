@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDatabase } from "../db/client";
+import { operationalFailure } from "../observability/events";
 import type { TransactionClient } from "../db/transaction";
 import {
   canPerform,
@@ -49,6 +50,8 @@ export async function requirePermission(
     }
     return current;
   } catch (error) {
+    if (!(error instanceof PrivateAccessError))
+      operationalFailure("auth.permission", error, { permission });
     if (error instanceof PrivateAccessError || error instanceof PermissionError)
       throw error;
     throw new PrivateAccessError("UNAVAILABLE");

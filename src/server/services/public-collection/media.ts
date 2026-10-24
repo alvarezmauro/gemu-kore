@@ -81,13 +81,13 @@ export function assetAdmission(tx: TransactionClient) {
         asset.height > 12000)
     )
       return null;
-    const visited = new Set<string>(),
+    const heights = new Map<string, number>(),
       path = new Set<string>(),
       discovered = new Set([id]);
     async function visit(id: string, depth: number): Promise<boolean> {
       if (path.has(id) || depth > 16) return false;
-      if (visited.has(id)) return true;
-      if (visited.size >= 128) return false;
+      const knownHeight = heights.get(id);
+      if (knownHeight !== undefined) return depth + knownHeight <= 16;
       const current = await node(id);
       if (
         !current ||
@@ -96,7 +96,6 @@ export function assetAdmission(tx: TransactionClient) {
         current.inputs.length > 128
       )
         return false;
-      visited.add(id);
       path.add(id);
       // Fetch siblings together; validate them in DFS order so cycle/path and
       // unique-node accounting keep their existing fail-closed semantics.
@@ -109,14 +108,17 @@ export function assetAdmission(tx: TransactionClient) {
           current.inputs.map((edge) => node(edge.sourceAssetId)),
         );
       }
+      let height = 0;
       for (const edge of current.inputs) {
         if (
           !["RESIZE", "SANITIZE", "RENDER_INPUT"].includes(edge.purpose) ||
           !(await visit(edge.sourceAssetId, depth + 1))
         )
           return false;
+        height = Math.max(height, heights.get(edge.sourceAssetId)! + 1);
       }
       path.delete(id);
+      heights.set(id, height);
       return true;
     }
     return (await visit(id, 0)) ? asset : null;

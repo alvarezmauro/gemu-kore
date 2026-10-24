@@ -1,5 +1,6 @@
 import { toNextJsHandler } from "better-auth/next-js";
 import { getAuth } from "@/server/auth";
+import { withLogContext } from "@/server/observability/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,5 +40,5 @@ async function handle(request: Request) {
   return response;
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = (request: Request) => withLogContext(() => handle(request));
+export const POST = GET;

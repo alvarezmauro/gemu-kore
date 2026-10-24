@@ -18,6 +18,10 @@ Passing application checks do not clear dependency advisories.
 This task produces a review and a Task 23.2 handoff. It changes no application
 code, dependency, configuration, schema, migration or deployment.
 
+Task 23.2 implementation and current dispositions are recorded separately in
+[Final review remediation](FINAL_REVIEW_REMEDIATION.md). This document preserves
+the original review evidence and finding register.
+
 ## Scope and evidence
 
 Reviewed `PROJECT_SPEC.md`, the Task 23.1 instructions and accepted architecture

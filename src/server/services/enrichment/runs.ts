@@ -37,6 +37,12 @@ import {
 } from "./common";
 import { EnrichmentError } from "./errors";
 import { getEnrichmentReview } from "./suggestions";
+import {
+  operationalEvent,
+  operationalFailure,
+  withLogContext,
+  failureCode,
+} from "@/server/observability/events";
 
 const active = new Map<string, AbortController>();
 const providerCodes = new Set<ProviderErrorCode>([
@@ -95,185 +101,197 @@ export function createEnrichmentRunner(
     deadlineAt: number,
     signal?: AbortSignal,
   ) {
-    const { run, token } = claim;
-    const controller = new AbortController();
-    active.set(token, controller);
-    let timedOut = false;
-    const timer = setTimeout(
-      () => {
-        timedOut = true;
-        controller.abort();
-      },
-      Math.max(1, deadlineAt - performance.now()),
-    );
-    const cancel = () => controller.abort();
-    signal?.addEventListener("abort", cancel, { once: true });
-    if (signal?.aborted) controller.abort();
-    let data: unknown;
-    let code: string | null = null;
-    try {
-      const selected = run.selectedCandidate ? selectedReference(run) : null;
-      const providerContext = {
-        signal: controller.signal,
-        deadlineAt,
-      };
-      // Race also bounds non-cooperative adapters; generation checks fence late results.
-      let removeAbort = () => {};
+    return withLogContext(async () => {
+      const { run, token } = claim;
+      operationalEvent("enrichment.execute", "started", { runId: run.id });
+      const controller = new AbortController();
+      active.set(token, controller);
+      let timedOut = false;
+      const timer = setTimeout(
+        () => {
+          timedOut = true;
+          controller.abort();
+        },
+        Math.max(1, deadlineAt - performance.now()),
+      );
+      const cancel = () => controller.abort();
+      signal?.addEventListener("abort", cancel, { once: true });
+      if (signal?.aborted) controller.abort();
+      let data: unknown;
+      let code: string | null = null;
       try {
-        const aborted = new Promise<never>((_, reject) => {
-          const abort = () => reject(new Error("Aborted"));
-          removeAbort = () =>
-            controller.signal.removeEventListener("abort", abort);
-          controller.signal.addEventListener("abort", abort, { once: true });
-          if (controller.signal.aborted) abort();
-        });
-        const result = await Promise.race([
-          aborted,
-          retrieve(
-            run,
-            querySchema.parse(run.query).query,
-            providerContext,
-            getProvider,
-            getAccessoryProvider,
-          ),
-        ]);
-        if (!result.ok)
-          code = providerCodes.has(result.error.code)
-            ? result.error.code
-            : "INVALID_RESPONSE";
-        else if (selected) {
-          const metadata = resultData(run, result.data);
-          if (!equal(metadata.identity.ref, selected))
-            throw new Error("Mismatched identity");
-          data = metadata;
-        } else data = searchData(run, result.data);
-        if (data)
-          bounded({
-            target: run.targetSnapshot,
-            query: run.query,
-            candidates: run.candidates,
-            result: data,
+        const selected = run.selectedCandidate ? selectedReference(run) : null;
+        const providerContext = {
+          signal: controller.signal,
+          deadlineAt,
+        };
+        // Race also bounds non-cooperative adapters; generation checks fence late results.
+        let removeAbort = () => {};
+        try {
+          const aborted = new Promise<never>((_, reject) => {
+            const abort = () => reject(new Error("Aborted"));
+            removeAbort = () =>
+              controller.signal.removeEventListener("abort", abort);
+            controller.signal.addEventListener("abort", abort, { once: true });
+            if (controller.signal.aborted) abort();
           });
+          const result = await Promise.race([
+            aborted,
+            retrieve(
+              run,
+              querySchema.parse(run.query).query,
+              providerContext,
+              getProvider,
+              getAccessoryProvider,
+            ),
+          ]);
+          if (!result.ok)
+            code = providerCodes.has(result.error.code)
+              ? result.error.code
+              : "INVALID_RESPONSE";
+          else if (selected) {
+            const metadata = resultData(run, result.data);
+            if (!equal(metadata.identity.ref, selected))
+              throw new Error("Mismatched identity");
+            data = metadata;
+          } else data = searchData(run, result.data);
+          if (data)
+            bounded({
+              target: run.targetSnapshot,
+              query: run.query,
+              candidates: run.candidates,
+              result: data,
+            });
+        } finally {
+          removeAbort();
+        }
+      } catch {
+        code = controller.signal.aborted
+          ? timedOut
+            ? "TIMEOUT"
+            : "CANCELLED"
+          : "INVALID_RESPONSE";
       } finally {
-        removeAbort();
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", cancel);
+        active.delete(token);
       }
-    } catch {
-      code = controller.signal.aborted
-        ? timedOut
-          ? "TIMEOUT"
-          : "CANCELLED"
-        : "INVALID_RESPONSE";
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", cancel);
-      active.delete(token);
-    }
-    try {
-      await guarded(
-        context,
-        async (actor, tx) => {
-          const current = await recoverExpired(
-            await authorizedRun(run.id, actor, tx),
-            tx,
-            new Date(),
+      try {
+        const outcome = await guarded(
+          context,
+          async (actor, tx) => {
+            const current = await recoverExpired(
+              await authorizedRun(run.id, actor, tx),
+              tx,
+              new Date(),
+            );
+            if (
+              current.operationToken !== token ||
+              current.fetchStatus !== "RUNNING"
+            )
+              return;
+            const now = new Date();
+            if (performance.now() >= deadlineAt) code = "TIMEOUT";
+            if (signal?.aborted) code = "CANCELLED";
+            if (!unchanged(current, await loadTarget(targetOf(current), tx)))
+              code = "CONFLICT";
+            if (code) {
+              await repository.updateRun(
+                run.id,
+                {
+                  fetchStatus: "FAILED",
+                  failureCode: code,
+                  completedAt: now,
+                  operationToken: null,
+                  leaseUntil: null,
+                  attempts: completedAttempts(current, code, now),
+                },
+                tx,
+              );
+              return "failed" as const;
+            }
+            bounded({
+              target: current.targetSnapshot,
+              query: current.query,
+              candidates: current.candidates,
+              result: data,
+            });
+            if (performance.now() >= deadlineAt)
+              throw new EnrichmentError("TIMEOUT");
+            if (current.selectedCandidate) {
+              await repository.updateRun(
+                run.id,
+                {
+                  result: json(data),
+                  fetchStatus: "COMPLETED",
+                  completedAt: now,
+                  operationToken: null,
+                  leaseUntil: null,
+                  attempts: completedAttempts(current, "COMPLETED", now),
+                },
+                tx,
+              );
+            } else {
+              const page = searchData(current, data);
+              await repository.updateRun(
+                run.id,
+                {
+                  candidates: json(page),
+                  fetchStatus: page.candidates.length
+                    ? "NEEDS_SELECTION"
+                    : "COMPLETED",
+                  completedAt: page.candidates.length ? null : now,
+                  operationToken: null,
+                  leaseUntil: null,
+                  attempts: completedAttempts(
+                    current,
+                    page.candidates.length ? "NEEDS_SELECTION" : "COMPLETED",
+                    now,
+                  ),
+                },
+                tx,
+              );
+            }
+            return "succeeded" as const;
+          },
+          false,
+          code ? undefined : deadlineAt,
+        );
+        if (outcome)
+          operationalEvent(
+            "enrichment.execute",
+            outcome,
+            { runId: run.id },
+            outcome === "failed" ? failureCode({ code }) : undefined,
           );
+      } catch (error) {
+        operationalFailure("enrichment.execute", error, { runId: run.id });
+        if (!(error instanceof EnrichmentError) || error.code !== "TIMEOUT")
+          throw error;
+        // A deadline can roll back publication. Retain only the fenced failure in a short cleanup transaction.
+        await guarded(context, async (actor, tx) => {
+          const current = await authorizedRun(run.id, actor, tx);
           if (
             current.operationToken !== token ||
             current.fetchStatus !== "RUNNING"
           )
             return;
           const now = new Date();
-          if (performance.now() >= deadlineAt) code = "TIMEOUT";
-          if (signal?.aborted) code = "CANCELLED";
-          if (!unchanged(current, await loadTarget(targetOf(current), tx)))
-            code = "CONFLICT";
-          if (code) {
-            await repository.updateRun(
-              run.id,
-              {
-                fetchStatus: "FAILED",
-                failureCode: code,
-                completedAt: now,
-                operationToken: null,
-                leaseUntil: null,
-                attempts: completedAttempts(current, code, now),
-              },
-              tx,
-            );
-            return;
-          }
-          bounded({
-            target: current.targetSnapshot,
-            query: current.query,
-            candidates: current.candidates,
-            result: data,
-          });
-          if (performance.now() >= deadlineAt)
-            throw new EnrichmentError("TIMEOUT");
-          if (current.selectedCandidate) {
-            await repository.updateRun(
-              run.id,
-              {
-                result: json(data),
-                fetchStatus: "COMPLETED",
-                completedAt: now,
-                operationToken: null,
-                leaseUntil: null,
-                attempts: completedAttempts(current, "COMPLETED", now),
-              },
-              tx,
-            );
-          } else {
-            const page = searchData(current, data);
-            await repository.updateRun(
-              run.id,
-              {
-                candidates: json(page),
-                fetchStatus: page.candidates.length
-                  ? "NEEDS_SELECTION"
-                  : "COMPLETED",
-                completedAt: page.candidates.length ? null : now,
-                operationToken: null,
-                leaseUntil: null,
-                attempts: completedAttempts(
-                  current,
-                  page.candidates.length ? "NEEDS_SELECTION" : "COMPLETED",
-                  now,
-                ),
-              },
-              tx,
-            );
-          }
-        },
-        false,
-        code ? undefined : deadlineAt,
-      );
-    } catch (error) {
-      if (!(error instanceof EnrichmentError) || error.code !== "TIMEOUT")
-        throw error;
-      // A deadline can roll back publication. Retain only the fenced failure in a short cleanup transaction.
-      await guarded(context, async (actor, tx) => {
-        const current = await authorizedRun(run.id, actor, tx);
-        if (
-          current.operationToken !== token ||
-          current.fetchStatus !== "RUNNING"
-        )
-          return;
-        const now = new Date();
-        await repository.updateRun(
-          run.id,
-          {
-            fetchStatus: "FAILED",
-            failureCode: "TIMEOUT",
-            operationToken: null,
-            leaseUntil: null,
-            completedAt: now,
-            attempts: completedAttempts(current, "TIMEOUT", now),
-          },
-          tx,
-        );
-      });
-    }
+          await repository.updateRun(
+            run.id,
+            {
+              fetchStatus: "FAILED",
+              failureCode: "TIMEOUT",
+              operationToken: null,
+              leaseUntil: null,
+              completedAt: now,
+              attempts: completedAttempts(current, "TIMEOUT", now),
+            },
+            tx,
+          );
+        });
+      }
+    });
   }
   async function start(
     context: PrivateAccessContext,

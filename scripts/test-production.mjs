@@ -279,6 +279,16 @@ http://:8080 {
     "-e",
     "const f=require('node:fs'); for(const p of ['.env.production','tests','scripts/access-admin.ts','node_modules/prisma','/usr/local/lib/node_modules/npm','/usr/local/bin/npm','/usr/local/bin/npx']) if(f.existsSync(p)) process.exit(1); if(process.getuid()!==1000 || process.version!=='v24.22.1')process.exit(1)",
   ]);
+  await compose([
+    "run",
+    "--rm",
+    "--no-deps",
+    "--entrypoint",
+    "node",
+    "operations",
+    "-e",
+    "const f=require('node:fs'); for(const p of ['/usr/local/lib/node_modules/npm','/usr/local/bin/npm','/usr/local/bin/npx','/usr/local/bin/yarn','/usr/local/bin/yarnpkg']) if(f.existsSync(p)) process.exit(1); if(process.getuid()!==1000 || require('/usr/local/lib/node_modules/pnpm/package.json').version!==require('/app/package.json').engines.pnpm)process.exit(1)",
+  ]);
   await probe("privileges");
   await probe("seed");
   console.info(

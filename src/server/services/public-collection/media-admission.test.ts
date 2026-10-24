@@ -86,6 +86,15 @@ it("accepts shared DAG branches, but denies cycles, missing nodes and unsupporte
     "THUMBNAIL" as PublicAsset["inputs"][number]["purpose"];
   expect(await assetAdmission(tx)("root", "IMAGE")).toBeNull();
 });
+
+it("checks the full depth of a shared subtree even when a shallow path visited it first", async () => {
+  node("root", ["shared", "long-0"]);
+  node("shared", ["leaf"]);
+  node("leaf");
+  for (let n = 0; n < 15; n++)
+    node(`long-${n}`, [n === 14 ? "shared" : `long-${n + 1}`]);
+  expect(await assetAdmission(tx)("root", "IMAGE")).toBeNull();
+});
 it("retains the depth, total-node and per-node degree limits during batched traversal", async () => {
   for (let n = 0; n <= 16; n++)
     node(`depth-${n}`, n < 16 ? [`depth-${n + 1}`] : []);

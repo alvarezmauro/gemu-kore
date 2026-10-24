@@ -57,6 +57,26 @@ Setup refuses existing keys with broader bucket permissions or different
 secrets. These boundaries do not make a host administrator untrusted: Docker
 administrators can inspect container environments and persistent volumes.
 
+## Application diagnostics
+
+The web application emits allowlisted JSON operational events for authentication
+and permission failures, upload lifecycle, enrichment execution and unexpected
+database failures. Events include a server-generated correlation UUID and safe
+codes, with optional opaque upload/run UUIDs or permission names. Raw errors,
+SQL, request URLs/headers, object keys, filenames and provider payloads are not
+logged. Success events use standard output; failures and denials use standard
+error. Keep Docker logs private and configure host-side rotation and retention.
+Logging sink failure does not change permissions or transaction results.
+See the [final review remediation](../architecture/FINAL_REVIEW_REMEDIATION.md)
+for the field contract and retained vendor release blockers.
+
+The project and container toolchain uses pnpm 11.28.8. Rebuild both application
+and operations images after dependency/toolchain changes; a host package audit
+does not inspect the globally bundled pnpm tree in the operations image. The web
+runtime still excludes package-manager tools. The operations image retains pnpm
+and Node; unused inherited npm, npx and Yarn are removed. The production test
+runner verifies these boundaries and the actual global pnpm version.
+
 ## First deployment
 
 Use a Docker host with a current Compose plugin supporting conditional

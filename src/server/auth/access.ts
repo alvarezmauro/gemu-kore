@@ -9,6 +9,7 @@ import {
 } from "../repositories/access";
 import { normalizeVerifiedEmail } from "./email";
 import { getAuthenticatedIdentity } from "./session";
+import { operationalFailure, withLogContext } from "../observability/events";
 
 const trustedAccess = Symbol("server-created private access");
 
@@ -48,15 +49,18 @@ async function resolveGrant(
 export async function requirePrivateAccess(
   requestHeaders: Headers,
 ): Promise<PrivateAccessContext> {
-  try {
-    const identity = await getAuthenticatedIdentity(requestHeaders);
-    if (!identity) throw new PrivateAccessError("UNAUTHENTICATED");
-    return await resolveGrant(identity);
-  } catch (error) {
-    if (error instanceof PrivateAccessError) throw error;
-    // Database/provider internals must never become a private-access DTO.
-    throw new PrivateAccessError("UNAVAILABLE");
-  }
+  return withLogContext(async () => {
+    try {
+      const identity = await getAuthenticatedIdentity(requestHeaders);
+      if (!identity) throw new PrivateAccessError("UNAUTHENTICATED");
+      return await resolveGrant(identity);
+    } catch (error) {
+      operationalFailure("auth.access", error);
+      if (error instanceof PrivateAccessError) throw error;
+      // Database/provider internals must never become a private-access DTO.
+      throw new PrivateAccessError("UNAVAILABLE");
+    }
+  });
 }
 
 // Future mutation services call this using their transaction before any write.
@@ -65,28 +69,31 @@ export async function revalidatePrivateAccess(
   context: PrivateAccessContext,
   database?: TransactionClient,
 ): Promise<PrivateAccessContext> {
-  try {
-    if (context?.[trustedAccess] !== true)
-      throw new PrivateAccessError("DENIED");
-    const current = await findCurrentAccessIdentity(
-      context.userId,
-      context.sessionId,
-      database ?? getDatabase(),
-    );
-    const email = normalizeVerifiedEmail(current?.user.email);
-    if (
-      !current?.user.emailVerified ||
-      !email ||
-      email !== current.user.email ||
-      email !== context.email
-    )
-      throw new PrivateAccessError("UNAUTHENTICATED");
-    return await resolveGrant(
-      { userId: context.userId, sessionId: context.sessionId, email },
-      database,
-    );
-  } catch (error) {
-    if (error instanceof PrivateAccessError) throw error;
-    throw new PrivateAccessError("UNAVAILABLE");
-  }
+  return withLogContext(async () => {
+    try {
+      if (context?.[trustedAccess] !== true)
+        throw new PrivateAccessError("DENIED");
+      const current = await findCurrentAccessIdentity(
+        context.userId,
+        context.sessionId,
+        database ?? getDatabase(),
+      );
+      const email = normalizeVerifiedEmail(current?.user.email);
+      if (
+        !current?.user.emailVerified ||
+        !email ||
+        email !== current.user.email ||
+        email !== context.email
+      )
+        throw new PrivateAccessError("UNAUTHENTICATED");
+      return await resolveGrant(
+        { userId: context.userId, sessionId: context.sessionId, email },
+        database,
+      );
+    } catch (error) {
+      operationalFailure("auth.revalidate", error);
+      if (error instanceof PrivateAccessError) throw error;
+      throw new PrivateAccessError("UNAVAILABLE");
+    }
+  });
 }

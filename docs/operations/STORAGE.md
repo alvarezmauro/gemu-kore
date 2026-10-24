@@ -60,7 +60,7 @@ Unit checks cover optional/partial/provider configurations, unsafe endpoints, bo
 
 Final Task 5.2 verification: 145 unit/component tests, 32 storage tests, 198 isolated PostgreSQL tests and 64 desktop/mobile browser tests pass (439 total), with lint, typechecking, formatting and production browser builds. The refreshed Docker app is healthy; its design preview and anonymous `/app` → login flow were verified in the browser. Generated-client tasks must run sequentially in this checkout: concurrently regenerating Prisma during typechecking produced a transient missing-generated-file failure; a subsequent serialized run passes.
 
-The production dependency audit still reports the two previously reviewed tooling advisories in `deepmerge-ts` and `braces`; the new SDK introduces no additional reported advisory. See [AUTH_SECURITY_REVIEW.md](../architecture/AUTH_SECURITY_REVIEW.md). The known nonfailing pg adapter deprecation is unchanged. No dependency warning is suppressed or unrelated dependency upgraded.
+The earlier storage-task audit reported tooling advisories in `deepmerge-ts` and `braces`. The [Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) records supported dependency patches and the current zero-finding workspace audit; container and Garage binary assessments remain separate and open. The known nonfailing pg adapter deprecation remains visible.
 
 Next: **Task 5.3 — Asset Upload Pipeline**. Cloud providers have not been exercised live; before deployment, run equivalent private byte/range/error/retention checks using an isolated bucket and the selected production account.
 

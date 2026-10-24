@@ -2684,6 +2684,8 @@ Do not implement changes yet.
 
 ## TASK 23.2 — Apply Final Review
 
+Status: **Completed 2026-10-23 — application remediations verified; production approval withheld.** Applied the bounded asset-eligibility migration and shared-subtree depth correction, added redacted structured operational events, updated supported Prisma/pnpm/parser patches, and removed unused inherited package-manager tools from the operations image. The [Final review remediation](docs/architecture/FINAL_REVIEW_REMEDIATION.md) records all dispositions and exact artifact assessments. All 1,485 unit/component, 690 PostgreSQL, 46 upload-pipeline, 32 storage and three backup cases pass; all 54 distinct critical desktop/mobile cases pass across the initial run and a focused rerun after correcting the fixture JSON output protocol. The ten production browser cases and encrypted restore pass before and after trimming the operations image. Final logging-code refinement also passes focused unit/transaction/browser checks and a fresh application build. Lint, types, schema, formatting and documentation checks pass; the workspace audit reports zero known vulnerabilities. Runtime and operations images retain nine High Debian matches each; public proxy and Garage vendor assessments remain open with reasons. No unsupported vendor rebuild, live deployment, personal data change or future cleanup task was performed. Next: Task 24.1 — Dead Code and Dependency Cleanup, only when requested.
+
 MODEL:
 
 `GPT-6 Sol`

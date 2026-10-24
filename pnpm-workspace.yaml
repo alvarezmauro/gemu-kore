@@ -10,11 +10,17 @@ networkConcurrency: 8
 # Transitive optional MySQL adapters: patch both published security advisories.
 # The application continues to use only PostgreSQL through PrismaPg.
 overrides:
-  mysql2: 3.23.1
+  mysql2: 3.24.6
   # Compatible security patches for Vite and shadcn's CLI-only dependencies.
   vite: 8.3.3
   "@modelcontextprotocol/sdk": 1.32.0
   ip-address: 10.7.4
+  # Patch allowed parser ranges without replacing a consumer's major version.
+  "zod@>=4 <5": 4.6.7
+  "body-parser@>=2 <3": 2.4.0
+  "undici@>=7 <8": 7.30.1
+  "undici@>=8 <9": 8.12.2
+  "fast-uri@>=3 <4": 3.1.9
 
 # Single package; approved installation steps for Prisma, tsx and lint tooling.
 allowBuilds:

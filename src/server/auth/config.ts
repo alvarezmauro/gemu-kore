@@ -6,6 +6,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import type { AuthEnvironment } from "../config/auth-env";
 import type { PrismaClient } from "../db/generated/client";
 import { createSocialProviders } from "./providers";
+import { operationalEvent } from "../observability/events";
 
 export function createAuth(database: PrismaClient, env: AuthEnvironment) {
   return betterAuth({
@@ -99,12 +100,13 @@ export function createAuth(database: PrismaClient, env: AuthEnvironment) {
     ],
     onAPIError: {
       errorURL: `${env.baseURL}/login`,
-      onError: () => console.error("Authentication request failed."),
+      onError: () =>
+        operationalEvent("auth.request", "failed", {}, "UNAVAILABLE"),
     },
     // SDK errors may include provider payloads. Keep those out of app logs.
     logger: {
       level: "error",
-      log: () => console.error("Authentication operation failed."),
+      log: () => operationalEvent("auth.request", "failed", {}, "UNAVAILABLE"),
     },
   });
 }

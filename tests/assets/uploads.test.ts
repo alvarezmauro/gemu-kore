@@ -2,7 +2,16 @@ import { createHash, randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import { CreateBucketCommand, S3Client } from "@aws-sdk/client-s3";
 import sharp from "sharp";
-import { afterAll, beforeAll, beforeEach, expect, inject, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  inject,
+  it,
+  vi,
+} from "vitest";
 import { getDatabase, disconnectDatabase } from "@/server/db/client";
 import { requirePrivateAccess } from "@/server/auth/access";
 import {
@@ -34,6 +43,7 @@ const admin = new S3Client({
 });
 const secret =
   "asset-integration-only-secret-longer-than-thirty-two-characters";
+afterEach(() => vi.restoreAllMocks());
 let companyId: string;
 let headers: Headers;
 let userId: string;
@@ -178,6 +188,38 @@ it("uploads through the request boundary, preserves originals and strips oriente
   expect(retry.status).toBe(200);
   expect(await retry.json()).toEqual(dto);
   expect(await db.catalogAsset.count()).toBe(1);
+});
+
+it("records upload outcomes with opaque correlation and no private filename, metadata or credentials", async () => {
+  const info = vi.spyOn(console, "info").mockImplementation(() => {});
+  const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+  const response = await send(await image());
+  expect(response.status).toBe(201);
+  const saved = await response.json();
+  const events = info.mock.calls.map(([line]) => JSON.parse(String(line)));
+  expect(events).toMatchObject([
+    { operation: "asset.upload", outcome: "started" },
+    {
+      operation: "asset.upload",
+      outcome: "succeeded",
+      uploadId: saved.uploadId,
+    },
+  ]);
+  expect(events[0].correlationId).toBe(events[1].correlationId);
+  expect((await send(Buffer.from("invalid photo"))).status).toBe(400);
+  expect(
+    errors.mock.calls.map(([line]) => JSON.parse(String(line))),
+  ).toMatchObject([
+    {
+      operation: "asset.upload",
+      outcome: "failed",
+      code: "INVALID_INPUT",
+      uploadId: expect.any(String),
+    },
+  ]);
+  expect([...info.mock.calls, ...errors.mock.calls].flat().join()).not.toMatch(
+    /personal|my%20|private owner|session_token|assets@example|secret-longer|invalid photo/,
+  );
 });
 it("authorizes before storage even for conditional reads and rejects CSRF", async () => {
   const anon = await uploadRequest(

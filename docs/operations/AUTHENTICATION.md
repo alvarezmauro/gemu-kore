@@ -66,7 +66,7 @@ Production rate limiting uses the library's process-local memory store, with ten
 
 The module boundaries and later AccessGrant/RBAC handoff are in [AUTH_ARCHITECTURE.md](../architecture/AUTH_ARCHITECTURE.md).
 
-The auth foundation's [Task 3.6 security review](../architecture/AUTH_SECURITY_REVIEW.md) records the earlier review. Task 22.3's [production security review](../architecture/PRODUCTION_SECURITY_REVIEW.md) supersedes its dependency counts: the refreshed package audit reports one high advisory in Prisma's trusted configuration tooling (`deepmerge-ts`), with no identified browser/provider input path. The optional MySQL adapter remains patched and unused. Image findings are recorded separately and still block production approval; passing application tests is not a clean vulnerability audit.
+The auth foundation's [Task 3.6 security review](../architecture/AUTH_SECURITY_REVIEW.md) records the earlier review. The [Task 23.2 remediation](../architecture/FINAL_REVIEW_REMEDIATION.md) supersedes earlier dependency counts: supported Prisma and parser patches clear the workspace audit. The optional MySQL adapter remains patched and unused. Image findings are recorded separately and still block production approval. Authentication and permission failures emit redacted structured events; raw SDK errors, cookies and callback URLs remain excluded.
 
 ## Verification
 

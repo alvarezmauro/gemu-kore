@@ -16,7 +16,7 @@ with sourced results and bounded requests. Setup is optional; enrichment review 
 user interface are implemented in Tasks **13.2–13.5**, with [reviewed suggestions,
 guarded acceptance and manual-copy draft recovery](docs/operations/ENRICHMENT.md).
 
-Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.5.0**. With those installed, run from the repository root:
+Use Node.js **24.20.0** (also recorded in `.node-version`) and pnpm **11.28.8**. With those installed, run from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -48,8 +48,10 @@ records hardening, verification and unresolved image advisories that block relea
 approval.
 
 The [whole repository review](docs/architecture/WHOLE_REPOSITORY_REVIEW.md)
-records the final architecture assessment and scoped remediation handoff for
-Task 23.2. Review completion does not grant production approval.
+records the final architecture assessment. Task 23.2
+[remediation](docs/architecture/FINAL_REVIEW_REMEDIATION.md) covers bounded media
+eligibility, redacted operational events and dependency patches. Proxy/storage
+findings still block production approval.
 
 Next.js manages `NODE_ENV`; do not override it with custom values. `src/instrumentation.ts` invokes the server-only validator in `src/server/config/env.ts` when the Node.js server initializes. Invalid configuration reports field names without values. Extend the schema and example file together as later tasks introduce integrations. Never use `NEXT_PUBLIC_*` for secrets.
 
@@ -85,7 +87,7 @@ pnpm start
 
 Vitest and React Testing Library cover unit/component behavior. Integration tests automatically create and remove an isolated PostgreSQL container; they require Docker and do not use your development data. Before the first browser run, use `pnpm test:e2e:install`. Playwright builds and starts the app on port 3100, then checks desktop/mobile Chromium. See [Testing](docs/operations/TESTING.md) for setup, examples, isolation and failure reports.
 
-Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma 7.10.0 rather than the registry's Prisma 8 release candidate. TypeScript 6 and ESLint 9 satisfy the installed Next.js lint plugins' peer ranges; ESLint 9 emits an upstream deprecation notice during initial installation. Revisit that pin when those plugins support ESLint 10. `pnpm-workspace.yaml` holds package-manager settings and explicit installation-script approvals for this single package; it does not introduce extra workspace packages. Next.js automatic agent-file generation is disabled to preserve the maintained `AGENTS.md`.
+Dependencies are pinned in `package.json` and `pnpm-lock.yaml`, including Prisma 7.10.1 rather than the registry's Prisma 8 release candidate. TypeScript 6 and ESLint 9 satisfy the installed Next.js lint plugins' peer ranges; ESLint 9 emits an upstream deprecation notice during initial installation. Revisit that pin when those plugins support ESLint 10. `pnpm-workspace.yaml` holds package-manager settings and explicit installation-script approvals for this single package; it does not introduce extra workspace packages. Next.js automatic agent-file generation is disabled to preserve the maintained `AGENTS.md`.
 
 ## Project documents
 

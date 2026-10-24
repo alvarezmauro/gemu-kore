@@ -16,6 +16,9 @@ async function main() {
       "Access browser fixtures require the isolated test runner.",
     );
   }
+  // This isolated CLI reserves stdout for one machine-readable fixture result.
+  // Keep application diagnostics visible without mixing them into that protocol.
+  console.info = (...values: unknown[]) => console.error(...values);
   const [command, argument] = process.argv.slice(2);
   const database = getDatabase();
   try {
@@ -999,7 +1002,7 @@ async function main() {
         where: { user: { email: argument } },
       });
     } else throw new Error("Unknown access browser fixture command.");
-    console.info(JSON.stringify(result));
+    process.stdout.write(`${JSON.stringify(result)}\n`);
   } finally {
     await disconnectDatabase();
   }

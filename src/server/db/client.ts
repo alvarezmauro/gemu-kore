@@ -4,6 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { getDatabaseEnv } from "../config/env";
 import { PrismaClient } from "./generated/client";
+import { operationalEvent } from "../observability/events";
 
 const databaseGlobal = globalThis as typeof globalThis & {
   gemukorePrisma?: PrismaClient;
@@ -22,8 +23,10 @@ export function getDatabase() {
       },
       {
         schema: new URL(DATABASE_URL).searchParams.get("schema") ?? "public",
-        onPoolError: () => console.error("Database pool connection failed."),
-        onConnectionError: () => console.error("Database connection failed."),
+        onPoolError: () =>
+          operationalEvent("database.connection", "failed", {}, "UNAVAILABLE"),
+        onConnectionError: () =>
+          operationalEvent("database.connection", "failed", {}, "UNAVAILABLE"),
       },
     );
 

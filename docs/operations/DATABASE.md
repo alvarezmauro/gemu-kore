@@ -1,6 +1,6 @@
 # Database development
 
-The foundation uses PostgreSQL **16.15** and Prisma **7.10.0**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Tasks 4.1–4.2 implement and review the approved core catalog and owned-collection structures. Findings and corrections are in [Prisma schema review](../architecture/PRISMA_SCHEMA_REVIEW.md). See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
+The foundation uses PostgreSQL **16.15** and Prisma **7.10.1**, with matching client and PostgreSQL adapter versions. Task 1.2 established the `public` schema and migration history; Phase 3 added authentication/policy tables. Tasks 4.1–4.2 implement and review the approved core catalog and owned-collection structures. Findings and corrections are in [Prisma schema review](../architecture/PRISMA_SCHEMA_REVIEW.md). See [Core database contracts](CORE_DATABASE.md) for the model inventory, deletion rules, SQL invariants and deferred features.
 
 ## Local connection
 
@@ -45,6 +45,13 @@ Use `migrate dev` only on a dedicated development database; it uses a shadow dat
 For an existing set of reviewed migrations, use `pnpm db:deploy`. This applies pending migrations without generating schema changes or resetting data. Production migration credentials and permissions will be separated from application runtime access during deployment work. No startup hook runs migrations or creates a database automatically. Do not use `db push` or an automatic reset; they bypass the reviewed migration workflow and custom SQL constraints. Task 4.1 creates safe settings defaults, without placeholder catalog, collection or administrator seed data.
 
 Generated Prisma files live under `src/server/db/generated/` and are ignored. The `dev`, `build`, `typecheck` and `db:check` commands generate them explicitly, so a clean checkout does not depend on an untracked client from another machine.
+
+Task 23.2 adds `20261023000000_bounded_asset_eligibility`, replacing the public
+asset eligibility function without changing stored rows or extending timeouts.
+It traverses at most 128 unique assets and measures the longest source path,
+failing closed beyond depth 16 or on cycles/unapproved sources. Apply it before
+the updated application through the normal deployment workflow. See the
+[final review remediation](../architecture/FINAL_REVIEW_REMEDIATION.md).
 
 ## Database access and health
 
